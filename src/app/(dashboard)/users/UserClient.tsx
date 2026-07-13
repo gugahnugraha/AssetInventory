@@ -126,6 +126,7 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
       } else if (res.success) {
         setIsCreateOpen(false);
         createForm.reset();
+        setIsSubmitting(false);
         router.refresh();
       }
     } catch (err) {
@@ -154,6 +155,7 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
         setIsEditOpen(false);
         setSelectedUser(null);
         editForm.reset();
+        setIsSubmitting(false);
         router.refresh();
       }
     } catch (err) {

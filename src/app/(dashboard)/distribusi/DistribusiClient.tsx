@@ -83,6 +83,7 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
       } else if (res.success) {
         setIsCreateOpen(false);
         reset();
+        setIsSubmitting(false);
         router.refresh();
       }
     } catch (err) {
@@ -104,6 +105,7 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
         setIsEditOpen(false);
         setSelectedDist(null);
         reset();
+        setIsSubmitting(false);
         router.refresh();
       }
     } catch (err) {

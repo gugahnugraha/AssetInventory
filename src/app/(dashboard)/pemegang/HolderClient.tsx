@@ -96,6 +96,7 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
       } else if (res.success) {
         setIsCreateOpen(false);
         reset();
+        setIsSubmitting(false);
         router.refresh();
       }
     } catch (err) {
@@ -117,6 +118,7 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
         setIsEditOpen(false);
         setSelectedHolder(null);
         reset();
+        setIsSubmitting(false);
         router.refresh();
       }
     } catch (err) {
