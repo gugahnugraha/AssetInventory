@@ -11,6 +11,7 @@ interface ClientLayoutProps {
     nama: string;
     username: string;
     role: Role;
+    opdName?: string;
   };
 }
 

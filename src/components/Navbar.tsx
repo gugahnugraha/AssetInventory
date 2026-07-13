@@ -11,6 +11,7 @@ interface NavbarProps {
     nama: string
     username: string
     role: Role
+    opdName?: string
   }
   onMobileMenuToggle?: () => void
 }
@@ -56,7 +57,7 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
         
         <div className="hidden sm:flex flex-col">
           <span className="text-xs text-muted-foreground font-medium">Sistem Informasi Inventarisasi</span>
-          <span className="font-semibold text-sm text-foreground">OPD Kabupaten Bandung</span>
+          <span className="font-semibold text-sm text-foreground">{user.opdName || "OPD Kabupaten Bandung"}</span>
         </div>
       </div>
 
