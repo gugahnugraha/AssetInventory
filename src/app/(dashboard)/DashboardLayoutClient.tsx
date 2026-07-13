@@ -12,6 +12,7 @@ interface ClientLayoutProps {
     username: string;
     role: Role;
     opdName?: string;
+    opdKode?: string;
   };
 }
 

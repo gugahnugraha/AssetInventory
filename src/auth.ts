@@ -61,6 +61,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             role: user.role,
             opdId: user.opdId,
             opdName: user.opd.nama,
+            opdKode: user.opd.kode,
           };
         } catch (error: any) {
           console.error("[Auth] Exception during authorize callback:", error.message || error);

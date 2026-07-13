@@ -38,6 +38,7 @@ export const authConfig = {
         token.role = (user as any).role;
         token.opdId = (user as any).opdId;
         token.opdName = (user as any).opdName;
+        token.opdKode = (user as any).opdKode;
       }
       
       // Handle session updates (e.g. if profile changes)
@@ -55,6 +56,7 @@ export const authConfig = {
         session.user.role = token.role as any;
         session.user.opdId = token.opdId as string;
         session.user.opdName = token.opdName as string;
+        session.user.opdKode = token.opdKode as string;
       }
       return session;
     },

@@ -25,6 +25,8 @@ interface SidebarProps {
     nama: string
     username: string
     role: Role
+    opdName?: string
+    opdKode?: string
   }
 }
 
@@ -106,7 +108,7 @@ export function Sidebar({ user }: SidebarProps) {
           {!collapsed && (
             <div className="flex flex-col select-none">
               <span className="font-bold text-sm leading-tight tracking-wider">ASET INVENTARIS</span>
-              <span className="text-xs text-emerald-300">OPD Kab. Bandung</span>
+              <span className="text-xs text-emerald-300">{user.opdKode || "OPD Kab. Bandung"}</span>
             </div>
           )}
         </div>
