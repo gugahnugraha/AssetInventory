@@ -30,6 +30,11 @@ export default async function DashboardPage() {
         ...asset,
         createdAt: asset.createdAt.toISOString(),
         updatedAt: asset.updatedAt.toISOString(),
+        category: {
+          ...asset.category,
+          createdAt: asset.category.createdAt.toISOString(),
+          updatedAt: asset.category.updatedAt.toISOString(),
+        }
       })),
     };
 

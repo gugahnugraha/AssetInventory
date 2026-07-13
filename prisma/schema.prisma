@@ -73,30 +73,71 @@ model Holder {
   updatedAt      DateTime     @updatedAt
 }
 
+model Category {
+  id        String              @id @default(uuid())
+  nama      String              @unique
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  attributes CategoryAttribute[]
+  assets     Asset[]
+}
+
+model CategoryAttribute {
+  id          String           @id @default(uuid())
+  categoryId  String
+  category    Category         @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  nama        String
+  required    Boolean          @default(false)
+  fieldType   String           @default("TEXT") // "TEXT", "NUMBER"
+  displayOrder Int             @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  assetAttributes AssetAttribute[]
+
+  @@unique([categoryId, nama])
+}
+
+model AssetAttribute {
+  id                  String            @id @default(uuid())
+  assetId             String
+  asset               Asset             @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  categoryAttributeId String
+  categoryAttribute   CategoryAttribute @relation(fields: [categoryAttributeId], references: [id], onDelete: Cascade)
+  value               String
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@unique([assetId, categoryAttributeId])
+}
+
 model Asset {
-  id             String       @id @default(uuid())
-  kode1          String       // e.g. "02"
-  kode2          String       // e.g. "05"
-  kode3          String       // e.g. "01"
-  kode4          String       // e.g. "03"
-  nomorRegister  String       // e.g. "001"
-  kodeLengkap    String       @unique // XX.XX.XX.XX.XXX
-  jenisAset      String
+  id             String            @id @default(uuid())
+  kode1          String            // e.g. "02"
+  kode2          String            // e.g. "05"
+  kode3          String            // e.g. "01"
+  kode4          String            // e.g. "03"
+  nomorRegister  String            // e.g. "001"
+  kodeLengkap    String            @unique // XX.XX.XX.XX.XXX
+  categoryId     String
+  category       Category          @relation(fields: [categoryId], references: [id])
+  namaAset       String            // e.g. "Mobil Avanza"
   merkType       String
+  harga          Float             @default(0.0)
   tahunPembelian Int
   distributionId String
-  distribution   Distribution @relation(fields: [distributionId], references: [id])
+  distribution   Distribution      @relation(fields: [distributionId], references: [id])
   holderId       String?
-  holder         Holder?      @relation(fields: [holderId], references: [id])
-  kondisi        Kondisi      @default(NORMAL)
+  holder         Holder?           @relation(fields: [holderId], references: [id])
+  kondisi        Kondisi           @default(NORMAL)
   catatan        String?
-  fotoUtama      String?      // URL in Cloudflare R2
+  fotoUtama      String?           // URL in Cloudflare R2
   opdId          String
-  opd            Opd          @relation(fields: [opdId], references: [id])
+  opd            Opd               @relation(fields: [opdId], references: [id])
   photos         AssetPhoto[]
+  attributes     AssetAttribute[]
   auditLogs      AuditLog[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 }
 
 model AssetPhoto {

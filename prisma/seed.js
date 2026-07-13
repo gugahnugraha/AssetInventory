@@ -28,6 +28,70 @@ async function main() {
     });
     console.log(`- Seeded OPD: ${opd.nama} (${opd.kode})`);
 
+    // 1.5 Seed Categories and Category Attributes
+    const categoriesData = [
+      {
+        nama: "Kendaraan",
+        attributes: [
+          { nama: "Nomor Polisi", required: true, fieldType: "TEXT", displayOrder: 1 },
+          { nama: "Nomor Mesin", required: true, fieldType: "TEXT", displayOrder: 2 },
+          { nama: "Nomor Rangka", required: true, fieldType: "TEXT", displayOrder: 3 },
+        ],
+      },
+      {
+        nama: "Peralatan Elektronik",
+        attributes: [
+          { nama: "Nomor Serial", required: true, fieldType: "TEXT", displayOrder: 1 },
+        ],
+      },
+      {
+        nama: "Furnitur",
+        attributes: [],
+      },
+      {
+        nama: "Peralatan Kantor",
+        attributes: [],
+      },
+      {
+        nama: "Peralatan Jaringan & IT",
+        attributes: [
+          { nama: "Nomor Serial", required: false, fieldType: "TEXT", displayOrder: 1 },
+          { nama: "IP Address", required: false, fieldType: "TEXT", displayOrder: 2 },
+        ],
+      },
+      {
+        nama: "Lainnya",
+        attributes: [],
+      },
+    ];
+
+    for (const catData of categoriesData) {
+      const cat = await prisma.category.upsert({
+        where: { nama: catData.nama },
+        update: {},
+        create: { nama: catData.nama },
+      });
+      console.log(`- Seeded Category: ${cat.nama}`);
+
+      for (const attr of catData.attributes) {
+        await prisma.categoryAttribute.upsert({
+          where: { categoryId_nama: { categoryId: cat.id, nama: attr.nama } },
+          update: {
+            required: attr.required,
+            fieldType: attr.fieldType,
+            displayOrder: attr.displayOrder,
+          },
+          create: {
+            categoryId: cat.id,
+            nama: attr.nama,
+            required: attr.required,
+            fieldType: attr.fieldType,
+            displayOrder: attr.displayOrder,
+          },
+        });
+      }
+    }
+
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const defaultPasswordHash = await bcrypt.hash("Password123!", salt);

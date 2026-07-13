@@ -29,6 +29,21 @@ export default async function AssetsPage() {
       ...asset,
       createdAt: asset.createdAt.toISOString(),
       updatedAt: asset.updatedAt.toISOString(),
+      category: {
+        ...asset.category,
+        createdAt: asset.category.createdAt.toISOString(),
+        updatedAt: asset.category.updatedAt.toISOString(),
+      },
+      attributes: asset.attributes.map((attr) => ({
+        ...attr,
+        createdAt: attr.createdAt.toISOString(),
+        updatedAt: attr.updatedAt.toISOString(),
+        categoryAttribute: {
+          ...attr.categoryAttribute,
+          createdAt: attr.categoryAttribute.createdAt.toISOString(),
+          updatedAt: attr.categoryAttribute.updatedAt.toISOString(),
+        }
+      })),
       distribution: {
         ...asset.distribution,
         createdAt: asset.distribution.createdAt.toISOString(),

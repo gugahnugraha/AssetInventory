@@ -127,16 +127,19 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         ),
       },
       {
-        accessorKey: "jenisAset",
+        accessorKey: "namaAset",
         header: ({ column }) => (
           <Button variant="ghost" className="p-0 font-semibold cursor-pointer" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Jenis Aset <ArrowUpDown className="ml-2 h-4 w-4" />
+            Nama Aset <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
         cell: ({ row }) => (
           <div className="flex flex-col min-w-40">
-            <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-50">{row.getValue("jenisAset")}</span>
-            <span className="text-xs text-zinc-500">{row.original.merkType || "-"}</span>
+            <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-50">{row.getValue("namaAset")}</span>
+            <span className="text-xs text-zinc-500 mb-1">{row.original.merkType || "-"}</span>
+            <Badge variant="outline" className="text-[10px] w-fit bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-200/50 font-medium">
+              {row.original.category?.nama || "Lainnya"}
+            </Badge>
           </div>
         ),
       },
@@ -221,19 +224,28 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
     globalFilterFn: (row, columnId, filterValue) => {
       const search = filterValue.toLowerCase();
       const kode = String(row.getValue("kodeLengkap") || "").toLowerCase();
-      const jenis = String(row.getValue("jenisAset") || "").toLowerCase();
+      const nama = String(row.original.namaAset || "").toLowerCase();
+      const category = String(row.original.category?.nama || "").toLowerCase();
       const merk = String(row.original.merkType || "").toLowerCase();
       const bidang = String(row.original.distribution?.nama || "").toLowerCase();
       const pemegang = String(row.original.holder?.nama || "").toLowerCase();
       const tahun = String(row.getValue("tahunPembelian") || "");
 
+      const matchAttribute = row.original.attributes?.some((attr: any) => {
+        const attrName = String(attr.categoryAttribute?.nama || "").toLowerCase();
+        const attrVal = String(attr.value || "").toLowerCase();
+        return attrName.includes(search) || attrVal.includes(search);
+      });
+
       return (
         kode.includes(search) ||
-        jenis.includes(search) ||
+        nama.includes(search) ||
+        category.includes(search) ||
         merk.includes(search) ||
         bidang.includes(search) ||
         pemegang.includes(search) ||
-        tahun.includes(search)
+        tahun.includes(search) ||
+        matchAttribute
       );
     },
   });
@@ -241,16 +253,27 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const exportToExcel = () => {
     const dataToExport = table.getFilteredRowModel().rows.map(row => {
       const asset = row.original;
-      return {
+      const baseData: any = {
         "Kode Aset": asset.kodeLengkap,
-        "Jenis Aset": asset.jenisAset,
+        "Kategori Aset": asset.category?.nama || "-",
+        "Nama Aset": asset.namaAset,
         "Merk / Type": asset.merkType || "-",
+        "Harga (Rp)": asset.harga || 0,
         "Tahun Pembelian": asset.tahunPembelian,
         "Kondisi": getKondisiLabel(asset.kondisi),
         "Bidang": asset.distribution?.nama || "-",
         "Pemegang Barang": asset.holder?.nama || "-",
         "Catatan": asset.catatan || "-",
       };
+
+      // Add dynamic attributes dynamically
+      asset.attributes?.forEach((attr: any) => {
+        if (attr.categoryAttribute?.nama) {
+          baseData[attr.categoryAttribute.nama] = attr.value || "-";
+        }
+      });
+
+      return baseData;
     });
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);

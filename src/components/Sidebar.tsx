@@ -14,7 +14,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Shield
+  Shield,
+  Tags
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { logoutAction } from "@/actions/auth"
@@ -58,6 +59,12 @@ export function Sidebar({ user }: SidebarProps) {
       href: "/pemegang",
       icon: UserCheck,
       roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+    },
+    {
+      label: "Master Kategori",
+      href: "/kategori",
+      icon: Tags,
+      roles: [Role.ADMINISTRATOR],
     },
     {
       label: "Kelola User",

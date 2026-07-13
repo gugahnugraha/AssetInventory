@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { getAssetById } from "@/services/asset";
 import { getAllDistributions } from "@/services/distribution";
 import { getAllHolders } from "@/services/holder";
+import { getAllCategories } from "@/services/category";
 import { AssetFormClient } from "../../AssetFormClient";
 import { Role } from "@prisma/client";
 
@@ -38,6 +39,7 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
 
     const distributions = await getAllDistributions(opdId);
     const holders = await getAllHolders(opdId);
+    const categories = await getAllCategories();
 
     // Serialize database models (convert Date objects to JSON-friendly string ISO dates)
     const serializedAsset = {
@@ -47,8 +49,10 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
       kode3: asset.kode3,
       kode4: asset.kode4,
       nomorRegister: asset.nomorRegister,
-      jenisAset: asset.jenisAset,
+      categoryId: asset.categoryId,
+      namaAset: asset.namaAset,
       merkType: asset.merkType,
+      harga: asset.harga,
       tahunPembelian: asset.tahunPembelian,
       distributionId: asset.distributionId,
       holderId: asset.holderId,
@@ -58,6 +62,10 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
       photos: asset.photos.map((photo) => ({
         url: photo.url,
         caption: photo.caption,
+      })),
+      attributes: asset.attributes.map((attr) => ({
+        categoryAttributeId: attr.categoryAttributeId,
+        value: attr.value,
       })),
     };
 
@@ -73,11 +81,24 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
       distributionId: holder.distributionId,
     }));
 
+    const serializedCategories = categories.map((cat) => ({
+      id: cat.id,
+      nama: cat.nama,
+      attributes: cat.attributes.map((attr) => ({
+        id: attr.id,
+        nama: attr.nama,
+        required: attr.required,
+        fieldType: attr.fieldType,
+        displayOrder: attr.displayOrder,
+      })),
+    }));
+
     return (
       <AssetFormClient
         initialData={serializedAsset}
         distributions={serializedDistributions}
         holders={serializedHolders}
+        categories={serializedCategories}
       />
     );
   } catch (error) {

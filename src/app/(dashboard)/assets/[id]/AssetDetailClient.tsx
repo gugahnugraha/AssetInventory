@@ -180,7 +180,7 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
               {activePhoto && activePhoto !== "/placeholder-asset.png" ? (
                 <img
                   src={activePhoto}
-                  alt={asset.jenisAset}
+                  alt={asset.namaAset}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -262,12 +262,24 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
             </CardHeader>
             <CardContent className="pt-4 divide-y">
               <div className="flex justify-between py-2 text-sm">
-                <span className="text-zinc-500 font-medium">Jenis / Nama Aset</span>
-                <span className="font-bold text-zinc-900 dark:text-zinc-100">{asset.jenisAset}</span>
+                <span className="text-zinc-500 font-medium">Nama Aset</span>
+                <span className="font-bold text-zinc-900 dark:text-zinc-100">{asset.namaAset}</span>
+              </div>
+              <div className="flex justify-between py-2 text-sm">
+                <span className="text-zinc-500 font-medium">Kategori</span>
+                <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                  <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-200/50">
+                    {asset.category?.nama || "-"}
+                  </Badge>
+                </span>
               </div>
               <div className="flex justify-between py-2 text-sm">
                 <span className="text-zinc-500 font-medium">Merk / Type</span>
                 <span className="font-semibold text-zinc-800 dark:text-zinc-200">{asset.merkType || "-"}</span>
+              </div>
+              <div className="flex justify-between py-2 text-sm">
+                <span className="text-zinc-500 font-medium">Harga Perolehan</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">Rp {asset.harga ? asset.harga.toLocaleString("id-ID") : "0"}</span>
               </div>
               <div className="flex justify-between py-2 text-sm">
                 <span className="text-zinc-500 font-medium">Tahun Pembelian</span>
@@ -283,6 +295,25 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
               </div>
             </CardContent>
           </Card>
+
+          {/* Dynamic Attributes Section */}
+          {asset.attributes && asset.attributes.length > 0 && (
+            <Card className="border-zinc-200/80 dark:border-zinc-800/80">
+              <CardHeader className="border-b pb-4">
+                <CardTitle className="text-sm font-bold uppercase tracking-wider text-emerald-700">
+                  Atribut Tambahan ({asset.category?.nama})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4 divide-y bg-zinc-50/20 dark:bg-zinc-900/10">
+                {asset.attributes.map((attr: any) => (
+                  <div key={attr.id} className="flex justify-between py-2 text-sm">
+                    <span className="text-zinc-500 font-medium">{attr.categoryAttribute?.nama}</span>
+                    <span className="font-semibold text-zinc-850 dark:text-zinc-250">{attr.value || "-"}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Catatan Card */}
           <Card className="border-zinc-200/80 dark:border-zinc-800/80">

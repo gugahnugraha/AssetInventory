@@ -324,7 +324,7 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
                   <div key={asset.id} className="flex items-center justify-between p-4 hover:bg-zinc-50 dark:hover:bg-zinc-900/40 transition-colors">
                     <div className="flex flex-col min-w-0 pr-4">
                       <span className="font-semibold text-sm truncate text-zinc-900 dark:text-zinc-50">
-                        {asset.merkType ? `${asset.jenisAset} - ${asset.merkType}` : asset.jenisAset}
+                        {asset.merkType ? `${asset.namaAset} - ${asset.merkType}` : asset.namaAset}
                       </span>
                       <span className="text-xs text-emerald-600 dark:text-emerald-400 font-mono mt-0.5">
                         {asset.kodeLengkap}
@@ -372,7 +372,7 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
                         <p className="text-zinc-700 dark:text-zinc-300">
                           <span className="font-bold text-zinc-900 dark:text-zinc-50">{log.user.nama}</span>
                           {" "}{actionDetails.label.toLowerCase()}{" "}
-                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">{log.asset.jenisAset}</span>
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">{log.asset.namaAset}</span>
                           {log.asset.merkType ? ` (${log.asset.merkType})` : ""}
                         </p>
                         <p className="text-[11px] font-mono text-zinc-400 mt-0.5">Kode: {log.asset.kodeLengkap}</p>

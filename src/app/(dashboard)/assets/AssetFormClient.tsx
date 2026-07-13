@@ -29,8 +29,10 @@ const assetSchema = z.object({
   kode3: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
   kode4: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
   nomorRegister: z.string().regex(/^\d{3}$/, "Wajib 3 digit angka"),
-  jenisAset: z.string().min(1, "Jenis aset wajib diisi"),
+  categoryId: z.string().min(1, "Kategori wajib diisi"),
+  namaAset: z.string().min(1, "Nama aset wajib diisi"),
   merkType: z.string().min(1, "Merk/Type wajib diisi"),
+  harga: z.coerce.number().min(0, "Harga tidak boleh negatif"),
   tahunPembelian: z.coerce.number()
     .min(1900, "Tahun tidak valid")
     .max(new Date().getFullYear(), `Tahun maksimal ${new Date().getFullYear()}`),
@@ -45,6 +47,7 @@ const assetSchema = z.object({
       caption: z.string().nullable().optional(),
     })
   ).default([]),
+  dynamicAttributes: z.record(z.string(), z.string()).optional(),
 });
 
 type AssetFormValues = z.infer<typeof assetSchema>;
@@ -53,9 +56,10 @@ interface AssetFormClientProps {
   initialData?: any; // Pre-filled data if edit mode
   distributions: any[];
   holders: any[];
+  categories: any[];
 }
 
-export function AssetFormClient({ initialData, distributions, holders }: AssetFormClientProps) {
+export function AssetFormClient({ initialData, distributions, holders, categories }: AssetFormClientProps) {
   const router = useRouter();
   const [error, setError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -78,8 +82,10 @@ export function AssetFormClient({ initialData, distributions, holders }: AssetFo
           kode3: initialData.kode3 as string,
           kode4: initialData.kode4 as string,
           nomorRegister: initialData.nomorRegister as string,
-          jenisAset: initialData.jenisAset as string,
+          categoryId: initialData.categoryId as string,
+          namaAset: initialData.namaAset as string,
           merkType: initialData.merkType as string,
+          harga: initialData.harga as number,
           tahunPembelian: initialData.tahunPembelian as number,
           distributionId: initialData.distributionId as string,
           holderId: initialData.holderId as string | null,
@@ -87,6 +93,10 @@ export function AssetFormClient({ initialData, distributions, holders }: AssetFo
           catatan: initialData.catatan || "",
           fotoUtama: initialData.fotoUtama || "",
           photos: initialData.photos || [],
+          dynamicAttributes: initialData.attributes?.reduce((acc: any, attr: any) => {
+            acc[attr.categoryAttributeId] = attr.value;
+            return acc;
+          }, {}) || {},
         }
       : {
           kode1: "02", // default group codes
@@ -94,8 +104,10 @@ export function AssetFormClient({ initialData, distributions, holders }: AssetFo
           kode3: "01",
           kode4: "03",
           nomorRegister: "",
-          jenisAset: "",
+          categoryId: "",
+          namaAset: "",
           merkType: "",
+          harga: 0,
           tahunPembelian: new Date().getFullYear(),
           distributionId: "",
           holderId: null,
@@ -103,6 +115,7 @@ export function AssetFormClient({ initialData, distributions, holders }: AssetFo
           catatan: "",
           fotoUtama: "",
           photos: [],
+          dynamicAttributes: {},
         },
   });
 
@@ -114,6 +127,13 @@ export function AssetFormClient({ initialData, distributions, holders }: AssetFo
   const watchKode3 = (watch("kode3") || "") as string;
   const watchKode4 = (watch("kode4") || "") as string;
   const watchRegister = (watch("nomorRegister") || "") as string;
+  
+  const watchCategoryId = watch("categoryId") as string;
+  const selectedCategory = React.useMemo(() => {
+    return categories.find(c => c.id === watchCategoryId) || null;
+  }, [categories, watchCategoryId]);
+
+  const categoryAttributes = selectedCategory?.attributes || [];
 
   // Compiled asset code preview
   const kodeLengkapPreview = `01.03.${watchKode1 || "XX"}.${watchKode2 || "XX"}.${watchKode3 || "XX"}.${watchKode4 || "XX"}.${watchRegister || "XXX"}`;
@@ -335,27 +355,60 @@ export function AssetFormClient({ initialData, distributions, holders }: AssetFo
                 </div>
               </div>
 
-              {/* Jenis Aset & Merk */}
+              {/* Kategori & Nama Aset & Merk & Harga */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                    Jenis Aset (Nama Barang)
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                    Kategori Aset <span className="text-rose-500">*</span>
                   </label>
-                  <Input
-                    placeholder="Contoh: Laptop, Meja Kerja"
-                    {...register("jenisAset")}
-                  />
-                  {errors.jenisAset && <p className="text-xs text-rose-500 mt-1">{errors.jenisAset.message}</p>}
+                  <select
+                    {...register("categoryId")}
+                    className="w-full h-10 rounded-md border border-zinc-200 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">Pilih Kategori</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nama}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.categoryId && <p className="text-xs text-rose-500 mt-1">{errors.categoryId.message}</p>}
                 </div>
+
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                    Merk / Type
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                    Nama Aset <span className="text-rose-500">*</span>
                   </label>
                   <Input
-                    placeholder="Contoh: Lenovo ThinkPad L14, Kayu Jati"
+                    placeholder="Contoh: Mobil Avanza, Laptop ThinkPad"
+                    {...register("namaAset")}
+                  />
+                  {errors.namaAset && <p className="text-xs text-rose-500 mt-1">{errors.namaAset.message}</p>}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                    Merk / Type <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    placeholder="Contoh: Lenovo L14 Gen 3, Kayu Jati"
                     {...register("merkType")}
                   />
                   {errors.merkType && <p className="text-xs text-rose-500 mt-1">{errors.merkType.message}</p>}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                    Harga Perolehan (Rp) <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="Contoh: 15000000"
+                    {...register("harga")}
+                  />
+                  {errors.harga && <p className="text-xs text-rose-500 mt-1">{errors.harga.message}</p>}
                 </div>
               </div>
 
@@ -392,6 +445,38 @@ export function AssetFormClient({ initialData, distributions, holders }: AssetFo
               </div>
             </CardContent>
           </Card>
+
+          {/* Dynamic Attributes Form Section */}
+          {categoryAttributes.length > 0 && (
+            <Card className="border-zinc-200/80 dark:border-zinc-800/80">
+              <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+                <CardTitle className="text-emerald-700 font-bold">Atribut Tambahan ({selectedCategory?.nama})</CardTitle>
+                <CardDescription>Atribut kustom spesifik untuk kategori ini.</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {categoryAttributes.map((attr: any) => (
+                  <div key={attr.id} className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
+                      {attr.nama}
+                      {attr.required && <span className="text-rose-500">*</span>}
+                    </label>
+                    <Input
+                      type={attr.fieldType === "NUMBER" ? "number" : "text"}
+                      placeholder={`Masukkan ${attr.nama.toLowerCase()}`}
+                      {...register(`dynamicAttributes.${attr.id}`, {
+                        required: attr.required ? `${attr.nama} wajib diisi` : false
+                      })}
+                    />
+                    {errors.dynamicAttributes?.[attr.id] && (
+                      <p className="text-xs text-rose-500 mt-1">
+                        {(errors.dynamicAttributes[attr.id] as any).message}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Placement & Holder */}
           <Card className="border-zinc-200/80 dark:border-zinc-800/80">

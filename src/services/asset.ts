@@ -27,10 +27,21 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
         const searchConditions: Prisma.AssetWhereInput[] = [
           { kodeLengkap: { contains: search, mode: "insensitive" } },
           { nomorRegister: { contains: search, mode: "insensitive" } },
-          { jenisAset: { contains: search, mode: "insensitive" } },
+          { namaAset: { contains: search, mode: "insensitive" } },
           { merkType: { contains: search, mode: "insensitive" } },
+          { category: { nama: { contains: search, mode: "insensitive" } } },
           { distribution: { nama: { contains: search, mode: "insensitive" } } },
           { holder: { nama: { contains: search, mode: "insensitive" } } },
+          {
+            attributes: {
+              some: {
+                OR: [
+                  { value: { contains: search, mode: "insensitive" } },
+                  { categoryAttribute: { nama: { contains: search, mode: "insensitive" } } }
+                ]
+              }
+            }
+          }
         ];
 
         // Add year search if it looks like a year
@@ -46,9 +57,15 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
     return await prisma.asset.findMany({
       where,
       include: {
+        category: true,
         distribution: true,
         holder: true,
         photos: true,
+        attributes: {
+          include: {
+            categoryAttribute: true
+          }
+        }
       },
       orderBy: { createdAt: "desc" },
     });
@@ -63,9 +80,15 @@ export async function getAssetById(id: string) {
     return await prisma.asset.findUnique({
       where: { id },
       include: {
+        category: true,
         distribution: true,
         holder: true,
         photos: true,
+        attributes: {
+          include: {
+            categoryAttribute: true
+          }
+        },
         auditLogs: {
           include: {
             user: {
@@ -91,8 +114,10 @@ export interface CreateAssetInput {
   kode3: string;
   kode4: string;
   nomorRegister: string;
-  jenisAset: string;
+  categoryId: string;
+  namaAset: string;
   merkType: string;
+  harga: number;
   tahunPembelian: number;
   distributionId: string;
   holderId?: string | null;
@@ -101,6 +126,7 @@ export interface CreateAssetInput {
   fotoUtama?: string | null;
   opdId: string;
   photos?: { url: string; caption?: string | null }[];
+  dynamicAttributes?: Record<string, string>;
 }
 
 export async function createAsset(data: CreateAssetInput, userId: string) {
@@ -126,8 +152,10 @@ export async function createAsset(data: CreateAssetInput, userId: string) {
           kode4: data.kode4,
           nomorRegister: data.nomorRegister,
           kodeLengkap,
-          jenisAset: data.jenisAset,
+          categoryId: data.categoryId,
+          namaAset: data.namaAset,
           merkType: data.merkType,
+          harga: data.harga,
           tahunPembelian: data.tahunPembelian,
           distributionId: data.distributionId,
           holderId: data.holderId || null,
@@ -141,7 +169,23 @@ export async function createAsset(data: CreateAssetInput, userId: string) {
         },
       });
 
-      // 2. Create Audit Log
+      // 2. Create Dynamic Attributes
+      if (data.dynamicAttributes) {
+        const attrData = Object.entries(data.dynamicAttributes)
+          .filter(([_, val]) => val !== undefined && val !== null && val.trim() !== "")
+          .map(([attrId, val]) => ({
+            assetId: asset.id,
+            categoryAttributeId: attrId,
+            value: val.trim()
+          }));
+        if (attrData.length > 0) {
+          await tx.assetAttribute.createMany({
+            data: attrData
+          });
+        }
+      }
+
+      // 3. Create Audit Log
       await tx.auditLog.create({
         data: {
           userId,
@@ -165,8 +209,10 @@ export interface UpdateAssetInput {
   kode3?: string;
   kode4?: string;
   nomorRegister?: string;
-  jenisAset?: string;
+  categoryId?: string;
+  namaAset?: string;
   merkType?: string;
+  harga?: number;
   tahunPembelian?: number;
   distributionId?: string;
   holderId?: string | null;
@@ -174,6 +220,7 @@ export interface UpdateAssetInput {
   catatan?: string | null;
   fotoUtama?: string | null;
   photos?: { url: string; caption?: string | null }[];
+  dynamicAttributes?: Record<string, string>;
 }
 
 export async function updateAsset(id: string, data: UpdateAssetInput, userId: string) {
@@ -225,8 +272,10 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
           kode4: data.kode4,
           nomorRegister: data.nomorRegister,
           kodeLengkap,
-          jenisAset: data.jenisAset,
+          categoryId: data.categoryId,
+          namaAset: data.namaAset,
           merkType: data.merkType,
+          harga: data.harga,
           tahunPembelian: data.tahunPembelian,
           distributionId: data.distributionId,
           holderId: data.holderId === undefined ? undefined : data.holderId,
@@ -239,7 +288,26 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
         },
       });
 
-      // 3. Create Audit Log
+      // 3. Update Dynamic Attributes
+      if (data.dynamicAttributes) {
+        await tx.assetAttribute.deleteMany({
+          where: { assetId: id }
+        });
+        const attrData = Object.entries(data.dynamicAttributes)
+          .filter(([_, val]) => val !== undefined && val !== null && val.trim() !== "")
+          .map(([attrId, val]) => ({
+            assetId: id,
+            categoryAttributeId: attrId,
+            value: val.trim()
+          }));
+        if (attrData.length > 0) {
+          await tx.assetAttribute.createMany({
+            data: attrData
+          });
+        }
+      }
+
+      // 4. Create Audit Log
       await tx.auditLog.create({
         data: {
           userId,
@@ -295,13 +363,28 @@ export async function getDashboardStats(opdId: string) {
     // Total assets
     const total = await prisma.asset.count({ where: { opdId } });
 
+    // Total value of assets
+    const totalValueResult = await prisma.asset.aggregate({
+      where: { opdId },
+      _sum: {
+        harga: true
+      }
+    });
+    const totalValue = totalValueResult._sum.harga || 0;
+
     // Breakdowns by condition
-    const normal = await prisma.asset.count({ where: { opdId, kondisi: Kondisi.NORMAL } });
-    const rusakRingan = await prisma.asset.count({ where: { opdId, kondisi: Kondisi.RUSAK_RINGAN } });
-    const rusakBerat = await prisma.asset.count({ where: { opdId, kondisi: Kondisi.RUSAK_BERAT } });
-    const hilang = await prisma.asset.count({ where: { opdId, kondisi: Kondisi.HILANG } });
-    const perbaikan = await prisma.asset.count({ where: { opdId, kondisi: Kondisi.DALAM_PERBAIKAN } });
-    const dipinjam = await prisma.asset.count({ where: { opdId, kondisi: Kondisi.DIPINJAM } });
+    const condiciones = [
+      { name: "normal", val: Kondisi.NORMAL },
+      { name: "rusakRingan", val: Kondisi.RUSAK_RINGAN },
+      { name: "rusakBerat", val: Kondisi.RUSAK_BERAT },
+      { name: "hilang", val: Kondisi.HILANG },
+      { name: "perbaikan", val: Kondisi.DALAM_PERBAIKAN },
+      { name: "dipinjam", val: Kondisi.DIPINJAM }
+    ];
+    const counts = await Promise.all(condiciones.map(c => 
+      prisma.asset.count({ where: { opdId, kondisi: c.val } })
+    ));
+    const [normal, rusakRingan, rusakBerat, hilang, perbaikan, dipinjam] = counts;
 
     // Asset per distribution
     const assetsByDist = await prisma.distribution.findMany({
@@ -319,9 +402,9 @@ export async function getDashboardStats(opdId: string) {
       total: item._count.assets,
     }));
 
-    // Asset per jenisAset (Top 5 + Others)
-    const assetsByJenis = await prisma.asset.groupBy({
-      by: ["jenisAset"],
+    // Asset per namaAset (Top 5 + Others)
+    const assetsByNama = await prisma.asset.groupBy({
+      by: ["namaAset"],
       where: { opdId },
       _count: {
         id: true,
@@ -334,15 +417,15 @@ export async function getDashboardStats(opdId: string) {
       take: 5,
     });
 
-    const jenisChartData = assetsByJenis.map(item => ({
-      name: item.jenisAset,
+    const jenisChartData = assetsByNama.map(item => ({
+      name: item.namaAset,
       total: item._count.id,
     }));
 
     // Latest assets
     const latestAssets = await prisma.asset.findMany({
       where: { opdId },
-      include: { distribution: true, holder: true },
+      include: { distribution: true, holder: true, category: true },
       orderBy: { createdAt: "desc" },
       take: 5,
     });
@@ -356,6 +439,7 @@ export async function getDashboardStats(opdId: string) {
         hilang,
         perbaikan,
         dipinjam,
+        totalValue,
       },
       charts: {
         byDistribution: distChartData,

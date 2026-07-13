@@ -66,7 +66,7 @@ export async function getRecentAuditLogs(opdId: string, limit = 10) {
         asset: {
           select: {
             kodeLengkap: true,
-            jenisAset: true,
+            namaAset: true,
             merkType: true,
           },
         },
