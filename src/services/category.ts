@@ -4,7 +4,7 @@ import prisma from "./db";
 
 export async function getAllCategories() {
   try {
-    return await prisma.category.findMany({
+    const categories = await prisma.category.findMany({
       include: {
         attributes: {
           orderBy: { displayOrder: "asc" }
@@ -14,6 +14,15 @@ export async function getAllCategories() {
         }
       },
       orderBy: { nama: "asc" }
+    });
+
+    // Urutkan kategori agar "Lainnya" selalu berada di akhir
+    return categories.sort((a, b) => {
+      const aLainnya = a.nama.toLowerCase() === "lainnya";
+      const bLainnya = b.nama.toLowerCase() === "lainnya";
+      if (aLainnya && !bLainnya) return 1;
+      if (!aLainnya && bLainnya) return -1;
+      return a.nama.localeCompare(b.nama);
     });
   } catch (error) {
     console.error("Error in getAllCategories:", error);
