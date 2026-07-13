@@ -66,7 +66,7 @@ export async function createUser(data: CreateUserInput) {
 
 export async function updateUser(
   id: string,
-  data: Partial<Omit<CreateUserInput, "opdId">>
+  data: Partial<Omit<CreateUserInput, "opdId">> & { lastLogin?: Date | null }
 ) {
   try {
     return await prisma.user.update({

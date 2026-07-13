@@ -105,7 +105,7 @@ export interface CreateAssetInput {
 
 export async function createAsset(data: CreateAssetInput, userId: string) {
   try {
-    const kodeLengkap = `${data.kode1}.${data.kode2}.${data.kode3}.${data.kode4}.${data.nomorRegister}`;
+    const kodeLengkap = `01.03.${data.kode1}.${data.kode2}.${data.kode3}.${data.kode4}.${data.nomorRegister}`;
 
     // Verify uniqueness of full code
     const existing = await prisma.asset.findUnique({
@@ -194,7 +194,7 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
     const k3 = data.kode3 !== undefined ? data.kode3 : existingAsset.kode3;
     const k4 = data.kode4 !== undefined ? data.kode4 : existingAsset.kode4;
     const reg = data.nomorRegister !== undefined ? data.nomorRegister : existingAsset.nomorRegister;
-    const newKodeLengkap = `${k1}.${k2}.${k3}.${k4}.${reg}`;
+    const newKodeLengkap = `01.03.${k1}.${k2}.${k3}.${k4}.${reg}`;
 
     if (newKodeLengkap !== existingAsset.kodeLengkap) {
       // Verify uniqueness of the new full code

@@ -24,11 +24,11 @@ import {
 import Link from "next/link";
 
 const assetSchema = z.object({
-  kode1: z.string().min(2, "Kode 1 wajib 2 digit").max(2, "Maksimal 2 digit"),
-  kode2: z.string().min(2, "Kode 2 wajib 2 digit").max(2, "Maksimal 2 digit"),
-  kode3: z.string().min(2, "Kode 3 wajib 2 digit").max(2, "Maksimal 2 digit"),
-  kode4: z.string().min(2, "Kode 4 wajib 2 digit").max(2, "Maksimal 2 digit"),
-  nomorRegister: z.string().min(3, "Register wajib 3 digit").max(3, "Maksimal 3 digit"),
+  kode1: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
+  kode2: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
+  kode3: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
+  kode4: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
+  nomorRegister: z.string().regex(/^\d{3}$/, "Wajib 3 digit angka"),
   jenisAset: z.string().min(1, "Jenis aset wajib diisi"),
   merkType: z.string().min(1, "Merk/Type wajib diisi"),
   tahunPembelian: z.coerce.number()
@@ -116,7 +116,7 @@ export function AssetFormClient({ initialData, distributions, holders }: AssetFo
   const watchRegister = (watch("nomorRegister") || "") as string;
 
   // Compiled asset code preview
-  const kodeLengkapPreview = `${watchKode1 || "XX"}.${watchKode2 || "XX"}.${watchKode3 || "XX"}.${watchKode4 || "XX"}.${watchRegister || "XXX"}`;
+  const kodeLengkapPreview = `01.03.${watchKode1 || "XX"}.${watchKode2 || "XX"}.${watchKode3 || "XX"}.${watchKode4 || "XX"}.${watchRegister || "XXX"}`;
 
   // Filter holders based on selected distribution/department
   const filteredHolders = React.useMemo(() => {

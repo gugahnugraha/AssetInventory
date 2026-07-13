@@ -5,7 +5,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "secondary" | "destructive" | "outline" | "success" | "warning" | "info"
 }
 
-function Badge({ className, variant = "default", ...props }, ref: React.ForwardedRef<HTMLDivElement>) {
+function Badge({ className, variant = "default", ...props }: BadgeProps, ref: React.ForwardedRef<HTMLDivElement>) {
   return (
     <div
       ref={ref}

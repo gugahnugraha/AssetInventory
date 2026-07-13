@@ -1,13 +1,8 @@
 import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
-import { NextRequest } from "next/server";
-
-const authMiddleware = NextAuth(authConfig).auth;
 
 // Next.js 16 uses the "proxy" convention instead of "middleware"
-export async function proxy(request: NextRequest, event: any) {
-  return authMiddleware(request, event);
-}
+export const proxy = NextAuth(authConfig).auth;
 
 export const config = {
   /*

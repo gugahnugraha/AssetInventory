@@ -279,7 +279,7 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
               </div>
               <div className="flex justify-between py-2 text-sm">
                 <span className="text-zinc-500 font-medium">Kode Bidang (Kelompok)</span>
-                <span className="font-mono">{asset.kode1}.{asset.kode2}.{asset.kode3}.{asset.kode4}</span>
+                <span className="font-mono">01.03.{asset.kode1}.{asset.kode2}.{asset.kode3}.{asset.kode4}</span>
               </div>
             </CardContent>
           </Card>
