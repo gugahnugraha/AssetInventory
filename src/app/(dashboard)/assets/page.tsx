@@ -1,0 +1,72 @@
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { getAllAssets } from "@/services/asset";
+import { getAllDistributions } from "@/services/distribution";
+import { AssetListClient } from "./AssetListClient";
+import { Role } from "@prisma/client";
+
+export const metadata = {
+  title: "Data Aset - SIM Inventaris Aset OPD",
+  description: "Kelola daftar inventaris aset Pemerintah Daerah Kabupaten Bandung.",
+};
+
+export default async function AssetsPage() {
+  const session = await auth();
+
+  if (!session || !session.user) {
+    redirect("/login");
+  }
+
+  const opdId = session.user.opdId;
+  const userRole = session.user.role as Role;
+
+  try {
+    const assets = await getAllAssets(opdId);
+    const distributions = await getAllDistributions(opdId);
+
+    // Serialize database models (convert Date objects to JSON-friendly string ISO dates)
+    const serializedAssets = assets.map((asset) => ({
+      ...asset,
+      createdAt: asset.createdAt.toISOString(),
+      updatedAt: asset.updatedAt.toISOString(),
+      distribution: {
+        ...asset.distribution,
+        createdAt: asset.distribution.createdAt.toISOString(),
+        updatedAt: asset.distribution.updatedAt.toISOString(),
+      },
+      holder: asset.holder
+        ? {
+            ...asset.holder,
+            createdAt: asset.holder.createdAt.toISOString(),
+            updatedAt: asset.holder.updatedAt.toISOString(),
+          }
+        : null,
+      photos: asset.photos.map((photo) => ({
+        ...photo,
+        createdAt: photo.createdAt.toISOString(),
+      })),
+    }));
+
+    const serializedDistributions = distributions.map((dist) => ({
+      ...dist,
+      createdAt: dist.createdAt.toISOString(),
+      updatedAt: dist.updatedAt.toISOString(),
+    }));
+
+    return (
+      <AssetListClient
+        initialAssets={serializedAssets}
+        distributions={serializedDistributions}
+        userRole={userRole}
+      />
+    );
+  } catch (error) {
+    console.error("Failed to load assets page data:", error);
+    return (
+      <div className="p-8 text-center bg-rose-50 border border-rose-200 text-rose-800 rounded-lg">
+        <h2 className="text-xl font-bold">Terjadi Kesalahan</h2>
+        <p className="mt-2">Gagal mengambil daftar aset. Silakan coba beberapa saat lagi atau hubungi Administrator.</p>
+      </div>
+    );
+  }
+}

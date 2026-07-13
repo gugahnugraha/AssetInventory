@@ -1,0 +1,120 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMINISTRATOR
+  OPERATOR
+  MANAGER
+}
+
+enum Kondisi {
+  NORMAL
+  RUSAK_RINGAN
+  RUSAK_BERAT
+  HILANG
+  DALAM_PERBAIKAN
+  DIPINJAM
+}
+
+model Opd {
+  id            String         @id @default(uuid())
+  nama          String
+  kode          String         @unique // e.g. "DISKOMINFO"
+  users         User[]
+  distributions Distribution[]
+  assets        Asset[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model User {
+  id           String     @id @default(uuid())
+  nama         String
+  username     String     @unique
+  passwordHash String
+  role         Role       @default(OPERATOR)
+  opdId        String
+  opd          Opd        @relation(fields: [opdId], references: [id])
+  isActive     Boolean    @default(true)
+  lastLogin    DateTime?
+  auditLogs    AuditLog[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Distribution {
+  id        String   @id @default(uuid())
+  nama      String   // e.g. Sekretariat, Keuangan, Aset
+  opdId     String
+  opd       Opd      @relation(fields: [opdId], references: [id])
+  holders   Holder[]
+  assets    Asset[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([nama, opdId])
+}
+
+model Holder {
+  id             String       @id @default(uuid())
+  nama           String
+  nip            String       @unique
+  jabatan        String
+  distributionId String
+  distribution   Distribution @relation(fields: [distributionId], references: [id])
+  assets         Asset[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Asset {
+  id             String       @id @default(uuid())
+  kode1          String       // e.g. "02"
+  kode2          String       // e.g. "05"
+  kode3          String       // e.g. "01"
+  kode4          String       // e.g. "03"
+  nomorRegister  String       // e.g. "001"
+  kodeLengkap    String       @unique // XX.XX.XX.XX.XXX
+  jenisAset      String
+  merkType       String
+  tahunPembelian Int
+  distributionId String
+  distribution   Distribution @relation(fields: [distributionId], references: [id])
+  holderId       String?
+  holder         Holder?      @relation(fields: [holderId], references: [id])
+  kondisi        Kondisi      @default(NORMAL)
+  catatan        String?
+  fotoUtama      String?      // URL in Cloudflare R2
+  opdId          String
+  opd            Opd          @relation(fields: [opdId], references: [id])
+  photos         AssetPhoto[]
+  auditLogs      AuditLog[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model AssetPhoto {
+  id        String   @id @default(uuid())
+  assetId   String
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  url       String
+  caption   String?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  assetId   String
+  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  action    String   // "CREATE", "UPDATE", "DELETE"
+  oldValue  String?  // JSON stringified old value
+  newValue  String?  // JSON stringified new value
+  createdAt DateTime @default(now())
+}
