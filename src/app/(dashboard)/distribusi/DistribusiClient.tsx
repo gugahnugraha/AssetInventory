@@ -144,8 +144,8 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">Bidang & Unit Kerja</h1>
-          <p className="text-zinc-500 dark:text-zinc-400 mt-1">
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-950">Bidang & Unit Kerja</h1>
+          <p className="text-zinc-800 font-semibold mt-1">
             Kelola struktur bidang penempatan inventaris aset OPD.
           </p>
         </div>
@@ -159,21 +159,21 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
 
       {/* Grid displays */}
       {distributions.length === 0 ? (
-        <Card className="border-dashed border-2 py-12 flex flex-col items-center justify-center text-center text-zinc-500">
-          <GitFork className="h-10 w-10 text-zinc-400 mb-3" />
-          <p className="font-semibold">Belum Ada Bidang Terdaftar</p>
-          <p className="text-xs text-zinc-400 max-w-xs mt-1">Silakan tambahkan bidang kerja baru seperti Sekretariat, Keuangan, dsb.</p>
+        <Card className="border-dashed border-2 py-12 flex flex-col items-center justify-center text-center text-zinc-800 border-zinc-300">
+          <GitFork className="h-10 w-10 text-zinc-700 mb-3" />
+          <p className="font-semibold text-lg text-zinc-950">Belum Ada Bidang Terdaftar</p>
+          <p className="text-sm text-zinc-800 max-w-xs mt-1 font-medium">Silakan tambahkan bidang kerja baru seperti Sekretariat, Keuangan, dsb.</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {distributions.map((dist) => (
-            <Card key={dist.id} className="border-zinc-200/80 dark:border-zinc-800/80 flex flex-col justify-between hover:shadow-md transition-shadow">
+            <Card key={dist.id} className="border-zinc-200/80 flex flex-col justify-between hover:shadow-md transition-shadow">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="p-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg">
+                  <div className="p-2.5 bg-emerald-500/10 text-emerald-800 rounded-lg">
                     <GitFork className="h-5 w-5" />
                   </div>
-                  <CardTitle className="text-base font-bold truncate leading-tight">{dist.nama}</CardTitle>
+                  <CardTitle className="text-base font-bold truncate leading-tight text-zinc-950">{dist.nama}</CardTitle>
                 </div>
                 {userRole !== Role.MANAGER && (
                   <div className="flex items-center gap-1">
@@ -197,19 +197,19 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
                 )}
               </CardHeader>
               <CardContent className="pt-2">
-                <div className="grid grid-cols-2 gap-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider bg-zinc-50 dark:bg-zinc-900/60 p-3 rounded-lg border">
+                <div className="grid grid-cols-2 gap-4 text-xs font-semibold text-zinc-850 uppercase tracking-wider bg-zinc-100/60 p-3 rounded-lg border border-zinc-200">
                   <div className="flex items-center gap-2">
-                    <Boxes className="h-4 w-4 text-emerald-600 shrink-0" />
+                    <Boxes className="h-4 w-4 text-emerald-800 shrink-0" />
                     <div className="flex flex-col min-w-0">
-                      <span className="text-[10px] text-zinc-400">Total Aset</span>
-                      <span className="text-base font-extrabold text-zinc-800 dark:text-zinc-200 mt-0.5">{dist._count.assets}</span>
+                      <span className="text-[10px] text-zinc-800 font-bold">Total Aset</span>
+                      <span className="text-lg font-bold text-zinc-950 mt-0.5">{dist._count.assets}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <UserCheck className="h-4 w-4 text-blue-600 shrink-0" />
+                    <UserCheck className="h-4 w-4 text-blue-800 shrink-0" />
                     <div className="flex flex-col min-w-0">
-                      <span className="text-[10px] text-zinc-400">Pemegang</span>
-                      <span className="text-base font-extrabold text-zinc-800 dark:text-zinc-200 mt-0.5">{dist._count.holders}</span>
+                      <span className="text-[10px] text-zinc-800 font-bold">Pemegang</span>
+                      <span className="text-lg font-bold text-zinc-950 mt-0.5">{dist._count.holders}</span>
                     </div>
                   </div>
                 </div>

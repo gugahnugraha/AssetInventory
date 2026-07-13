@@ -69,9 +69,10 @@
     --input: 220 13% 87%;
     --ring: 142.1 76.2% 36.3%;
 
-    --radius: 0.75rem;
   }
 }
+
+@custom-variant dark (&:where(.never-match-dark));
 
 @layer base {
   * {

@@ -5,6 +5,8 @@ import { Sidebar } from "@/components/Sidebar";
 import { Navbar } from "@/components/Navbar";
 import { Role } from "@prisma/client";
 
+import { usePathname } from "next/navigation";
+
 interface ClientLayoutProps {
   children: React.ReactNode;
   user: {
@@ -18,14 +20,15 @@ interface ClientLayoutProps {
 
 export function DashboardLayoutClient({ children, user }: ClientLayoutProps) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const pathname = usePathname();
 
   // Close mobile sidebar on route change
   React.useEffect(() => {
     setMobileOpen(false);
-  }, []);
+  }, [pathname]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-muted/20 dark:bg-zinc-950 transition-colors">
+    <div className="flex h-screen overflow-hidden bg-zinc-100/60 transition-colors">
       {/* Desktop Sidebar (visible on md+) */}
       <div className="hidden md:flex">
         <Sidebar user={user} />
@@ -49,7 +52,7 @@ export function DashboardLayoutClient({ children, user }: ClientLayoutProps) {
       {/* Main Content Area */}
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar user={user} onMobileMenuToggle={() => setMobileOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-zinc-50/50 dark:bg-zinc-900/50 transition-colors">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-zinc-50/40 transition-colors">
           <div className="mx-auto max-w-7xl">
             {children}
           </div>

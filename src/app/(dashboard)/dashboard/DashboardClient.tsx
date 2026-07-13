@@ -83,7 +83,7 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
       case "CREATE": return { label: "Menambahkan Aset", color: "bg-emerald-100 text-emerald-700 border-emerald-200" };
       case "UPDATE": return { label: "Memperbarui Aset", color: "bg-amber-100 text-amber-700 border-amber-200" };
       case "DELETE": return { label: "Menghapus Aset", color: "bg-rose-100 text-rose-700 border-rose-200" };
-      default: return { label: action, color: "bg-slate-100 text-slate-700 border-slate-200" };
+      default: return { label: action, color: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700" };
     }
   };
 
@@ -92,8 +92,8 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
       {/* Welcome Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-800">Dashboard</h1>
-          <p className="text-slate-500 mt-1">
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-950">Dashboard</h1>
+          <p className="text-zinc-800 font-medium mt-1">
             Ringkasan data inventaris dan aktivitas perubahan aset OPD.
           </p>
         </div>
@@ -113,15 +113,15 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Aset</p>
-                <h3 className="text-3xl font-extrabold text-slate-800 mt-1">{metrics.total}</h3>
+                <p className="text-xs font-semibold text-zinc-800 uppercase tracking-wider">Total Aset</p>
+                <h3 className="text-3xl font-bold text-zinc-950 mt-1">{metrics.total}</h3>
               </div>
-              <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
+              <div className="p-3 bg-emerald-100 text-emerald-800 rounded-xl">
                 <Boxes className="h-6 w-6" />
               </div>
             </div>
-            <div className="mt-3 flex items-center text-xs text-slate-500">
-              <TrendingUp className="h-3 w-3 text-emerald-500 mr-1" />
+            <div className="mt-3 flex items-center text-xs text-zinc-800 font-semibold">
+              <TrendingUp className="h-3 w-3 text-emerald-700 mr-1" />
               <span>Aset terdaftar di OPD</span>
             </div>
           </CardContent>
@@ -131,14 +131,14 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kondisi Baik</p>
-                <h3 className="text-3xl font-extrabold text-emerald-600 mt-1">{metrics.normal}</h3>
+                <p className="text-xs font-semibold text-zinc-800 uppercase tracking-wider">Kondisi Baik</p>
+                <h3 className="text-3xl font-bold text-emerald-800 mt-1">{metrics.normal}</h3>
               </div>
-              <div className="p-3 bg-sky-100 text-sky-600 rounded-xl">
+              <div className="p-3 bg-sky-100 text-sky-800 rounded-xl">
                 <CheckCircle2 className="h-6 w-6" />
               </div>
             </div>
-            <div className="mt-3 flex items-center text-xs text-slate-500">
+            <div className="mt-3 flex items-center text-xs text-zinc-800 font-semibold">
               <span>{Math.round((metrics.normal / (metrics.total || 1)) * 100)}% dari total aset</span>
             </div>
           </CardContent>
@@ -148,14 +148,14 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rusak Ringan</p>
-                <h3 className="text-3xl font-extrabold text-amber-600 mt-1">{metrics.rusakRingan}</h3>
+                <p className="text-xs font-semibold text-zinc-800 uppercase tracking-wider">Rusak Ringan</p>
+                <h3 className="text-3xl font-bold text-amber-800 mt-1">{metrics.rusakRingan}</h3>
               </div>
-              <div className="p-3 bg-amber-100 text-amber-600 rounded-xl">
+              <div className="p-3 bg-amber-100 text-amber-800 rounded-xl">
                 <Wrench className="h-6 w-6" />
               </div>
             </div>
-            <div className="mt-3 flex items-center text-xs text-slate-500">
+            <div className="mt-3 flex items-center text-xs text-zinc-800 font-semibold">
               <span>Aset butuh pemeliharaan</span>
             </div>
           </CardContent>
@@ -165,14 +165,14 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rusak Berat</p>
-                <h3 className="text-3xl font-extrabold text-rose-600 mt-1">{metrics.rusakBerat}</h3>
+                <p className="text-xs font-semibold text-zinc-800 uppercase tracking-wider">Rusak Berat</p>
+                <h3 className="text-3xl font-bold text-rose-800 mt-1">{metrics.rusakBerat}</h3>
               </div>
-              <div className="p-3 bg-rose-100 text-rose-600 rounded-xl">
+              <div className="p-3 bg-rose-100 text-rose-800 rounded-xl">
                 <XCircle className="h-6 w-6" />
               </div>
             </div>
-            <div className="mt-3 flex items-center text-xs text-slate-500">
+            <div className="mt-3 flex items-center text-xs text-zinc-800 font-semibold">
               <span>Perlu penghapusan aset</span>
             </div>
           </CardContent>
@@ -182,14 +182,14 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
           <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Aset Hilang</p>
-                <h3 className="text-3xl font-extrabold text-violet-600 mt-1">{metrics.hilang}</h3>
+                <p className="text-xs font-semibold text-zinc-800 uppercase tracking-wider">Aset Hilang</p>
+                <h3 className="text-3xl font-bold text-violet-800 mt-1">{metrics.hilang}</h3>
               </div>
-              <div className="p-3 bg-violet-100 text-violet-600 rounded-xl">
+              <div className="p-3 bg-violet-100 text-violet-800 rounded-xl">
                 <HelpCircle className="h-6 w-6" />
               </div>
             </div>
-            <div className="mt-3 flex items-center text-xs text-slate-500">
+            <div className="mt-3 flex items-center text-xs text-zinc-800 font-semibold">
               <span>Sedang ditelusuri</span>
             </div>
           </CardContent>
@@ -205,21 +205,21 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
           </CardHeader>
           <CardContent className="h-80">
             {charts.byDistribution.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-sm text-slate-400">
+              <div className="flex items-center justify-center h-full text-sm text-slate-400 dark:text-zinc-500">
                 Tidak ada data distribusi bidang.
               </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={charts.byDistribution} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" className="stroke-slate-200 dark:stroke-zinc-800" />
                   <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                   <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
                   <Tooltip 
                     contentStyle={{ 
                       borderRadius: "8px", 
-                      backgroundColor: "#ffffff", 
-                      borderColor: "#e2e8f0",
-                      color: "#1e293b"
+                      backgroundColor: "var(--color-card)", 
+                      borderColor: "var(--color-border)",
+                      color: "var(--color-foreground)"
                     }}
                     cursor={{ fill: "rgba(14, 165, 233, 0.05)" }}
                   />
@@ -237,7 +237,7 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
           </CardHeader>
           <CardContent className="h-80 flex flex-col justify-between">
             {charts.byType.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-sm text-slate-400">
+              <div className="flex items-center justify-center h-full text-sm text-slate-400 dark:text-zinc-500">
                 Tidak ada data kategori aset.
               </div>
             ) : (
@@ -261,9 +261,9 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
                       <Tooltip 
                         contentStyle={{ 
                           borderRadius: "8px", 
-                          backgroundColor: "#ffffff", 
-                          borderColor: "#e2e8f0",
-                          color: "#1e293b"
+                          backgroundColor: "var(--color-card)", 
+                          borderColor: "var(--color-border)",
+                          color: "var(--color-foreground)"
                         }} 
                       />
                     </PieChart>
@@ -273,7 +273,7 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
                   {charts.byType.map((item, index) => (
                     <div key={item.name} className="flex items-center gap-1.5 truncate">
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                      <span className="truncate text-slate-600 font-medium" title={item.name}>
+                      <span className="truncate text-slate-600 dark:text-zinc-400 font-medium" title={item.name}>
                         {item.name} ({item.total})
                       </span>
                     </div>
@@ -300,21 +300,21 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
           </CardHeader>
           <CardContent className="px-0">
             {latestAssets.length === 0 ? (
-              <div className="flex items-center justify-center py-12 text-sm text-slate-400">
+              <div className="flex items-center justify-center py-12 text-sm text-slate-400 dark:text-zinc-500">
                 Belum ada data aset terdaftar.
               </div>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-zinc-200/80">
                 {latestAssets.map((asset) => (
-                  <div key={asset.id} className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+                  <div key={asset.id} className="flex items-center justify-between p-4 hover:bg-zinc-100/60 transition-colors">
                     <div className="flex flex-col min-w-0 pr-4">
-                      <span className="font-semibold text-sm truncate text-slate-800">
+                      <span className="font-semibold text-sm truncate text-zinc-950">
                         {asset.merkType ? `${asset.namaAset} - ${asset.merkType}` : asset.namaAset}
                       </span>
-                      <span className="text-xs text-emerald-600 font-mono mt-0.5">
+                      <span className="text-xs text-emerald-800 font-mono font-semibold mt-0.5">
                         {asset.kodeLengkap}
                       </span>
-                      <span className="text-xs text-slate-400 mt-1 truncate">
+                      <span className="text-xs text-zinc-800 font-medium mt-1 truncate">
                         Bidang: {asset.distribution.nama} • Pemegang: {asset.holder?.nama || "Tidak ada"}
                       </span>
                     </div>
@@ -334,33 +334,33 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
               <CardTitle>Aktivitas Log Audit</CardTitle>
               <CardDescription>Catatan perubahan data yang dilakukan oleh Operator & Admin.</CardDescription>
             </div>
-            <Clock className="h-4 w-4 text-slate-400" />
+            <Clock className="h-4 w-4 text-slate-400 dark:text-zinc-500" />
           </CardHeader>
           <CardContent className="px-0">
             {recentLogs.length === 0 ? (
-              <div className="flex items-center justify-center py-12 text-sm text-slate-400">
+              <div className="flex items-center justify-center py-12 text-sm text-slate-400 dark:text-zinc-500">
                 Belum ada aktivitas log tercatat.
               </div>
             ) : (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-zinc-200/80">
                 {recentLogs.map((log) => {
                   const actionDetails = formatAction(log.action);
                   return (
-                    <div key={log.id} className="flex gap-3 p-4 items-start text-sm">
+                    <div key={log.id} className="flex gap-3 p-4 items-start text-sm hover:bg-zinc-100/60 transition-colors">
                       <div className="mt-0.5">
-                        <Badge className="font-medium text-[10px] uppercase border px-1.5 py-0" variant="outline">
+                        <Badge className="font-semibold text-[10px] uppercase border px-1.5 py-0" variant="outline">
                           {log.action}
                         </Badge>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-slate-700">
-                          <span className="font-bold text-slate-900">{log.user.nama}</span>
+                        <p className="text-zinc-900 font-medium">
+                          <span className="font-semibold text-zinc-950">{log.user.nama}</span>
                           {" "}{actionDetails.label.toLowerCase()}{" "}
-                          <span className="font-semibold text-emerald-600">{log.asset.namaAset}</span>
+                          <span className="font-semibold text-emerald-850">{log.asset.namaAset}</span>
                           {log.asset.merkType ? ` (${log.asset.merkType})` : ""}
                         </p>
-                        <p className="text-[11px] font-mono text-slate-400 mt-0.5">Kode: {log.asset.kodeLengkap}</p>
-                        <p className="text-xs text-slate-400 mt-1 flex items-center gap-1 font-medium">
+                        <p className="text-[11px] font-mono font-semibold text-zinc-800 mt-0.5">Kode: {log.asset.kodeLengkap}</p>
+                        <p className="text-xs text-zinc-800 mt-1 flex items-center gap-1 font-medium">
                           <Clock className="h-3 w-3" />
                           {formatDate(log.createdAt)}
                         </p>

@@ -223,8 +223,8 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">Kelola Pengguna</h1>
-          <p className="text-zinc-500 dark:text-zinc-400 mt-1">
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-950">Kelola Pengguna</h1>
+          <p className="text-zinc-800 font-semibold mt-1">
             Daftar akun pegawai OPD yang memiliki akses ke sistem inventaris.
           </p>
         </div>
@@ -235,17 +235,17 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
       </div>
 
       {/* Table list */}
-      <Card className="border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden">
+      <Card className="border-zinc-200/80 overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-zinc-50 dark:bg-zinc-900/60">
+              <TableHeader className="bg-zinc-100/80">
                 <TableRow>
-                  <TableHead className="font-semibold text-zinc-700 dark:text-zinc-300">Nama & Username</TableHead>
-                  <TableHead className="font-semibold text-zinc-700 dark:text-zinc-300">Role Hak Akses</TableHead>
-                  <TableHead className="font-semibold text-zinc-700 dark:text-zinc-300">Status</TableHead>
-                  <TableHead className="font-semibold text-zinc-700 dark:text-zinc-300">Login Terakhir</TableHead>
-                  <TableHead className="text-right font-semibold text-zinc-700 dark:text-zinc-300">Aksi</TableHead>
+                  <TableHead className="font-bold text-zinc-950">Nama & Username</TableHead>
+                  <TableHead className="font-bold text-zinc-950">Role Hak Akses</TableHead>
+                  <TableHead className="font-bold text-zinc-950">Status</TableHead>
+                  <TableHead className="font-bold text-zinc-950">Login Terakhir</TableHead>
+                  <TableHead className="text-right font-bold text-zinc-950">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -255,11 +255,11 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
                     <TableRow key={user.id}>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                          <span className="font-bold text-zinc-950 flex items-center gap-2">
                             {user.nama}
-                            {isSelf && <Badge variant="outline" className="text-[9px] px-1 py-0 border-emerald-500 text-emerald-600">Saya</Badge>}
+                            {isSelf && <Badge variant="outline" className="text-[9px] px-1 py-0 border-emerald-600 text-emerald-800 font-bold">Saya</Badge>}
                           </span>
-                          <span className="text-xs text-zinc-500 mt-0.5">@{user.username}</span>
+                          <span className="text-xs text-zinc-800 font-semibold mt-0.5">@{user.username}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -282,12 +282,12 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
                       </TableCell>
                       <TableCell>
                         {user.lastLogin ? (
-                          <span className="text-xs flex items-center gap-1 font-medium text-zinc-600 dark:text-zinc-400">
-                            <Clock className="h-3 w-3 text-zinc-400" />
+                          <span className="text-xs flex items-center gap-1 font-semibold text-zinc-850">
+                            <Clock className="h-3 w-3 text-zinc-700" />
                             {formatDate(user.lastLogin)}
                           </span>
                         ) : (
-                          <span className="text-xs text-zinc-400 italic">Belum pernah masuk</span>
+                          <span className="text-xs text-zinc-800 font-semibold italic">Belum pernah masuk</span>
                         )}
                       </TableCell>
                       <TableCell className="text-right">

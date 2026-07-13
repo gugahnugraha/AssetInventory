@@ -157,8 +157,8 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">Pemegang Barang (PJB)</h1>
-          <p className="text-zinc-500 dark:text-zinc-400 mt-1">
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-950">Pemegang Barang (PJB)</h1>
+          <p className="text-zinc-800 font-semibold mt-1">
             Kelola daftar aparatur penanggung jawab pemegang barang inventaris.
           </p>
         </div>
@@ -171,7 +171,7 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
       </div>
 
       {/* Table List */}
-      <Card className="border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden">
+      <Card className="border-zinc-200/80 overflow-hidden">
         <CardContent className="p-0">
           {holders.length === 0 ? (
             <div className="text-center py-12 text-zinc-500 italic">
@@ -180,13 +180,13 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-zinc-50 dark:bg-zinc-900/60">
+                <TableHeader className="bg-zinc-100/80">
                   <TableRow>
-                    <TableHead className="font-semibold text-zinc-700 dark:text-zinc-300">NIP & Nama</TableHead>
-                    <TableHead className="font-semibold text-zinc-700 dark:text-zinc-300">Jabatan</TableHead>
-                    <TableHead className="font-semibold text-zinc-700 dark:text-zinc-300">Bidang</TableHead>
-                    <TableHead className="font-semibold text-zinc-700 dark:text-zinc-300">Jumlah Aset Dipegang</TableHead>
-                    {userRole !== Role.MANAGER && <TableHead className="text-right font-semibold text-zinc-700 dark:text-zinc-300">Aksi</TableHead>}
+                    <TableHead className="font-bold text-zinc-950">NIP & Nama</TableHead>
+                    <TableHead className="font-bold text-zinc-950">Jabatan</TableHead>
+                    <TableHead className="font-bold text-zinc-950">Bidang</TableHead>
+                    <TableHead className="font-bold text-zinc-950">Jumlah Aset Dipegang</TableHead>
+                    {userRole !== Role.MANAGER && <TableHead className="text-right font-bold text-zinc-950">Aksi</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -194,21 +194,21 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
                     <TableRow key={holder.id}>
                       <TableCell>
                         <div className="flex flex-col min-w-48">
-                          <span className="font-bold text-zinc-900 dark:text-zinc-100">{holder.nama}</span>
-                          <span className="text-xs text-zinc-500 font-mono mt-0.5">NIP. {holder.nip}</span>
+                          <span className="font-bold text-zinc-950">{holder.nama}</span>
+                          <span className="text-xs text-zinc-800 font-mono font-semibold mt-0.5">NIP. {holder.nip}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm">{holder.jabatan}</span>
+                        <span className="text-sm text-zinc-900 font-medium">{holder.jabatan}</span>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                        <span className="text-sm font-semibold text-emerald-800">
                           {holder.distribution.nama}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1.5 font-bold text-zinc-800 dark:text-zinc-200">
-                          <Boxes className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <div className="flex items-center gap-1.5 font-bold text-zinc-950">
+                          <Boxes className="h-4 w-4 text-emerald-700 shrink-0" />
                           <span>{holder._count.assets} Aset</span>
                         </div>
                       </TableCell>
