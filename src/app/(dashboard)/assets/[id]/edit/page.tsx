@@ -48,6 +48,7 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
       kode2: asset.kode2,
       kode3: asset.kode3,
       kode4: asset.kode4,
+      kode5: asset.kode5,
       nomorRegister: asset.nomorRegister,
       categoryId: asset.categoryId,
       namaAset: asset.namaAset,

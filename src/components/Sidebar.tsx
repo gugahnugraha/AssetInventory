@@ -132,6 +132,7 @@ export function Sidebar({ user }: SidebarProps) {
             <Link
               key={link.href}
               href={link.href}
+              prefetch={false}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer group",
                 isActive 

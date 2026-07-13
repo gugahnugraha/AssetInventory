@@ -175,14 +175,14 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
           const asset = row.original;
           return (
             <div className="flex justify-end gap-2">
-              <Link href={`/assets/${asset.id}`} title="Detail Aset">
+              <Link href={`/assets/${asset.id}`} prefetch={false} title="Detail Aset">
                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">
                   <Eye className="h-4 w-4" />
                 </Button>
               </Link>
               {userRole !== Role.MANAGER && (
                 <>
-                  <Link href={`/assets/${asset.id}/edit`} title="Edit Aset">
+                  <Link href={`/assets/${asset.id}/edit`} prefetch={false} title="Edit Aset">
                     <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-amber-50 dark:hover:bg-amber-950/20 text-amber-600 dark:text-amber-400">
                       <Edit3 className="h-4 w-4" />
                     </Button>
@@ -306,7 +306,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
             Ekspor Excel
           </Button>
           {userRole !== Role.MANAGER && (
-            <Link href="/assets/tambah">
+            <Link href="/assets/tambah" prefetch={false}>
               <Button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-xs">
                 <Plus className="h-4 w-4" />
                 Tambah Aset

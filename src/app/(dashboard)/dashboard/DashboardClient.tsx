@@ -117,7 +117,7 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/assets/tambah">
+          <Link href="/assets/tambah" prefetch={false}>
             <button className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-500 transition-colors shadow-xs hover:shadow-emerald-600/10 cursor-pointer">
               <Boxes className="h-4 w-4" />
               Tambah Aset Baru
@@ -308,7 +308,7 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
               <CardTitle>Aset Terbaru</CardTitle>
               <CardDescription>Daftar 5 barang inventaris yang baru saja didaftarkan.</CardDescription>
             </div>
-            <Link href="/assets" className="text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-1 hover:underline">
+            <Link href="/assets" prefetch={false} className="text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-1 hover:underline">
               Semua Aset
               <ArrowRight className="h-3 w-3" />
             </Link>

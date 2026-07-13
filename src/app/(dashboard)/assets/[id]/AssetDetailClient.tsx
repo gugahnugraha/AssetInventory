@@ -139,7 +139,7 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
       {/* Title & Action Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Link href="/assets">
+          <Link href="/assets" prefetch={false}>
             <Button variant="outline" size="icon" className="rounded-full h-8 w-8 cursor-pointer">
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -154,7 +154,7 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
 
         {userRole !== Role.MANAGER && (
           <div className="flex items-center gap-2">
-            <Link href={`/assets/${asset.id}/edit`}>
+            <Link href={`/assets/${asset.id}/edit`} prefetch={false}>
               <Button className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white cursor-pointer shadow-xs">
                 <Edit3 className="h-4 w-4" />
                 Sunting Aset
@@ -291,7 +291,7 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
               </div>
               <div className="flex justify-between py-2 text-sm">
                 <span className="text-zinc-500 font-medium">Kode Bidang (Kelompok)</span>
-                <span className="font-mono">01.03.{asset.kode1}.{asset.kode2}.{asset.kode3}.{asset.kode4}</span>
+                <span className="font-mono">01.03.{asset.kode1}.{asset.kode2}.{asset.kode3}.{asset.kode4}.{asset.kode5}</span>
               </div>
             </CardContent>
           </Card>

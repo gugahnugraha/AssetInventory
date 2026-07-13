@@ -116,8 +116,9 @@ model Asset {
   kode2          String            // e.g. "05"
   kode3          String            // e.g. "01"
   kode4          String            // e.g. "03"
+  kode5          String            // e.g. "02"
   nomorRegister  String            // e.g. "001"
-  kodeLengkap    String            @unique // XX.XX.XX.XX.XXX
+  kodeLengkap    String            @unique // XX.XX.XX.XX.XX.XXX
   categoryId     String
   category       Category          @relation(fields: [categoryId], references: [id])
   namaAset       String            // e.g. "Mobil Avanza"

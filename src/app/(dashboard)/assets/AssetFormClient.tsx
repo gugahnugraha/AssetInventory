@@ -28,6 +28,7 @@ const assetSchema = z.object({
   kode2: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
   kode3: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
   kode4: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
+  kode5: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
   nomorRegister: z.string().regex(/^\d{3}$/, "Wajib 3 digit angka"),
   categoryId: z.string().min(1, "Kategori wajib diisi"),
   namaAset: z.string().min(1, "Nama aset wajib diisi"),
@@ -81,6 +82,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
           kode2: initialData.kode2 as string,
           kode3: initialData.kode3 as string,
           kode4: initialData.kode4 as string,
+          kode5: initialData.kode5 as string,
           nomorRegister: initialData.nomorRegister as string,
           categoryId: initialData.categoryId as string,
           namaAset: initialData.namaAset as string,
@@ -99,10 +101,11 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
           }, {}) || {},
         }
       : {
-          kode1: "02", // default group codes
-          kode2: "05",
-          kode3: "01",
-          kode4: "03",
+          kode1: "",
+          kode2: "",
+          kode3: "",
+          kode4: "",
+          kode5: "",
           nomorRegister: "",
           categoryId: "",
           namaAset: "",
@@ -126,6 +129,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
   const watchKode2 = (watch("kode2") || "") as string;
   const watchKode3 = (watch("kode3") || "") as string;
   const watchKode4 = (watch("kode4") || "") as string;
+  const watchKode5 = (watch("kode5") || "") as string;
   const watchRegister = (watch("nomorRegister") || "") as string;
   
   const watchCategoryId = watch("categoryId") as string;
@@ -136,7 +140,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
   const categoryAttributes = selectedCategory?.attributes || [];
 
   // Compiled asset code preview
-  const kodeLengkapPreview = `01.03.${watchKode1 || "XX"}.${watchKode2 || "XX"}.${watchKode3 || "XX"}.${watchKode4 || "XX"}.${watchRegister || "XXX"}`;
+  const kodeLengkapPreview = `01.03.${watchKode1 || "XX"}.${watchKode2 || "XX"}.${watchKode3 || "XX"}.${watchKode4 || "XX"}.${watchKode5 || "XX"}.${watchRegister || "XXX"}`;
 
   // Filter holders based on selected distribution/department
   const filteredHolders = React.useMemo(() => {
@@ -260,7 +264,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
     <div className="space-y-6 pt-2 pb-8">
       {/* Header breadcrumb */}
       <div className="flex items-center gap-4">
-        <Link href="/assets">
+        <Link href="/assets" prefetch={false}>
           <Button variant="outline" size="icon" className="rounded-full h-8 w-8 cursor-pointer">
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -298,7 +302,25 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                 <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
                   Kode Klasifikasi & Register
                 </label>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-8 gap-2">
+                  <div>
+                    <Input
+                      value="01"
+                      disabled
+                      readOnly
+                      className="text-center font-mono font-bold bg-zinc-100 text-zinc-400 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-500 dark:border-zinc-700"
+                    />
+                    <p className="text-[10px] text-zinc-400 text-center mt-1">Sistem</p>
+                  </div>
+                  <div>
+                    <Input
+                      value="03"
+                      disabled
+                      readOnly
+                      className="text-center font-mono font-bold bg-zinc-100 text-zinc-400 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-500 dark:border-zinc-700"
+                    />
+                    <p className="text-[10px] text-zinc-400 text-center mt-1">Sistem</p>
+                  </div>
                   <div>
                     <Input
                       placeholder="XX"
@@ -334,6 +356,15 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                       {...register("kode4")}
                     />
                     {errors.kode4 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode4.message}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="XX"
+                      maxLength={2}
+                      className="text-center font-mono font-bold"
+                      {...register("kode5")}
+                    />
+                    {errors.kode5 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode5.message}</p>}
                   </div>
                   <div>
                     <Input
@@ -650,7 +681,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   "Simpan Data Aset"
                 )}
               </Button>
-              <Link href="/assets" className="block">
+              <Link href="/assets" prefetch={false} className="block">
                 <Button variant="outline" type="button" className="w-full cursor-pointer h-10">
                   Batalkan
                 </Button>

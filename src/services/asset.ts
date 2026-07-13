@@ -113,6 +113,7 @@ export interface CreateAssetInput {
   kode2: string;
   kode3: string;
   kode4: string;
+  kode5: string;
   nomorRegister: string;
   categoryId: string;
   namaAset: string;
@@ -131,7 +132,7 @@ export interface CreateAssetInput {
 
 export async function createAsset(data: CreateAssetInput, userId: string) {
   try {
-    const kodeLengkap = `01.03.${data.kode1}.${data.kode2}.${data.kode3}.${data.kode4}.${data.nomorRegister}`;
+    const kodeLengkap = `01.03.${data.kode1}.${data.kode2}.${data.kode3}.${data.kode4}.${data.kode5}.${data.nomorRegister}`;
 
     // Verify uniqueness of full code
     const existing = await prisma.asset.findUnique({
@@ -150,6 +151,7 @@ export async function createAsset(data: CreateAssetInput, userId: string) {
           kode2: data.kode2,
           kode3: data.kode3,
           kode4: data.kode4,
+          kode5: data.kode5,
           nomorRegister: data.nomorRegister,
           kodeLengkap,
           categoryId: data.categoryId,
@@ -208,6 +210,7 @@ export interface UpdateAssetInput {
   kode2?: string;
   kode3?: string;
   kode4?: string;
+  kode5?: string;
   nomorRegister?: string;
   categoryId?: string;
   namaAset?: string;
@@ -240,8 +243,9 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
     const k2 = data.kode2 !== undefined ? data.kode2 : existingAsset.kode2;
     const k3 = data.kode3 !== undefined ? data.kode3 : existingAsset.kode3;
     const k4 = data.kode4 !== undefined ? data.kode4 : existingAsset.kode4;
+    const k5 = data.kode5 !== undefined ? data.kode5 : existingAsset.kode5;
     const reg = data.nomorRegister !== undefined ? data.nomorRegister : existingAsset.nomorRegister;
-    const newKodeLengkap = `01.03.${k1}.${k2}.${k3}.${k4}.${reg}`;
+    const newKodeLengkap = `01.03.${k1}.${k2}.${k3}.${k4}.${k5}.${reg}`;
 
     if (newKodeLengkap !== existingAsset.kodeLengkap) {
       // Verify uniqueness of the new full code
@@ -270,6 +274,7 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
           kode2: data.kode2,
           kode3: data.kode3,
           kode4: data.kode4,
+          kode5: data.kode5,
           nomorRegister: data.nomorRegister,
           kodeLengkap,
           categoryId: data.categoryId,
