@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/ThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,16 +15,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" suppressHydrationWarning className="h-full">
-      <body className={`${inter.className} min-h-full bg-background font-sans antialiased text-foreground transition-colors duration-200`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+    <html lang="id" className="h-full">
+      <body className={`${inter.className} min-h-full bg-background font-sans antialiased text-foreground`}>
+        {children}
       </body>
     </html>
   );
