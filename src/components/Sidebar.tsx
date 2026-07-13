@@ -11,14 +11,12 @@ import {
   Users, 
   User, 
   Settings, 
-  LogOut,
   ChevronLeft,
   ChevronRight,
   Shield,
   Tags
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { logoutAction } from "@/actions/auth"
 import { Role } from "@prisma/client"
 
 interface SidebarProps {
@@ -93,11 +91,7 @@ export function Sidebar({ user }: SidebarProps) {
     return pathname.startsWith(href)
   }
 
-  const handleLogout = async () => {
-    if (confirm("Apakah Anda yakin ingin keluar dari sistem?")) {
-      await logoutAction()
-    }
-  }
+
 
   return (
     <aside
@@ -150,34 +144,7 @@ export function Sidebar({ user }: SidebarProps) {
         })}
       </nav>
 
-      {/* Footer Profile & Logout */}
-      <div className="p-4 border-t border-emerald-700/50 bg-emerald-900/40">
-        {!collapsed ? (
-          <div className="px-1 flex flex-col gap-1.5">
-            <div>
-              <p className="text-xs font-semibold text-emerald-300 uppercase tracking-wider">
-                {user.role.replace("_", " ")}
-              </p>
-              <p className="text-sm font-bold truncate text-white">{user.nama}</p>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1.5 mt-1.5 text-xs font-bold text-rose-300 hover:text-rose-200 transition-colors cursor-pointer self-start border border-transparent"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              Keluar
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={handleLogout}
-            className="flex items-center justify-center w-full py-1 text-rose-300 hover:text-rose-200 transition-colors cursor-pointer"
-            title="Keluar"
-          >
-            <LogOut className="h-5 w-5" />
-          </button>
-        )}
-      </div>
+
 
       {/* Collapse Toggle Button */}
       <button
