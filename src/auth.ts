@@ -21,29 +21,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .safeParse(credentials);
 
         if (!parsedCredentials.success) {
+          console.warn("[Auth] Credentials validation failed:", parsedCredentials.error.format());
           return null;
         }
 
         const { username, password } = parsedCredentials.data;
         
         try {
+          console.log(`[Auth] Querying user record for username: "${username}"`);
           const user = await getUserByUsername(username);
           if (!user) {
+            console.warn(`[Auth] User "${username}" not found in database.`);
             return null;
           }
 
+          console.log(`[Auth] Found user: "${user.username}" (Active: ${user.isActive})`);
+
           if (!user.isActive) {
+            console.warn(`[Auth] User "${username}" is inactive.`);
             throw new Error("Akun Anda telah dinonaktifkan. Silakan hubungi Administrator.");
           }
 
           const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
+          console.log(`[Auth] Password check for "${username}": ${passwordsMatch}`);
           if (!passwordsMatch) {
             return null;
           }
 
           // Update last login asynchronously
           updateUser(user.id, { lastLogin: new Date() }).catch((err) => {
-            console.error("Failed to update last login timestamp:", err);
+            console.error("[Auth] Failed to update last login timestamp:", err);
           });
 
           return {
@@ -54,8 +61,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             role: user.role,
             opdId: user.opdId,
           };
-        } catch (error) {
-          console.error("Authentication error inside authorize:", error);
+        } catch (error: any) {
+          console.error("[Auth] Exception during authorize callback:", error.message || error);
+          console.error(error);
           return null;
         }
       },
