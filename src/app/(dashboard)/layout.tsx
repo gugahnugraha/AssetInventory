@@ -14,12 +14,16 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const rawKode = session.user.opdKode || "DISKOMINFO";
+  const opdShort = rawKode.charAt(0).toUpperCase() + rawKode.slice(1).toLowerCase();
+  const opdNameFormatted = `${opdShort} Kab. Bandung`;
+
   const user = {
     nama: session.user.nama || session.user.name || "User",
     username: session.user.username || "",
     role: session.user.role as Role,
-    opdName: session.user.opdName || "",
-    opdKode: session.user.opdKode || "",
+    opdName: opdNameFormatted,
+    opdKode: rawKode,
   };
 
   return (
