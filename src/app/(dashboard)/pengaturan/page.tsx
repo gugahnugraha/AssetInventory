@@ -42,6 +42,7 @@ export default async function SettingsPage() {
           id: opd.id,
           nama: opd.nama,
           kode: opd.kode,
+          kodeNumeric: opd.kodeNumeric || "",
         }}
         isR2Configured={isR2Configured}
         userRole={userRole}

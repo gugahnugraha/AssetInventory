@@ -23,6 +23,7 @@ async function main() {
       create: {
         nama: "Dinas Komunikasi, Informatika, dan Statistik Kabupaten Bandung",
         kode: "DISKOMINFO",
+        kodeNumeric: "21.02.01.01",
       },
     });
     console.log(`- Seeded OPD: ${opd.nama} (${opd.kode})`);

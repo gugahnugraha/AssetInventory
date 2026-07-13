@@ -24,6 +24,7 @@ import { Role } from "@prisma/client";
 const opdSchema = z.object({
   nama: z.string().min(1, "Nama instansi wajib diisi"),
   kode: z.string().min(3, "Kode instansi minimal 3 karakter").toUpperCase().trim(),
+  kodeNumeric: z.string().trim().optional(),
 });
 
 type OpdFormValues = z.infer<typeof opdSchema>;
@@ -33,6 +34,7 @@ interface SettingsClientProps {
     id: string;
     nama: string;
     kode: string;
+    kodeNumeric?: string;
   };
   isR2Configured: boolean;
   userRole: Role;
@@ -55,6 +57,7 @@ export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClient
     defaultValues: {
       nama: opd.nama,
       kode: opd.kode,
+      kodeNumeric: opd.kodeNumeric || "",
     },
   });
 
@@ -65,7 +68,7 @@ export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClient
     setError(null);
 
     try {
-      const res = await updateOpdAction(opd.id, values.nama, values.kode);
+      const res = await updateOpdAction(opd.id, values.nama, values.kode, values.kodeNumeric);
       if (res.error) {
         setError(res.error);
         setIsSubmitting(false);
@@ -141,6 +144,19 @@ export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClient
                     {...register("kode")} 
                   />
                   {errors.kode && <p className="text-xs text-rose-500 mt-1">{errors.kode.message}</p>}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
+                    Kode Numerik Instansi (OPD)
+                  </label>
+                  <Input 
+                    placeholder="Contoh: 21.02.01.01"
+                    disabled={!isAdmin} 
+                    className={(!isAdmin ? "bg-zinc-50 dark:bg-zinc-900/50 cursor-not-allowed opacity-75 " : "") + "font-mono"} 
+                    {...register("kodeNumeric")} 
+                  />
+                  {errors.kodeNumeric && <p className="text-xs text-rose-500 mt-1">{errors.kodeNumeric.message}</p>}
                 </div>
 
                 {isAdmin ? (

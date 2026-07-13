@@ -25,6 +25,7 @@ model Opd {
   id            String         @id @default(uuid())
   nama          String
   kode          String         @unique // e.g. "DISKOMINFO"
+  kodeNumeric   String?        // e.g. "21.02.01.01"
   users         User[]
   distributions Distribution[]
   assets        Asset[]
