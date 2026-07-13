@@ -537,10 +537,10 @@ export function KategoriClient({ initialCategories }: KategoriClientProps) {
               <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Tipe Kolom</label>
               <select 
                 {...attrForm.register("fieldType")}
-                className="w-full h-10 rounded-md border border-zinc-200 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="TEXT">Teks</option>
-                <option value="NUMBER">Angka / Numerik</option>
+                <option value="TEXT" className="bg-background text-foreground">Teks</option>
+                <option value="NUMBER" className="bg-background text-foreground">Angka / Numerik</option>
               </select>
             </div>
 
@@ -606,10 +606,10 @@ export function KategoriClient({ initialCategories }: KategoriClientProps) {
               <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Tipe Kolom</label>
               <select 
                 {...attrForm.register("fieldType")}
-                className="w-full h-10 rounded-md border border-zinc-200 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
-                <option value="TEXT">Teks</option>
-                <option value="NUMBER">Angka / Numerik</option>
+                <option value="TEXT" className="bg-background text-foreground">Teks</option>
+                <option value="NUMBER" className="bg-background text-foreground">Angka / Numerik</option>
               </select>
             </div>
 

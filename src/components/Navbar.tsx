@@ -75,7 +75,7 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <Badge variant={getRoleVariant(user.role)}>
+            <Badge variant={getRoleVariant(user.role)} className="hidden sm:inline-flex">
               {getRoleLabel(user.role)}
             </Badge>
 

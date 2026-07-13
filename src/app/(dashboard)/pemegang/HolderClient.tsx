@@ -281,11 +281,11 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
             <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Bidang Penempatan</label>
             <select
               {...register("distributionId")}
-              className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
             >
-              <option value="">Pilih Bidang</option>
+              <option value="" className="bg-background text-foreground">Pilih Bidang</option>
               {distributions.map(d => (
-                <option key={d.id} value={d.id}>{d.nama}</option>
+                <option key={d.id} value={d.id} className="bg-background text-foreground">{d.nama}</option>
               ))}
             </select>
             {errors.distributionId && <p className="text-xs text-rose-500 mt-1">{errors.distributionId.message}</p>}
@@ -348,11 +348,11 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
             <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Bidang Penempatan</label>
             <select
               {...register("distributionId")}
-              className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
             >
-              <option value="">Pilih Bidang</option>
+              <option value="" className="bg-background text-foreground">Pilih Bidang</option>
               {distributions.map(d => (
-                <option key={d.id} value={d.id}>{d.nama}</option>
+                <option key={d.id} value={d.id} className="bg-background text-foreground">{d.nama}</option>
               ))}
             </select>
             {errors.distributionId && <p className="text-xs text-rose-500 mt-1">{errors.distributionId.message}</p>}

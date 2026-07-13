@@ -152,24 +152,31 @@ export function Sidebar({ user }: SidebarProps) {
 
       {/* Footer Profile & Logout */}
       <div className="p-4 border-t border-emerald-700/50 bg-emerald-900/40">
-        {!collapsed && (
-          <div className="mb-3 px-1">
-            <p className="text-xs font-semibold text-emerald-300 uppercase tracking-wider">
-              {user.role.replace("_", " ")}
-            </p>
-            <p className="text-sm font-bold truncate text-white">{user.nama}</p>
+        {!collapsed ? (
+          <div className="px-1 flex flex-col gap-1.5">
+            <div>
+              <p className="text-xs font-semibold text-emerald-300 uppercase tracking-wider">
+                {user.role.replace("_", " ")}
+              </p>
+              <p className="text-sm font-bold truncate text-white">{user.nama}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 mt-1.5 text-xs font-bold text-rose-300 hover:text-rose-200 transition-colors cursor-pointer self-start border border-transparent"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Keluar
+            </button>
           </div>
+        ) : (
+          <button
+            onClick={handleLogout}
+            className="flex items-center justify-center w-full py-1 text-rose-300 hover:text-rose-200 transition-colors cursor-pointer"
+            title="Keluar"
+          >
+            <LogOut className="h-5 w-5" />
+          </button>
         )}
-        <button
-          onClick={handleLogout}
-          className={cn(
-            "flex items-center gap-3 w-full px-3 py-2 rounded-lg text-sm font-medium text-rose-200 hover:bg-rose-950/40 hover:text-rose-100 transition-colors cursor-pointer border border-transparent hover:border-rose-900/20",
-            collapsed ? "justify-center" : ""
-          )}
-        >
-          <LogOut className="h-5 w-5 shrink-0 text-rose-300" />
-          {!collapsed && <span>Keluar</span>}
-        </button>
       </div>
 
       {/* Collapse Toggle Button */}

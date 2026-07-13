@@ -394,11 +394,11 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   </label>
                   <select
                     {...register("categoryId")}
-                    className="w-full h-10 rounded-md border border-zinc-200 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    <option value="">Pilih Kategori</option>
+                    <option value="" className="bg-background text-foreground">Pilih Kategori</option>
                     {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
+                      <option key={c.id} value={c.id} className="bg-background text-foreground">
                         {c.nama}
                       </option>
                     ))}
@@ -462,14 +462,14 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   </label>
                   <select
                     {...register("kondisi")}
-                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
                   >
-                    <option value={Kondisi.NORMAL}>Normal (Baik)</option>
-                    <option value={Kondisi.RUSAK_RINGAN}>Rusak Ringan</option>
-                    <option value={Kondisi.RUSAK_BERAT}>Rusak Berat</option>
-                    <option value={Kondisi.DALAM_PERBAIKAN}>Dalam Perbaikan</option>
-                    <option value={Kondisi.DIPINJAM}>Dipinjam</option>
-                    <option value={Kondisi.HILANG}>Hilang</option>
+                    <option value={Kondisi.NORMAL} className="bg-background text-foreground">Normal (Baik)</option>
+                    <option value={Kondisi.RUSAK_RINGAN} className="bg-background text-foreground">Rusak Ringan</option>
+                    <option value={Kondisi.RUSAK_BERAT} className="bg-background text-foreground">Rusak Berat</option>
+                    <option value={Kondisi.DALAM_PERBAIKAN} className="bg-background text-foreground">Dalam Perbaikan</option>
+                    <option value={Kondisi.DIPINJAM} className="bg-background text-foreground">Dipinjam</option>
+                    <option value={Kondisi.HILANG} className="bg-background text-foreground">Hilang</option>
                   </select>
                   {errors.kondisi && <p className="text-xs text-rose-500 mt-1">{errors.kondisi.message}</p>}
                 </div>
@@ -524,11 +524,11 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   </label>
                   <select
                     {...register("distributionId")}
-                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
                   >
-                    <option value="">Pilih Bidang</option>
+                    <option value="" className="bg-background text-foreground">Pilih Bidang</option>
                     {distributions.map(d => (
-                      <option key={d.id} value={d.id}>{d.nama}</option>
+                      <option key={d.id} value={d.id} className="bg-background text-foreground">{d.nama}</option>
                     ))}
                   </select>
                   {errors.distributionId && <p className="text-xs text-rose-500 mt-1">{errors.distributionId.message}</p>}
@@ -542,11 +542,11 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   <select
                     {...register("holderId")}
                     disabled={!watchDistributionId}
-                    className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
                   >
-                    <option value="">Tanpa Pemegang (Di Simpan di Gudang/Umum)</option>
+                    <option value="" className="bg-background text-foreground">Tanpa Pemegang (Di Simpan di Gudang/Umum)</option>
                     {filteredHolders.map(h => (
-                      <option key={h.id} value={h.id}>{h.nama} ({h.jabatan})</option>
+                      <option key={h.id} value={h.id} className="bg-background text-foreground">{h.nama} ({h.jabatan})</option>
                     ))}
                   </select>
                   {!watchDistributionId && (

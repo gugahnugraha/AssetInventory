@@ -360,21 +360,21 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
               <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Hak Akses Role</label>
               <select
                 {...createForm.register("role")}
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
               >
-                <option value={Role.OPERATOR}>Operator (CRUD Aset)</option>
-                <option value={Role.MANAGER}>Manager (Read-Only)</option>
-                <option value={Role.ADMINISTRATOR}>Administrator (Akses Penuh)</option>
+                <option value={Role.OPERATOR} className="bg-background text-foreground">Operator (CRUD Aset)</option>
+                <option value={Role.MANAGER} className="bg-background text-foreground">Manager (Read-Only)</option>
+                <option value={Role.ADMINISTRATOR} className="bg-background text-foreground">Administrator (Akses Penuh)</option>
               </select>
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Status Akun</label>
               <select
                 onChange={e => createForm.setValue("isActive", e.target.value === "true")}
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
               >
-                <option value="true">Aktif</option>
-                <option value="false">Nonaktif</option>
+                <option value="true" className="bg-background text-foreground">Aktif</option>
+                <option value="false" className="bg-background text-foreground">Nonaktif</option>
               </select>
             </div>
           </div>
@@ -440,11 +440,11 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
               <select
                 {...editForm.register("role")}
                 disabled={selectedUser?.id === currentUserId}
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+                className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
               >
-                <option value={Role.OPERATOR}>Operator (CRUD Aset)</option>
-                <option value={Role.MANAGER}>Manager (Read-Only)</option>
-                <option value={Role.ADMINISTRATOR}>Administrator (Akses Penuh)</option>
+                <option value={Role.OPERATOR} className="bg-background text-foreground">Operator (CRUD Aset)</option>
+                <option value={Role.MANAGER} className="bg-background text-foreground">Manager (Read-Only)</option>
+                <option value={Role.ADMINISTRATOR} className="bg-background text-foreground">Administrator (Akses Penuh)</option>
               </select>
               {selectedUser?.id === currentUserId && (
                 <p className="text-[10px] text-amber-600 dark:text-amber-500 font-medium">Tidak dapat mengubah role sendiri</p>
@@ -456,10 +456,10 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
                 value={editForm.watch("isActive") ? "true" : "false"}
                 onChange={e => editForm.setValue("isActive", e.target.value === "true")}
                 disabled={selectedUser?.id === currentUserId}
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+                className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
               >
-                <option value="true">Aktif</option>
-                <option value="false">Nonaktif</option>
+                <option value="true" className="bg-background text-foreground">Aktif</option>
+                <option value="false" className="bg-background text-foreground">Nonaktif</option>
               </select>
               {selectedUser?.id === currentUserId && (
                 <p className="text-[10px] text-amber-600 dark:text-amber-500 font-medium">Tidak dapat menonaktifkan diri sendiri</p>

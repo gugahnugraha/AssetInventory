@@ -337,11 +337,11 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
               <select
                 value={selectedBidang}
                 onChange={e => setSelectedBidang(e.target.value)}
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
               >
-                <option value="ALL">Semua Bidang</option>
+                <option value="ALL" className="bg-background text-foreground">Semua Bidang</option>
                 {distributions.map(dist => (
-                  <option key={dist.id} value={dist.id}>{dist.nama}</option>
+                  <option key={dist.id} value={dist.id} className="bg-background text-foreground">{dist.nama}</option>
                 ))}
               </select>
             </div>
@@ -352,15 +352,15 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
               <select
                 value={selectedKondisi}
                 onChange={e => setSelectedKondisi(e.target.value)}
-                className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
               >
-                <option value="ALL">Semua Kondisi</option>
-                <option value={Kondisi.NORMAL}>Normal</option>
-                <option value={Kondisi.RUSAK_RINGAN}>Rusak Ringan</option>
-                <option value={Kondisi.RUSAK_BERAT}>Rusak Berat</option>
-                <option value={Kondisi.HILANG}>Hilang</option>
-                <option value={Kondisi.DALAM_PERBAIKAN}>Dalam Perbaikan</option>
-                <option value={Kondisi.DIPINJAM}>Dipinjam</option>
+                <option value="ALL" className="bg-background text-foreground">Semua Kondisi</option>
+                <option value={Kondisi.NORMAL} className="bg-background text-foreground">Normal</option>
+                <option value={Kondisi.RUSAK_RINGAN} className="bg-background text-foreground">Rusak Ringan</option>
+                <option value={Kondisi.RUSAK_BERAT} className="bg-background text-foreground">Rusak Berat</option>
+                <option value={Kondisi.HILANG} className="bg-background text-foreground">Hilang</option>
+                <option value={Kondisi.DALAM_PERBAIKAN} className="bg-background text-foreground">Dalam Perbaikan</option>
+                <option value={Kondisi.DIPINJAM} className="bg-background text-foreground">Dipinjam</option>
               </select>
             </div>
           </div>

@@ -127,7 +127,7 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {/* Total Assets */}
         <Card className="relative overflow-hidden group hover:shadow-md transition-shadow">
           <CardContent className="p-6">
@@ -240,7 +240,12 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
                   <XAxis dataKey="name" stroke="#888888" fontSize={11} tickLine={false} axisLine={false} />
                   <YAxis stroke="#888888" fontSize={11} tickLine={false} axisLine={false} />
                   <Tooltip 
-                    contentStyle={{ borderRadius: "8px" }}
+                    contentStyle={{ 
+                      borderRadius: "8px", 
+                      backgroundColor: "var(--color-card)", 
+                      borderColor: "hsl(var(--border))",
+                      color: "hsl(var(--foreground))"
+                    }}
                     cursor={{ fill: "rgba(16, 185, 129, 0.05)" }}
                   />
                   <Bar dataKey="total" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={45} />
@@ -279,7 +284,14 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip contentStyle={{ borderRadius: "8px" }} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          borderRadius: "8px", 
+                          backgroundColor: "var(--color-card)", 
+                          borderColor: "hsl(var(--border))",
+                          color: "hsl(var(--foreground))"
+                        }} 
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
