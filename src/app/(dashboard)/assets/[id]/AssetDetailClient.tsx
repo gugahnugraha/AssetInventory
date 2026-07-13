@@ -20,6 +20,7 @@ import {
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { formatDate } from "@/lib/utils";
 import { deleteAssetAction } from "@/actions/asset";
 import { Kondisi, Role } from "@prisma/client";
@@ -33,6 +34,7 @@ interface AssetDetailClientProps {
 export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
   const router = useRouter();
   const [activePhoto, setActivePhoto] = React.useState<string>(asset.fotoUtama || "/placeholder-asset.png");
+  const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
 
   // Sync active photo if asset changes or uploads complete
   React.useEffect(() => {
@@ -76,22 +78,20 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (userRole === Role.MANAGER) return;
+    setShowDeleteConfirm(true);
+  };
 
-    if (confirm(`Apakah Anda yakin ingin menghapus aset dengan kode ${asset.kodeLengkap}? Tindakan ini tidak dapat dibatalkan.`)) {
-      try {
-        const res = await deleteAssetAction(asset.id);
-        if (res.error) {
-          alert(res.error);
-        } else if (res.success) {
-          router.push("/assets");
-          router.refresh();
-        }
-      } catch (err) {
-        console.error("Delete asset detail error:", err);
-        alert("Gagal menghapus aset.");
+  const handleDeleteConfirmed = async () => {
+    try {
+      const res = await deleteAssetAction(asset.id);
+      if (res.success) {
+        router.push("/assets");
+        router.refresh();
       }
+    } catch (err) {
+      console.error("Delete asset detail error:", err);
     }
   };
 
@@ -135,6 +135,7 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
   };
 
   return (
+    <>
     <div className="space-y-6 pt-2 pb-8">
       {/* Title & Action Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -377,5 +378,16 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
         </div>
       </div>
     </div>
+
+    <ConfirmDialog
+      isOpen={showDeleteConfirm}
+      onClose={() => setShowDeleteConfirm(false)}
+      onConfirm={handleDeleteConfirmed}
+      title="Hapus Aset Ini?"
+      description={`Anda akan menghapus aset dengan kode "${asset.kodeLengkap}". Tindakan ini tidak dapat dibatalkan dan akan tercatat dalam log audit.`}
+      confirmLabel="Ya, Hapus Aset"
+      variant="danger"
+    />
+    </>
   );
 }

@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { createUserAction, updateUserAction, deleteUserAction } from "@/actions/user";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Role } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/utils";
@@ -64,6 +65,7 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [selectedUser, setSelectedUser] = React.useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; name: string } | null>(null);
 
   // Create form Hook
   const createForm = useForm({
@@ -164,24 +166,28 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
+  const handleDelete = (id: string, name: string) => {
     if (id === currentUserId) {
-      alert("Anda tidak dapat menghapus akun Anda sendiri.");
+      setError("Anda tidak dapat menghapus akun Anda sendiri.");
       return;
     }
+    setDeleteTarget({ id, name });
+  };
 
-    if (confirm(`Apakah Anda yakin ingin menghapus user "${name}"? Seluruh data log audit yang bersangkutan akan dipertahankan.`)) {
-      try {
-        const res = await deleteUserAction(id);
-        if (res.error) {
-          alert(res.error);
-        } else if (res.success) {
-          router.refresh();
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Gagal menghapus user.");
+  const handleDeleteConfirmed = async () => {
+    if (!deleteTarget) return;
+    try {
+      const res = await deleteUserAction(deleteTarget.id);
+      if (res.error) {
+        setError(res.error);
+      } else if (res.success) {
+        router.refresh();
       }
+    } catch (err) {
+      console.error(err);
+      setError("Gagal menghapus user.");
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -212,6 +218,7 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
   };
 
   return (
+    <>
     <div className="space-y-6 pt-2 pb-8">
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -478,5 +485,16 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
         </form>
       </Dialog>
     </div>
+
+    <ConfirmDialog
+      isOpen={!!deleteTarget}
+      onClose={() => setDeleteTarget(null)}
+      onConfirm={handleDeleteConfirmed}
+      title={`Hapus User "${deleteTarget?.name}"?`}
+      description="Akun user ini akan dihapus secara permanen. Seluruh data log audit yang bersangkutan tetap akan dipertahankan."
+      confirmLabel="Ya, Hapus User"
+      variant="danger"
+    />
+    </>
   );
 }

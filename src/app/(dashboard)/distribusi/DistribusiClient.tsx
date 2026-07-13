@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { createDistributionAction, updateDistributionAction, deleteDistributionAction } from "@/actions/distribution";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Role } from "@prisma/client";
 import { useRouter } from "next/navigation";
 
@@ -43,6 +44,7 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [selectedDist, setSelectedDist] = React.useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; name: string } | null>(null);
 
   const {
     register,
@@ -114,24 +116,30 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
+  const handleDelete = (id: string, name: string) => {
     if (userRole === Role.MANAGER) return;
-    if (confirm(`Apakah Anda yakin ingin menghapus bidang "${name}"? Hubungan data pemegang barang & aset yang terkait akan dinonaktifkan.`)) {
-      try {
-        const res = await deleteDistributionAction(id);
-        if (res.error) {
-          alert(res.error);
-        } else if (res.success) {
-          router.refresh();
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Gagal menghapus bidang.");
+    setDeleteTarget({ id, name });
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!deleteTarget) return;
+    try {
+      const res = await deleteDistributionAction(deleteTarget.id);
+      if (res.error) {
+        setError(res.error);
+      } else if (res.success) {
+        router.refresh();
       }
+    } catch (err) {
+      console.error(err);
+      setError("Gagal menghapus bidang.");
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
   return (
+    <>
     <div className="space-y-6 pt-2 pb-8">
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -275,5 +283,16 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
         </form>
       </Dialog>
     </div>
+
+    <ConfirmDialog
+      isOpen={!!deleteTarget}
+      onClose={() => setDeleteTarget(null)}
+      onConfirm={handleDeleteConfirmed}
+      title={`Hapus Bidang "${deleteTarget?.name}"?`}
+      description="Bidang ini akan dihapus. Hubungan data pemegang barang dan aset yang terkait akan dinonaktifkan."
+      confirmLabel="Ya, Hapus Bidang"
+      variant="danger"
+    />
+    </>
   );
 }

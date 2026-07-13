@@ -2,8 +2,9 @@
 
 import * as React from "react"
 import { ThemeToggle } from "./ThemeToggle"
-import { Menu, User, Shield, LogOut, ChevronDown } from "lucide-react"
+import { Menu, User, LogOut, ChevronDown } from "lucide-react"
 import { Badge } from "./ui/badge"
+import { ConfirmDialog } from "./ui/confirm-dialog"
 import { Role } from "@prisma/client"
 import { logoutAction } from "@/actions/auth"
 
@@ -19,6 +20,7 @@ interface NavbarProps {
 
 export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
 
   // Translate role to user-friendly label
   const getRoleLabel = (role: Role) => {
@@ -47,13 +49,12 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
     }
   };
 
-  const handleLogout = async () => {
-    if (confirm("Apakah Anda yakin ingin keluar dari sistem?")) {
-      await logoutAction()
-    }
+  const handleLogoutConfirmed = async () => {
+    await logoutAction()
   };
 
   return (
+    <>
     <header className="sticky top-0 z-20 flex items-center justify-between h-16 px-6 border-b bg-background/95 backdrop-blur-md shadow-xs transition-colors">
       <div className="flex items-center gap-4">
         {/* Mobile menu trigger */}
@@ -120,7 +121,7 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
                 <p className="text-xs text-muted-foreground truncate">@{user.username}</p>
               </div>
               <button
-                onClick={handleLogout}
+                onClick={() => { setDropdownOpen(false); setShowLogoutConfirm(true); }}
                 className="flex items-center gap-2 w-full px-3 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-md transition-colors font-bold cursor-pointer text-left"
               >
                 <LogOut className="h-4 w-4" />
@@ -131,5 +132,16 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
         </div>
       </div>
     </header>
+
+    <ConfirmDialog
+      isOpen={showLogoutConfirm}
+      onClose={() => setShowLogoutConfirm(false)}
+      onConfirm={handleLogoutConfirmed}
+      title="Keluar dari Sistem?"
+      description="Anda akan keluar dari sesi ini. Pastikan semua pekerjaan sudah tersimpan sebelum melanjutkan."
+      confirmLabel="Ya, Keluar"
+      variant="warning"
+    />
+    </>
   )
 }

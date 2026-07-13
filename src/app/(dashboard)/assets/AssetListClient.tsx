@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { deleteAssetAction } from "@/actions/asset";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Kondisi, Role } from "@prisma/client";
 import * as XLSX from "xlsx";
 
@@ -47,6 +48,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const [selectedBidang, setSelectedBidang] = React.useState<string>("ALL");
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; code: string } | null>(null);
 
   const getKondisiLabel = (kondisi: Kondisi) => {
     switch (kondisi) {
@@ -83,21 +85,22 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
     }
   };
 
-  const handleDelete = async (id: string, code: string) => {
+  const handleDelete = (id: string, code: string) => {
     if (userRole === Role.MANAGER) return;
-    
-    if (confirm(`Apakah Anda yakin ingin menghapus aset dengan kode ${code}? Tindakan ini akan dicatat di log audit.`)) {
-      try {
-        const res = await deleteAssetAction(id);
-        if (res.error) {
-          alert(res.error);
-        } else if (res.success) {
-          setAssets(assets.filter(a => a.id !== id));
-        }
-      } catch (err) {
-        console.error("Delete asset error:", err);
-        alert("Gagal menghapus aset.");
+    setDeleteTarget({ id, code });
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!deleteTarget) return;
+    try {
+      const res = await deleteAssetAction(deleteTarget.id);
+      if (res.success) {
+        setAssets(assets.filter(a => a.id !== deleteTarget.id));
       }
+    } catch (err) {
+      console.error("Delete asset error:", err);
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -291,6 +294,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   };
 
   return (
+    <>
     <div className="space-y-6 pt-2 pb-8">
       {/* Title block */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -439,5 +443,16 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         </CardContent>
       </Card>
     </div>
+
+    <ConfirmDialog
+      isOpen={!!deleteTarget}
+      onClose={() => setDeleteTarget(null)}
+      onConfirm={handleDeleteConfirmed}
+      title="Hapus Aset?"
+      description={`Anda akan menghapus aset dengan kode "${deleteTarget?.code}". Tindakan ini akan dicatat di log audit dan tidak dapat dibatalkan.`}
+      confirmLabel="Ya, Hapus Aset"
+      variant="danger"
+    />
+    </>
   );
 }

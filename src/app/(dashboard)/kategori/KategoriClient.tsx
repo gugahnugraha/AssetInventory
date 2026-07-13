@@ -31,6 +31,7 @@ import {
   updateCategoryAttributeAction,
   deleteCategoryAttributeAction
 } from "@/actions/category";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 // VALIDATION SCHEMAS
 const categorySchema = z.object({
@@ -68,6 +69,8 @@ export function KategoriClient({ initialCategories }: KategoriClientProps) {
   // Form states
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [deleteCatTarget, setDeleteCatTarget] = React.useState<any | null>(null);
+  const [deleteAttrTarget, setDeleteAttrTarget] = React.useState<any | null>(null);
 
   React.useEffect(() => {
     setCategories(initialCategories);
@@ -152,23 +155,28 @@ export function KategoriClient({ initialCategories }: KategoriClientProps) {
     }
   };
 
-  const handleCatDelete = async (cat: any, e: React.MouseEvent) => {
+  const handleCatDelete = (cat: any, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm(`Apakah Anda yakin ingin menghapus kategori "${cat.nama}"?`)) {
-      try {
-        const res = await deleteCategoryAction(cat.id);
-        if (res.error) {
-          alert(res.error);
-        } else if (res.success) {
-          if (selectedCatId === cat.id) {
-            setSelectedCatId(null);
-          }
-          router.refresh();
+    setDeleteCatTarget(cat);
+  };
+
+  const handleCatDeleteConfirmed = async () => {
+    if (!deleteCatTarget) return;
+    try {
+      const res = await deleteCategoryAction(deleteCatTarget.id);
+      if (res.error) {
+        setError(res.error);
+      } else if (res.success) {
+        if (selectedCatId === deleteCatTarget.id) {
+          setSelectedCatId(null);
         }
-      } catch (err) {
-        console.error(err);
-        alert("Gagal menghapus kategori.");
+        router.refresh();
       }
+    } catch (err) {
+      console.error(err);
+      setError("Gagal menghapus kategori.");
+    } finally {
+      setDeleteCatTarget(null);
     }
   };
 
@@ -250,23 +258,29 @@ export function KategoriClient({ initialCategories }: KategoriClientProps) {
     }
   };
 
-  const handleAttrDelete = async (attr: any) => {
-    if (confirm(`Apakah Anda yakin ingin menghapus atribut "${attr.nama}"? Seluruh nilai data aset yang tersimpan pada atribut ini juga akan dihapus.`)) {
-      try {
-        const res = await deleteCategoryAttributeAction(attr.id);
-        if (res.error) {
-          alert(res.error);
-        } else if (res.success) {
-          router.refresh();
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Gagal menghapus atribut.");
+  const handleAttrDelete = (attr: any) => {
+    setDeleteAttrTarget(attr);
+  };
+
+  const handleAttrDeleteConfirmed = async () => {
+    if (!deleteAttrTarget) return;
+    try {
+      const res = await deleteCategoryAttributeAction(deleteAttrTarget.id);
+      if (res.error) {
+        setError(res.error);
+      } else if (res.success) {
+        router.refresh();
       }
+    } catch (err) {
+      console.error(err);
+      setError("Gagal menghapus atribut.");
+    } finally {
+      setDeleteAttrTarget(null);
     }
   };
 
   return (
+    <>
     <div className="space-y-6 pt-2 pb-8">
       {/* Title */}
       <div>
@@ -645,5 +659,26 @@ export function KategoriClient({ initialCategories }: KategoriClientProps) {
         </form>
       </Dialog>
     </div>
+
+    <ConfirmDialog
+      isOpen={!!deleteCatTarget}
+      onClose={() => setDeleteCatTarget(null)}
+      onConfirm={handleCatDeleteConfirmed}
+      title={`Hapus Kategori "${deleteCatTarget?.nama}"?`}
+      description="Kategori ini akan dihapus. Pastikan tidak ada aset yang masih menggunakan kategori ini."
+      confirmLabel="Ya, Hapus Kategori"
+      variant="danger"
+    />
+
+    <ConfirmDialog
+      isOpen={!!deleteAttrTarget}
+      onClose={() => setDeleteAttrTarget(null)}
+      onConfirm={handleAttrDeleteConfirmed}
+      title={`Hapus Atribut "${deleteAttrTarget?.nama}"?`}
+      description="Atribut ini akan dihapus beserta seluruh nilai data aset yang tersimpan pada atribut ini. Tindakan ini tidak dapat dibatalkan."
+      confirmLabel="Ya, Hapus Atribut"
+      variant="danger"
+    />
+    </>
   );
 }
