@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -38,6 +39,7 @@ interface SettingsClientProps {
 }
 
 export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClientProps) {
+  const router = useRouter();
   const [success, setSuccess] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -70,6 +72,7 @@ export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClient
       } else if (res.success) {
         setSuccess("Pengaturan instansi berhasil diperbarui.");
         setIsSubmitting(false);
+        router.refresh();
       }
     } catch (err) {
       console.error(err);

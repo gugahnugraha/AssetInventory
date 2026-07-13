@@ -32,6 +32,7 @@ export async function updateOpdAction(id: string, name: string, code: string) {
 
     revalidatePath("/pengaturan");
     revalidatePath("/dashboard");
+    revalidatePath("/", "layout");
     return { success: true, opd: updated };
   } catch (error: any) {
     console.error("Error in updateOpdAction:", error);
