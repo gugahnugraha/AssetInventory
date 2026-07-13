@@ -58,4 +58,5 @@ export const authConfig = {
     },
   },
   providers: [], // Placed empty here for middleware edge compatibility
+  secret: process.env.AUTH_SECRET || "f6c8d37482ea69d2f627b7384a22b7bf5ef5cd7db02b70f6bf3fcd5e5eb803d5",
 } satisfies NextAuthConfig;
