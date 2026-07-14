@@ -266,7 +266,7 @@ export function Sidebar({ user }: SidebarProps) {
       <div className="p-4 border-t border-emerald-700/50 text-center text-xs text-emerald-350">
         {!collapsed ? (
           <span>
-            Made with ❤️ by{" "}
+            Made with ♥ by{" "}
             <a
               href="https://github.com/gugahnugraha"
               target="_blank"
