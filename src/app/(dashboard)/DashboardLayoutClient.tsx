@@ -38,8 +38,8 @@ export function DashboardLayoutClient({ children, user }: ClientLayoutProps) {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden flex">
           {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" 
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
             onClick={() => setMobileOpen(false)}
           />
           {/* Sidebar Drawer */}
@@ -52,10 +52,13 @@ export function DashboardLayoutClient({ children, user }: ClientLayoutProps) {
       {/* Main Content Area */}
       <div className="flex flex-col flex-1 overflow-hidden">
         <Navbar user={user} onMobileMenuToggle={() => setMobileOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-zinc-50/40 transition-colors">
-          <div className="mx-auto max-w-7xl">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-zinc-50/40 transition-colors flex flex-col justify-between">
+          <div className="mx-auto max-w-7xl w-full flex-1">
             {children}
           </div>
+          <footer className="mt-8 py-4 border-t border-zinc-200/80 text-center text-xs text-zinc-700 font-semibold">
+            &copy; {new Date().getFullYear()} Sistem Informasi Inventarisasi Aset.
+          </footer>
         </main>
       </div>
     </div>

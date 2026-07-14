@@ -3,14 +3,14 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { 
-  LayoutDashboard, 
-  Boxes, 
-  GitFork, 
-  UserCheck, 
-  Users, 
-  User, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Boxes,
+  GitFork,
+  UserCheck,
+  Users,
+  User,
+  Settings,
   ChevronLeft,
   ChevronRight,
   Shield,
@@ -129,8 +129,8 @@ export function Sidebar({ user }: SidebarProps) {
               prefetch={false}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer group",
-                isActive 
-                  ? "bg-emerald-600/90 text-white shadow-md shadow-emerald-900/30 border border-emerald-500/30" 
+                isActive
+                  ? "bg-emerald-600/90 text-white shadow-md shadow-emerald-900/30 border border-emerald-500/30"
                   : "text-emerald-100 hover:bg-emerald-700/50 hover:text-white"
               )}
             >
@@ -143,6 +143,34 @@ export function Sidebar({ user }: SidebarProps) {
           )
         })}
       </nav>
+
+      {/* Sidebar Footer */}
+      <div className="p-4 border-t border-emerald-700/50 text-center text-xs text-emerald-350">
+        {!collapsed ? (
+          <span>
+            Made with ❤️ by{" "}
+            <a
+              href="https://github.com/gugahnugraha"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white hover:underline font-semibold"
+            >
+              Gugah Nugraha
+            </a>
+          </span>
+        ) : (
+          <span title="Made with heart by Gugah Nugraha">
+            <a
+              href="https://github.com/gugahnugraha"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white hover:scale-115 inline-block transition-transform font-bold"
+            >
+              ♥
+            </a>
+          </span>
+        )}
+      </div>
 
 
 
