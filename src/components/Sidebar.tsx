@@ -14,7 +14,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
-  Tags
+  Tags,
+  ArrowRightLeft
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Role } from "@prisma/client"
@@ -47,7 +48,13 @@ export function Sidebar({ user }: SidebarProps) {
       roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
     },
     {
-      label: "Bidang/Distribusi",
+      label: "Mutasi Aset",
+      href: "/mutasi",
+      icon: ArrowRightLeft,
+      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+    },
+    {
+      label: "Distribusi Aset (Bidang)",
       href: "/distribusi",
       icon: GitFork,
       roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],

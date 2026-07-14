@@ -39,7 +39,7 @@ export async function uploadFile(file: File): Promise<string> {
   }
 
   if (!r2Client || !isR2Configured) {
-    throw new Error("Penyimpanan Cloudflare R2 belum dikonfigurasi dengan benar di file .env.");
+    throw new Error("Gagal mengunggah foto. Sistem penyimpanan belum siap.");
   }
 
   const fileExtension = file.name.split(".").pop() || "png";
@@ -69,6 +69,6 @@ export async function uploadFile(file: File): Promise<string> {
     return `${publicUrlBase}/${uniqueFileName}`;
   } catch (error: any) {
     console.error("Failed to upload to Cloudflare R2:", error);
-    throw new Error(`Gagal mengupload foto ke Cloudflare R2: ${error.message || error}`);
+    throw new Error("Gagal mengunggah foto. Terjadi kendala pada server penyimpanan.");
   }
 }

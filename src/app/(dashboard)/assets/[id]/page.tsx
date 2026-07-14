@@ -76,6 +76,39 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
           role: log.user.role,
         },
       })),
+      history: (asset as any).history ? (asset as any).history.map((h: any) => ({
+        ...h,
+        beritaAcaraDate: h.beritaAcaraDate.toISOString(),
+        createdAt: h.createdAt.toISOString(),
+        creator: {
+          nama: h.creator.nama,
+          role: h.creator.role,
+        },
+        fromDistribution: h.fromDistribution ? {
+          id: h.fromDistribution.id,
+          nama: h.fromDistribution.nama,
+        } : null,
+        toDistribution: h.toDistribution ? {
+          id: h.toDistribution.id,
+          nama: h.toDistribution.nama,
+        } : null,
+        fromHolder: h.fromHolder ? {
+          id: h.fromHolder.id,
+          nama: h.fromHolder.nama,
+          nip: h.fromHolder.nip,
+          jabatan: h.fromHolder.jabatan,
+        } : null,
+        toHolder: h.toHolder ? {
+          id: h.toHolder.id,
+          nama: h.toHolder.nama,
+          nip: h.toHolder.nip,
+          jabatan: h.toHolder.jabatan,
+        } : null,
+        documents: h.documents.map((d: any) => ({
+          ...d,
+          uploadedAt: d.uploadedAt.toISOString(),
+        })),
+      })) : [],
     };
 
     return (

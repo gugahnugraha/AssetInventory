@@ -462,7 +462,8 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   </label>
                   <select
                     {...register("kondisi")}
-                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                    disabled={isEditMode}
+                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <option value={Kondisi.NORMAL} className="bg-background text-foreground">Normal (Baik)</option>
                     <option value={Kondisi.RUSAK_RINGAN} className="bg-background text-foreground">Rusak Ringan</option>
@@ -471,6 +472,11 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                     <option value={Kondisi.DIPINJAM} className="bg-background text-foreground">Dipinjam</option>
                     <option value={Kondisi.HILANG} className="bg-background text-foreground">Hilang</option>
                   </select>
+                  {isEditMode && (
+                    <p className="text-[10px] text-amber-600 font-semibold mt-1">
+                      * Perubahan kondisi hanya dapat dilakukan melalui menu Mutasi Aset.
+                    </p>
+                  )}
                   {errors.kondisi && <p className="text-xs text-rose-500 mt-1">{errors.kondisi.message}</p>}
                 </div>
               </div>
@@ -515,6 +521,15 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
               <CardTitle>Penempatan & Penanggung Jawab</CardTitle>
               <CardDescription>Pilih bidang kerja dan nama pemegang barang.</CardDescription>
             </CardHeader>
+            {isEditMode && (
+              <div className="mx-6 mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-xs font-semibold flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" />
+                <span>
+                  Penempatan Bidang dan Pemegang Barang tidak dapat diubah dari formulir edit. 
+                  Gunakan menu <strong>Mutasi Aset</strong> jika ingin memindahkan/memutasi barang ini.
+                </span>
+              </div>
+            )}
             <CardContent className="pt-6 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Distribution */}
@@ -524,7 +539,8 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   </label>
                   <select
                     {...register("distributionId")}
-                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                    disabled={isEditMode}
+                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <option value="" className="bg-background text-foreground">Pilih Bidang</option>
                     {distributions.map(d => (
@@ -541,8 +557,8 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   </label>
                   <select
                     {...register("holderId")}
-                    disabled={!watchDistributionId}
-                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50"
+                    disabled={isEditMode || !watchDistributionId}
+                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <option value="" className="bg-background text-foreground">Tanpa Pemegang (Di Simpan di Gudang/Umum)</option>
                     {filteredHolders.map(h => (

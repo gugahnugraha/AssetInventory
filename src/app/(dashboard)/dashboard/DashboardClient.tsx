@@ -47,11 +47,12 @@ interface DashboardClientProps {
     latestAssets: any[];
   };
   recentLogs: any[];
+  recentMutations: any[];
 }
 
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
-export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
+export function DashboardClient({ stats, recentLogs, recentMutations }: DashboardClientProps) {
   const { metrics, charts, latestAssets } = stats;
 
   const getKondisiLabel = (kondisi: Kondisi) => {
@@ -373,6 +374,79 @@ export function DashboardClient({ stats, recentLogs }: DashboardClientProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Mutasi Terbaru Widget */}
+      <Card accent="emerald" className="border-zinc-200/80">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <div>
+            <CardTitle>Mutasi Terbaru</CardTitle>
+            <CardDescription>Daftar 10 mutasi pemindahan aset terbaru.</CardDescription>
+          </div>
+          <Link href="/mutasi" className="text-emerald-600 text-xs font-semibold flex items-center gap-1 hover:underline">
+            Semua Mutasi
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        </CardHeader>
+        <CardContent className="p-0">
+          {recentMutations.length === 0 ? (
+            <div className="flex items-center justify-center py-12 text-sm text-slate-400 dark:text-zinc-500 italic font-semibold">
+              Belum ada aktivitas mutasi aset tercatat.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-zinc-200 bg-zinc-50/50 text-zinc-950 font-bold">
+                    <th className="py-3 px-4 font-bold text-zinc-950">Tanggal</th>
+                    <th className="py-3 px-4 font-bold text-zinc-950">Kode Aset</th>
+                    <th className="py-3 px-4 font-bold text-zinc-950">Nama Aset</th>
+                    <th className="py-3 px-4 font-bold text-zinc-950">Jenis Mutasi</th>
+                    <th className="py-3 px-4 font-bold text-zinc-950">Pemegang Baru</th>
+                    <th className="py-3 px-4 font-bold text-zinc-950">Distribusi Baru</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-200 font-medium text-zinc-900">
+                  {recentMutations.map((m) => {
+                    const getMutationTypeLabel = (type: any) => {
+                      switch (type) {
+                        case "HOLDER": return "Pemegang Barang";
+                        case "DISTRIBUTION": return "Distribusi Aset";
+                        case "CONDITION": return "Kondisi Aset";
+                        case "MULTIPLE": return "Mutasi Ganda";
+                        default: return type;
+                      }
+                    };
+                    return (
+                      <tr key={m.id} className="hover:bg-zinc-50/60 transition-colors">
+                        <td className="py-3 px-4 font-semibold text-zinc-950 whitespace-nowrap">
+                          {formatDate(m.createdAt)}
+                        </td>
+                        <td className="py-3 px-4 text-xs font-semibold text-emerald-800 font-mono">
+                          {m.asset.kodeLengkap}
+                        </td>
+                        <td className="py-3 px-4 font-bold text-zinc-950">
+                          {m.asset.namaAset} {m.asset.merkType ? `(${m.asset.merkType})` : ""}
+                        </td>
+                        <td className="py-3 px-4">
+                          <Badge variant="outline" className="bg-emerald-50 text-emerald-800 border-emerald-100 font-bold uppercase text-[9px] whitespace-nowrap">
+                            {getMutationTypeLabel(m.mutationType)}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4 text-zinc-900 font-bold">
+                          {m.toHolder?.nama || "Gudang / Umum"}
+                        </td>
+                        <td className="py-3 px-4 text-emerald-800 font-bold">
+                          {m.toDistribution?.nama || "-"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

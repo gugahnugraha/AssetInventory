@@ -44,6 +44,7 @@ model User {
   isActive     Boolean    @default(true)
   lastLogin    DateTime?
   auditLogs    AuditLog[]
+  assetHistories AssetHistory[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 }
@@ -53,10 +54,12 @@ model Distribution {
   nama      String   // e.g. Sekretariat, Keuangan, Aset
   opdId     String
   opd       Opd      @relation(fields: [opdId], references: [id])
-  holders   Holder[]
-  assets    Asset[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  holders       Holder[]
+  assets        Asset[]
+  fromHistories AssetHistory[] @relation("FromDistributionHistory")
+  toHistories   AssetHistory[] @relation("ToDistributionHistory")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@unique([nama, opdId])
 }
@@ -69,6 +72,8 @@ model Holder {
   distributionId String
   distribution   Distribution @relation(fields: [distributionId], references: [id])
   assets         Asset[]
+  fromHistories  AssetHistory[] @relation("FromHolderHistory")
+  toHistories    AssetHistory[] @relation("ToHolderHistory")
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 }
@@ -137,6 +142,7 @@ model Asset {
   photos         AssetPhoto[]
   attributes     AssetAttribute[]
   auditLogs      AuditLog[]
+  history        AssetHistory[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 }
@@ -160,4 +166,44 @@ model AuditLog {
   oldValue  String?  // JSON stringified old value
   newValue  String?  // JSON stringified new value
   createdAt DateTime @default(now())
+}
+
+enum MutationType {
+  HOLDER
+  DISTRIBUTION
+  CONDITION
+  MULTIPLE
+}
+
+model AssetHistory {
+  id                 String                 @id @default(uuid())
+  assetId            String
+  asset              Asset                  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  mutationType       MutationType
+  fromHolderId       String?
+  fromHolder         Holder?                @relation("FromHolderHistory", fields: [fromHolderId], references: [id])
+  toHolderId         String?
+  toHolder           Holder?                @relation("ToHolderHistory", fields: [toHolderId], references: [id])
+  fromDistributionId String?
+  fromDistribution   Distribution?          @relation("FromDistributionHistory", fields: [fromDistributionId], references: [id])
+  toDistributionId   String?
+  toDistribution     Distribution?          @relation("ToDistributionHistory", fields: [toDistributionId], references: [id])
+  fromCondition      Kondisi?
+  toCondition        Kondisi?
+  beritaAcaraNumber  String
+  beritaAcaraDate    DateTime
+  description        String?
+  createdBy          String
+  creator            User                   @relation(fields: [createdBy], references: [id])
+  documents          AssetHistoryDocument[]
+  createdAt          DateTime               @default(now())
+}
+
+model AssetHistoryDocument {
+  id             String       @id @default(uuid())
+  assetHistoryId String
+  assetHistory   AssetHistory @relation(fields: [assetHistoryId], references: [id], onDelete: Cascade)
+  fileName       String
+  fileUrl        String
+  uploadedAt     DateTime     @default(now())
 }

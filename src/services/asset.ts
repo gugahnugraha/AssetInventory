@@ -100,6 +100,22 @@ export async function getAssetById(id: string) {
           },
           orderBy: { createdAt: "desc" },
         },
+        history: {
+          include: {
+            fromDistribution: true,
+            toDistribution: true,
+            fromHolder: true,
+            toHolder: true,
+            creator: {
+              select: {
+                nama: true,
+                role: true,
+              },
+            },
+            documents: true,
+          },
+          orderBy: { createdAt: "desc" },
+        },
       },
     });
   } catch (error) {
@@ -282,8 +298,6 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
           merkType: data.merkType,
           harga: data.harga,
           tahunPembelian: data.tahunPembelian,
-          distributionId: data.distributionId,
-          holderId: data.holderId === undefined ? undefined : data.holderId,
           kondisi: data.kondisi,
           catatan: data.catatan,
           fotoUtama: data.fotoUtama,
