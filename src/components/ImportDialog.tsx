@@ -117,48 +117,34 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
   const handleImport = async () => {
     if (rows.length === 0 || !defaultDistId || isImporting) return;
     setIsImporting(true);
-    setProgress(0);
-    setProcessedCount(0);
-
-    const batchSize = 100;
-    const totalRows = rows.length;
-    let totalSuccess = 0;
-    let totalSkipped = 0;
-    const allDuplicates: string[] = [];
-    const allErrors: string[] = [];
+    setParseError(null);
+    setImportSummary(null);
+    setProgress(50);
+    setProcessedCount(rows.length);
 
     try {
-      for (let i = 0; i < totalRows; i += batchSize) {
-        const batch = rows.slice(i, i + batchSize);
-        
-        const res = await importAssetsBatchAction(batch, defaultDistId);
-        
-        if (res.error) {
-          allErrors.push(`Sistem Error Batch ${Math.floor(i / batchSize) + 1}: ${res.error}`);
-          totalSkipped += batch.length;
-        } else if (res.result) {
-          const { successCount, skippedCount, duplicates, errors } = res.result;
-          totalSuccess += successCount;
-          totalSkipped += skippedCount;
-          allDuplicates.push(...duplicates);
-          allErrors.push(...errors);
-        }
-
-        const nextProcessed = Math.min(i + batch.length, totalRows);
-        setProcessedCount(nextProcessed);
-        setProgress(Math.round((nextProcessed / totalRows) * 100));
+      const plainRows = JSON.parse(JSON.stringify(rows));
+      const res = await importAssetsBatchAction(plainRows, defaultDistId);
+      
+      if (res.error) {
+        setParseError(`Proses Import Gagal & Dibatalkan: ${res.error}`);
+        setProgress(0);
+        setProcessedCount(0);
+      } else if (res.result) {
+        setProgress(100);
+        setImportSummary({
+          successCount: res.result.successCount,
+          skippedCount: 0,
+          duplicates: [],
+          errors: [],
+        });
+        onSuccess();
       }
-
-      setImportSummary({
-        successCount: totalSuccess,
-        skippedCount: totalSkipped,
-        duplicates: allDuplicates,
-        errors: allErrors.slice(0, 50), // limit visual errors output to first 50
-      });
-      onSuccess();
     } catch (err: any) {
       console.error("Import execution failed:", err);
-      allErrors.push(`Kesalahan kritis: ${err.message || err}`);
+      setParseError(`Kesalahan kritis: ${err.message || err}`);
+      setProgress(0);
+      setProcessedCount(0);
     } finally {
       setIsImporting(false);
     }
@@ -262,27 +248,38 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
               </span>
               <span className="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full">Ready</span>
             </div>
-            <div className="overflow-x-auto text-xs max-h-[160px]">
-              <table className="w-full text-left border-collapse">
+            <div className="overflow-x-auto text-xs max-h-[220px]">
+              <table className="min-w-full text-left border-collapse table-auto">
                 <thead>
                   <tr className="bg-zinc-50 border-b text-zinc-500 font-semibold">
-                    <th className="p-2 border-r">No</th>
-                    <th className="p-2 border-r">Kode Aset</th>
-                    <th className="p-2 border-r">Nama Aset</th>
-                    <th className="p-2 border-r">KIB</th>
-                    <th className="p-2 border-r">Merk/Type</th>
-                    <th className="p-2">Harga</th>
+                    <th className="p-2 border-r sticky left-0 bg-zinc-50 z-10 min-w-[40px]">No</th>
+                    {Object.keys(rows[0] || {}).map((header, idx) => (
+                      <th key={idx} className="p-2 border-r whitespace-nowrap min-w-[120px]">
+                        {header}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y font-mono">
                   {previewData.map((row: any, idx) => (
                     <tr key={idx} className="hover:bg-zinc-50/50">
-                      <td className="p-2 border-r text-zinc-400 font-sans">{idx + 1}</td>
-                      <td className="p-2 border-r font-semibold text-emerald-600">{String(row["Kode Aset"] || row["kodeLengkap"] || "-")}</td>
-                      <td className="p-2 border-r font-sans font-medium text-zinc-800">{String(row["Nama Aset"] || "-")}</td>
-                      <td className="p-2 border-r font-sans text-center">{String(row["KIB"] || "-")}</td>
-                      <td className="p-2 border-r font-sans">{String(row["Merk/Type"] || "-")}</td>
-                      <td className="p-2 font-sans font-semibold">Rp {row["Harga"] ? Number(row["Harga"]).toLocaleString("id-ID") : "0"}</td>
+                      <td className="p-2 border-r text-zinc-400 font-sans sticky left-0 bg-white hover:bg-zinc-50 z-10">{idx + 1}</td>
+                      {Object.keys(rows[0] || {}).map((header, hIdx) => {
+                        const val = row[header];
+                        let valStr = val !== undefined && val !== null ? String(val) : "-";
+                        
+                        // Format dynamic values nicely if they are numeric
+                        if (header.toLowerCase() === "harga" && val !== undefined && val !== null) {
+                          const num = Number(String(val).replace(/[^0-9.,]/g, ""));
+                          if (!isNaN(num)) valStr = `Rp ${num.toLocaleString("id-ID")}`;
+                        }
+                        
+                        return (
+                          <td key={hIdx} className="p-2 border-r whitespace-nowrap truncate max-w-[200px]" title={valStr}>
+                            {valStr}
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))}
                 </tbody>

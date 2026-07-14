@@ -140,19 +140,20 @@ export async function importAssetsBatch(
     errors: [],
   };
 
-  try {
+  // Run the ENTIRE import batch inside a single Prisma transaction with custom timeouts!
+  await prisma.$transaction(async (tx) => {
     // 1. Preload master data: KIBs, Categories and their Attributes, and existing asset codes
-    const kibs = await prisma.kib.findMany();
-    const categories = await prisma.category.findMany({
+    const kibs = await tx.kib.findMany();
+    const categories = await tx.category.findMany({
       include: { attributes: true },
     });
-    const existingAssets = await prisma.asset.findMany({
+    const existingAssets = await tx.asset.findMany({
       select: { kodeLengkap: true },
     });
 
     const existingCodes = new Set(existingAssets.map((a) => a.kodeLengkap));
     
-    // In-memory cache to save newly created categories during this batch run
+    // In-memory cache to save newly created categories during this transaction
     const categoryCache = new Map<string, any>();
     for (const cat of categories) {
       categoryCache.set(`${cat.kibId}_${cat.nama.toLowerCase()}`, cat);
@@ -163,250 +164,232 @@ export async function importAssetsBatch(
       const row = rows[index];
       const rowNum = index + 1;
 
-      try {
-        const namaAset = cleanString(row["Nama Aset"]);
-        if (!namaAset) {
-          result.skippedCount++;
-          result.errors.push(`Baris ${rowNum}: Nama Aset tidak boleh kosong.`);
-          continue;
-        }
-
-        // Parse KIB
-        const kibVal = cleanString(row["KIB"]) || "B";
-        const kibCode = parseKibCode(kibVal);
-        const kib = kibs.find((k) => k.kode === kibCode) || kibs.find((k) => k.kode === "B");
-        if (!kib) {
-          result.skippedCount++;
-          result.errors.push(`Baris ${rowNum}: KIB "${kibCode}" tidak ditemukan.`);
-          continue;
-        }
-
-        // Parse sub-codes & register
-        let kode1 = 0;
-        let kode2 = 0;
-        let kode3 = 0;
-        let kode4 = 0;
-        let kode5 = 0;
-        let nomorRegister = 1;
-
-        const rawKodeAset = cleanString(row["Kode Aset"]);
-        let parsedFromCodeString = false;
-
-        if (rawKodeAset) {
-          const parts = rawKodeAset.split(".").map((p) => p.trim());
-          if (parts.length === 8) {
-            kode1 = parseInt(parts[2], 10) || 0;
-            kode2 = parseInt(parts[3], 10) || 0;
-            kode3 = parseInt(parts[4], 10) || 0;
-            kode4 = parseInt(parts[5], 10) || 0;
-            kode5 = parseInt(parts[6], 10) || 0;
-            nomorRegister = parseInt(parts[7], 10) || 1;
-            parsedFromCodeString = true;
-          } else if (parts.length === 7) {
-            kode1 = parseInt(parts[2], 10) || 0;
-            kode2 = parseInt(parts[3], 10) || 0;
-            kode3 = parseInt(parts[4], 10) || 0;
-            kode4 = parseInt(parts[5], 10) || 0;
-            kode5 = parseInt(parts[6], 10) || 0;
-            nomorRegister = parseInt(cleanString(row.NomorRegister), 10) || 1;
-            parsedFromCodeString = true;
-          } else if (parts.length === 6) {
-            kode1 = parseInt(parts[0], 10) || 0;
-            kode2 = parseInt(parts[1], 10) || 0;
-            kode3 = parseInt(parts[2], 10) || 0;
-            kode4 = parseInt(parts[3], 10) || 0;
-            kode5 = parseInt(parts[4], 10) || 0;
-            nomorRegister = parseInt(parts[5], 10) || 1;
-            parsedFromCodeString = true;
-          } else if (parts.length === 5) {
-            kode1 = parseInt(parts[0], 10) || 0;
-            kode2 = parseInt(parts[1], 10) || 0;
-            kode3 = parseInt(parts[2], 10) || 0;
-            kode4 = parseInt(parts[3], 10) || 0;
-            kode5 = parseInt(parts[4], 10) || 0;
-            nomorRegister = parseInt(cleanString(row.NomorRegister), 10) || 1;
-            parsedFromCodeString = true;
-          }
-        }
-
-        if (!parsedFromCodeString) {
-          kode1 = parseInt(cleanString(row.kode1), 10) || 0;
-          kode2 = parseInt(cleanString(row.kode2), 10) || 0;
-          kode3 = parseInt(cleanString(row.kode3), 10) || 0;
-          kode4 = parseInt(cleanString(row.kode4), 10) || 0;
-          kode5 = parseInt(cleanString(row.kode5), 10) || 0;
-          nomorRegister = parseInt(cleanString(row.NomorRegister), 10) || 1;
-        }
-
-        // Reconstruct complete unique code string (pad to strings for unique kodeLengkap)
-        const k1Str = String(kode1).padStart(2, "0");
-        const k2Str = String(kode2).padStart(2, "0");
-        const k3Str = String(kode3).padStart(2, "0");
-        const k4Str = String(kode4).padStart(2, "0");
-        const k5Str = String(kode5).padStart(3, "0");
-        const registerStr = String(nomorRegister).padStart(4, "0");
-        const kodeLengkap = `1.3.${k1Str}.${k2Str}.${k3Str}.${k4Str}.${k5Str}.${registerStr}`;
-
-        // Check for duplicates
-        if (existingCodes.has(kodeLengkap)) {
-          result.skippedCount++;
-          result.duplicates.push(kodeLengkap);
-          continue;
-        }
-
-        // Parse optional attributes
-        const noRangka = cleanString(row["Nomor Rangka"]);
-        const noMesin = cleanString(row["Nomor Mesin"]);
-        const noPolisi = cleanString(row["Nomor Polisi"]);
-        const hasVehicleInfo = !!(noRangka || noMesin || noPolisi);
-
-        // Determine category name
-        let targetCategoryName = "Lainnya";
-        if (kib.kode === "B") {
-          targetCategoryName = getCategoryNameForKibB(namaAset, hasVehicleInfo);
-        } else {
-          // KIB A: Tanah, KIB C: Gedung, etc.
-          targetCategoryName = kib.nama;
-        }
-
-        // Find or dynamically create Category if not present in cache/db
-        const cacheKey = `${kib.id}_${targetCategoryName.toLowerCase()}`;
-        let category = categoryCache.get(cacheKey);
-
-        if (!category) {
-          // Create the category dynamically in database
-          category = await prisma.category.create({
-            data: {
-              nama: targetCategoryName,
-              kibId: kib.id,
-            },
-            include: { attributes: true },
-          });
-          categoryCache.set(cacheKey, category);
-
-          // Seed default attributes if creating Kendaraan
-          if (targetCategoryName === "Kendaraan") {
-            const attrs = [
-              { nama: "Nomor Polisi", displayOrder: 1 },
-              { nama: "Nomor Mesin", displayOrder: 2 },
-              { nama: "Nomor Rangka", displayOrder: 3 },
-            ];
-            const createdAttrs = [];
-            for (const item of attrs) {
-              const ca = await prisma.categoryAttribute.create({
-                data: {
-                  categoryId: category.id,
-                  nama: item.nama,
-                  required: true,
-                  fieldType: "TEXT",
-                  displayOrder: item.displayOrder,
-                },
-              });
-              createdAttrs.push(ca);
-            }
-            category.attributes = createdAttrs;
-          }
-        }
-
-        // Parse other standard values
-        const merkType = cleanString(row["Merk/Type"]) || "-";
-        const spesifikasi = cleanString(row["Spesifikasi"]) || null;
-        const material = cleanString(row["Material"]) || null;
-        const catatan = cleanString(row["Catatan"]) || null;
-        const caraPerolehan = cleanString(row["Perolehan"]) || null;
-
-        // Harga
-        let harga = 0;
-        const rawHarga = row["Harga"];
-        if (rawHarga !== undefined && rawHarga !== null && rawHarga !== "") {
-          const cleanHargaStr = String(rawHarga).replace(/[^0-9.,]/g, "").replace(/,/g, ".");
-          harga = parseFloat(cleanHargaStr) || 0;
-        }
-
-        // Tahun Pembelian
-        let tahunPembelian = new Date().getFullYear();
-        const rawTahun = row["Tahun"];
-        if (rawTahun !== undefined && rawTahun !== null && rawTahun !== "") {
-          tahunPembelian = parseInt(String(rawTahun).replace(/\D/g, ""), 10) || tahunPembelian;
-        }
-
-        // Run db operations in transactional lock for each row to ensure consistency and audit trail
-        await prisma.$transaction(async (tx) => {
-          // Create Asset
-          const asset = await tx.asset.create({
-            data: {
-              kode1,
-              kode2,
-              kode3,
-              kode4,
-              kode5,
-              nomorRegister,
-              kodeLengkap,
-              categoryId: category.id,
-              namaAset,
-              merkType,
-              material,
-              caraPerolehan,
-              spesifikasi,
-              harga,
-              tahunPembelian,
-              distributionId: defaultDistributionId,
-              kondisi: Kondisi.NORMAL,
-              catatan,
-              opdId,
-            },
-          });
-
-          // Insert Vehicle Attributes if it is a vehicle
-          if (category.nama === "Kendaraan" && hasVehicleInfo) {
-            const attrMap = new Map<string, string>();
-            if (noPolisi) attrMap.set("Nomor Polisi", noPolisi);
-            if (noMesin) attrMap.set("Nomor Mesin", noMesin);
-            if (noRangka) attrMap.set("Nomor Rangka", noRangka);
-
-            for (const [name, val] of attrMap.entries()) {
-              const catAttr = category.attributes.find((a: any) => a.nama === name);
-              if (catAttr) {
-                await tx.assetAttribute.create({
-                  data: {
-                    assetId: asset.id,
-                    categoryAttributeId: catAttr.id,
-                    value: val,
-                  },
-                });
-              }
-            }
-          }
-
-          // Write Audit Log
-          await tx.auditLog.create({
-            data: {
-              userId,
-              assetId: asset.id,
-              action: "CREATE",
-              newValue: JSON.stringify({
-                namaAset,
-                kodeLengkap,
-                harga,
-                tahunPembelian,
-                kondisi: Kondisi.NORMAL,
-              }),
-            },
-          });
-        });
-
-        // Add to our list of processed codes to avoid duplicates in the same batch
-        existingCodes.add(kodeLengkap);
-        result.successCount++;
-      } catch (err: any) {
-        result.skippedCount++;
-        result.errors.push(`Baris ${rowNum}: Gagal di-import. Error: ${err.message || err}`);
+      const namaAset = cleanString(row["Nama Aset"]);
+      if (!namaAset) {
+        throw new Error(`Baris ${rowNum}: Nama Aset tidak boleh kosong.`);
       }
+
+      // Parse KIB (Forced to KIB B as requested)
+      const kib = kibs.find((k) => k.kode === "B");
+      if (!kib) {
+        throw new Error(`Baris ${rowNum}: KIB B tidak ditemukan.`);
+      }
+
+      // Parse sub-codes & register
+      let kode1 = 0;
+      let kode2 = 0;
+      let kode3 = 0;
+      let kode4 = 0;
+      let kode5 = 0;
+      let nomorRegister = 1;
+
+      const rawKodeAset = cleanString(row["Kode Aset"]);
+      let parsedFromCodeString = false;
+
+      if (rawKodeAset) {
+        const parts = rawKodeAset.split(".").map((p) => p.trim());
+        if (parts.length === 8) {
+          kode1 = parseInt(parts[2], 10) || 0;
+          kode2 = parseInt(parts[3], 10) || 0;
+          kode3 = parseInt(parts[4], 10) || 0;
+          kode4 = parseInt(parts[5], 10) || 0;
+          kode5 = parseInt(parts[6], 10) || 0;
+          nomorRegister = parseInt(parts[7], 10) || 1;
+          parsedFromCodeString = true;
+        } else if (parts.length === 7) {
+          kode1 = parseInt(parts[2], 10) || 0;
+          kode2 = parseInt(parts[3], 10) || 0;
+          kode3 = parseInt(parts[4], 10) || 0;
+          kode4 = parseInt(parts[5], 10) || 0;
+          kode5 = parseInt(parts[6], 10) || 0;
+          nomorRegister = parseInt(cleanString(row.NomorRegister), 10) || 1;
+          parsedFromCodeString = true;
+        } else if (parts.length === 6) {
+          kode1 = parseInt(parts[0], 10) || 0;
+          kode2 = parseInt(parts[1], 10) || 0;
+          kode3 = parseInt(parts[2], 10) || 0;
+          kode4 = parseInt(parts[3], 10) || 0;
+          kode5 = parseInt(parts[4], 10) || 0;
+          nomorRegister = parseInt(parts[5], 10) || 1;
+          parsedFromCodeString = true;
+        } else if (parts.length === 5) {
+          kode1 = parseInt(parts[0], 10) || 0;
+          kode2 = parseInt(parts[1], 10) || 0;
+          kode3 = parseInt(parts[2], 10) || 0;
+          kode4 = parseInt(parts[3], 10) || 0;
+          kode5 = parseInt(parts[4], 10) || 0;
+          nomorRegister = parseInt(cleanString(row.NomorRegister), 10) || 1;
+          parsedFromCodeString = true;
+        }
+      }
+
+      if (!parsedFromCodeString) {
+        kode1 = parseInt(cleanString(row.kode1), 10) || 0;
+        kode2 = parseInt(cleanString(row.kode2), 10) || 0;
+        kode3 = parseInt(cleanString(row.kode3), 10) || 0;
+        kode4 = parseInt(cleanString(row.kode4), 10) || 0;
+        kode5 = parseInt(cleanString(row.kode5), 10) || 0;
+        nomorRegister = parseInt(cleanString(row.NomorRegister), 10) || 1;
+      }
+
+      // Reconstruct complete unique code string (pad to strings for unique kodeLengkap)
+      const k1Str = String(kode1).padStart(2, "0");
+      const k2Str = String(kode2).padStart(2, "0");
+      const k3Str = String(kode3).padStart(2, "0");
+      const k4Str = String(kode4).padStart(2, "0");
+      const k5Str = String(kode5).padStart(3, "0");
+      const registerStr = String(nomorRegister).padStart(4, "0");
+      const kodeLengkap = `1.3.${k1Str}.${k2Str}.${k3Str}.${k4Str}.${k5Str}.${registerStr}`;
+
+      // Check for duplicates
+      if (existingCodes.has(kodeLengkap)) {
+        throw new Error(`Baris ${rowNum}: Kode Lengkap "${kodeLengkap}" sudah ada di database (Duplikat).`);
+      }
+
+      // Parse optional attributes
+      const noRangka = cleanString(row["Nomor Rangka"]);
+      const noMesin = cleanString(row["Nomor Mesin"]);
+      const noPolisi = cleanString(row["Nomor Polisi"]);
+      const hasVehicleInfo = !!(noRangka || noMesin || noPolisi);
+
+      // Determine category name
+      let targetCategoryName = "Lainnya";
+      if (kib.kode === "B") {
+        targetCategoryName = getCategoryNameForKibB(namaAset, hasVehicleInfo);
+      } else {
+        targetCategoryName = kib.nama;
+      }
+
+      // Find or dynamically create Category if not present in cache/db
+      const cacheKey = `${kib.id}_${targetCategoryName.toLowerCase()}`;
+      let category = categoryCache.get(cacheKey);
+
+      if (!category) {
+        // Create the category dynamically in database
+        category = await tx.category.create({
+          data: {
+            nama: targetCategoryName,
+            kibId: kib.id,
+          },
+          include: { attributes: true },
+        });
+        categoryCache.set(cacheKey, category);
+
+        // Seed default attributes if creating Kendaraan
+        if (targetCategoryName === "Kendaraan") {
+          const attrs = [
+            { nama: "Nomor Polisi", displayOrder: 1 },
+            { nama: "Nomor Mesin", displayOrder: 2 },
+            { nama: "Nomor Rangka", displayOrder: 3 },
+          ];
+          const createdAttrs = [];
+          for (const item of attrs) {
+            const ca = await tx.categoryAttribute.create({
+              data: {
+                categoryId: category.id,
+                nama: item.nama,
+                required: true,
+                fieldType: "TEXT",
+                displayOrder: item.displayOrder,
+              },
+            });
+            createdAttrs.push(ca);
+          }
+          category.attributes = createdAttrs;
+        }
+      }
+
+      // Parse other standard values
+      const merkType = cleanString(row["Merk/Type"]) || "-";
+      const spesifikasi = cleanString(row["Spesifikasi"]) || null;
+      const material = cleanString(row["Material"]) || null;
+      const catatan = cleanString(row["Catatan"]) || null;
+      const caraPerolehan = cleanString(row["Perolehan"]) || null;
+
+      // Harga
+      let harga = 0;
+      const rawHarga = row["Harga"];
+      if (rawHarga !== undefined && rawHarga !== null && rawHarga !== "") {
+        const cleanHargaStr = String(rawHarga).replace(/[^0-9.,]/g, "").replace(/,/g, ".");
+        harga = parseFloat(cleanHargaStr) || 0;
+      }
+
+      // Tahun Pembelian
+      let tahunPembelian = new Date().getFullYear();
+      const rawTahun = row["Tahun"];
+      if (rawTahun !== undefined && rawTahun !== null && rawTahun !== "") {
+        tahunPembelian = parseInt(String(rawTahun).replace(/\D/g, ""), 10) || tahunPembelian;
+      }
+
+      // Create Asset
+      const asset = await tx.asset.create({
+        data: {
+          kode1,
+          kode2,
+          kode3,
+          kode4,
+          kode5,
+          nomorRegister,
+          kodeLengkap,
+          categoryId: category.id,
+          namaAset,
+          merkType,
+          material,
+          caraPerolehan,
+          spesifikasi,
+          harga,
+          tahunPembelian,
+          distributionId: defaultDistributionId,
+          kondisi: Kondisi.NORMAL,
+          catatan,
+          opdId,
+        },
+      });
+
+      // Insert Vehicle Attributes if it is a vehicle
+      if (category.nama === "Kendaraan" && hasVehicleInfo) {
+        const attrMap = new Map<string, string>();
+        if (noPolisi) attrMap.set("Nomor Polisi", noPolisi);
+        if (noMesin) attrMap.set("Nomor Mesin", noMesin);
+        if (noRangka) attrMap.set("Nomor Rangka", noRangka);
+
+        for (const [name, val] of attrMap.entries()) {
+          const catAttr = category.attributes.find((a: any) => a.nama === name);
+          if (catAttr) {
+            await tx.assetAttribute.create({
+              data: {
+                assetId: asset.id,
+                categoryAttributeId: catAttr.id,
+                value: val,
+              },
+            });
+          }
+        }
+      }
+
+      // Write Audit Log
+      await tx.auditLog.create({
+        data: {
+          userId,
+          assetId: asset.id,
+          action: "CREATE",
+          newValue: JSON.stringify({
+            namaAset,
+            kodeLengkap,
+            harga,
+            tahunPembelian,
+            kondisi: Kondisi.NORMAL,
+          }),
+        },
+      });
+
+      existingCodes.add(kodeLengkap);
+      result.successCount++;
     }
-  } catch (globalError: any) {
-    console.error("Critical error during Excel import batch execution:", globalError);
-    result.errors.push(`Terjadi kesalahan sistem: ${globalError.message || globalError}`);
-  }
+  }, {
+    maxWait: 15000,
+    timeout: 60000,
+  });
 
   return result;
 }
