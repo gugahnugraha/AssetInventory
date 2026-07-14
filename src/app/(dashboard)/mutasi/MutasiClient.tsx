@@ -428,10 +428,37 @@ export function MutasiClient({
                             setToCondition(a.kondisi);
                             setShowAssetDropdown(false);
                           }}
-                          className="p-3 hover:bg-zinc-50 cursor-pointer flex flex-col font-medium"
+                          className="p-3 hover:bg-zinc-50 cursor-pointer text-zinc-900 transition-colors border-b last:border-0"
                         >
-                          <span className="text-zinc-950 font-bold">{a.namaAset}</span>
-                          <span className="text-xs font-semibold text-emerald-800 font-mono mt-0.5">{a.kodeLengkap}</span>
+                          {/* Top row: Name & Condition */}
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-bold text-zinc-950 truncate text-sm">{a.namaAset}</span>
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 border ${
+                              a.kondisi === "NORMAL"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-250/30"
+                                : a.kondisi === "RUSAK_BERAT" || a.kondisi === "HILANG"
+                                ? "bg-rose-50 text-rose-700 border-rose-250/30"
+                                : "bg-amber-50 text-amber-700 border-amber-250/30"
+                            }`}>
+                              {getKondisiLabel(a.kondisi)}
+                            </span>
+                          </div>
+
+                          {/* Middle row: Code & Merk/Type */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-zinc-500 mt-1 font-mono">
+                            <span className="font-semibold text-emerald-800 dark:text-emerald-400">{a.kodeLengkap}</span>
+                            {a.merkType && <span className="truncate max-w-[200px] text-zinc-400 mt-0.5 sm:mt-0 font-sans">Merk: {a.merkType}</span>}
+                          </div>
+
+                          {/* Bottom row: Penempatan (Bidang) & Pemegang */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] text-zinc-400 mt-1.5 border-t border-zinc-100 pt-1.5">
+                            <span>
+                              Bidang: <strong className="text-zinc-650">{a.distributionName}</strong>
+                            </span>
+                            <span className="mt-0.5 sm:mt-0">
+                              Pemegang: <strong className="text-zinc-650">{a.holderName || "Tidak ada"}</strong>
+                            </span>
+                          </div>
                         </div>
                       ))
                     )}

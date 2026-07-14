@@ -7,6 +7,8 @@ export interface AssetFilterInput {
   search?: string;
   kondisi?: string;
   distributionId?: string;
+  kibId?: string;
+  categoryId?: string;
 }
 
 export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
@@ -14,7 +16,7 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
     const where: Prisma.AssetWhereInput = { opdId };
 
     if (filters) {
-      const { search, kondisi, distributionId } = filters;
+      const { search, kondisi, distributionId, kibId, categoryId } = filters;
 
       if (kondisi) {
         where.kondisi = kondisi as Kondisi;
@@ -24,13 +26,20 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
         where.distributionId = distributionId;
       }
 
+      if (categoryId) {
+        where.categoryId = categoryId;
+      } else if (kibId) {
+        where.category = { kibId };
+      }
+
       if (search) {
         const searchConditions: Prisma.AssetWhereInput[] = [
           { kodeLengkap: { contains: search, mode: "insensitive" } },
-          { nomorRegister: { contains: search, mode: "insensitive" } },
           { namaAset: { contains: search, mode: "insensitive" } },
           { merkType: { contains: search, mode: "insensitive" } },
           { category: { nama: { contains: search, mode: "insensitive" } } },
+          { category: { kib: { nama: { contains: search, mode: "insensitive" } } } },
+          { category: { kib: { kode: { contains: search, mode: "insensitive" } } } },
           { distribution: { nama: { contains: search, mode: "insensitive" } } },
           { holder: { nama: { contains: search, mode: "insensitive" } } },
           {
@@ -45,6 +54,11 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
           }
         ];
 
+        const regNum = parseInt(search);
+        if (!isNaN(regNum)) {
+          searchConditions.push({ nomorRegister: regNum });
+        }
+
         // Add year search if it looks like a year
         const yearNum = parseInt(search);
         if (!isNaN(yearNum) && yearNum >= 1900 && yearNum <= 2100) {
@@ -58,7 +72,11 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
     return await prisma.asset.findMany({
       where,
       include: {
-        category: true,
+        category: {
+          include: {
+            kib: true
+          }
+        },
         distribution: true,
         holder: true,
         attributes: {
@@ -84,7 +102,11 @@ export async function getAssetById(id: string) {
     const asset = await prisma.asset.findUnique({
       where: { id },
       include: {
-        category: true,
+        category: {
+          include: {
+            kib: true
+          }
+        },
         distribution: true,
         holder: true,
         attributes: {
@@ -187,7 +209,12 @@ export interface CreateAssetInput {
 export async function createAsset(data: CreateAssetInput, userId: string) {
   let committedKeys: string[] = [];
   try {
-    const kodeLengkap = `1.3.${data.kode1}.${data.kode2}.${data.kode3}.${data.kode4}.${data.kode5}.${data.nomorRegister}`;
+    const registerInt = parseInt(data.nomorRegister, 10);
+    if (isNaN(registerInt)) {
+      throw new Error("Nomor register harus berupa angka/integer.");
+    }
+    const registerStr = String(registerInt).padStart(4, '0');
+    const kodeLengkap = `1.3.${data.kode1}.${data.kode2}.${data.kode3}.${data.kode4}.${data.kode5}.${registerStr}`;
 
     // Verify uniqueness of full code
     const existing = await prisma.asset.findUnique({
@@ -207,7 +234,7 @@ export async function createAsset(data: CreateAssetInput, userId: string) {
           kode3: data.kode3,
           kode4: data.kode4,
           kode5: data.kode5,
-          nomorRegister: data.nomorRegister,
+          nomorRegister: registerInt,
           kodeLengkap,
           categoryId: data.categoryId,
           namaAset: data.namaAset,
@@ -325,8 +352,9 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
     const k3 = data.kode3 !== undefined ? data.kode3 : existingAsset.kode3;
     const k4 = data.kode4 !== undefined ? data.kode4 : existingAsset.kode4;
     const k5 = data.kode5 !== undefined ? data.kode5 : existingAsset.kode5;
-    const reg = data.nomorRegister !== undefined ? data.nomorRegister : existingAsset.nomorRegister;
-    const newKodeLengkap = `1.3.${k1}.${k2}.${k3}.${k4}.${k5}.${reg}`;
+    const regInt = data.nomorRegister !== undefined ? parseInt(data.nomorRegister, 10) : existingAsset.nomorRegister;
+    const regStr = String(regInt).padStart(4, '0');
+    const newKodeLengkap = `1.3.${k1}.${k2}.${k3}.${k4}.${k5}.${regStr}`;
 
     if (newKodeLengkap !== existingAsset.kodeLengkap) {
       // Verify uniqueness of the new full code
@@ -407,7 +435,7 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
           kode3: data.kode3,
           kode4: data.kode4,
           kode5: data.kode5,
-          nomorRegister: data.nomorRegister,
+          nomorRegister: data.nomorRegister !== undefined ? parseInt(data.nomorRegister, 10) : undefined,
           kodeLengkap,
           categoryId: data.categoryId,
           namaAset: data.namaAset,
@@ -563,9 +591,42 @@ export async function getDashboardStats(opdId: string) {
     // Latest assets
     const latestAssets = await prisma.asset.findMany({
       where: { opdId },
-      include: { distribution: true, holder: true, category: true },
+      include: {
+        distribution: true,
+        holder: true,
+        category: {
+          include: {
+            kib: true
+          }
+        }
+      },
       orderBy: { createdAt: "desc" },
       take: 5,
+    });
+
+    // Asset per KIB
+    const kibList = await prisma.kib.findMany({
+      include: {
+        categories: {
+          include: {
+            _count: {
+              select: { assets: { where: { opdId } } }
+            }
+          }
+        }
+      }
+    });
+
+    const kibChartData = kibList.map(k => {
+      let totalAssets = 0;
+      k.categories.forEach(c => {
+        totalAssets += c._count.assets;
+      });
+      return {
+        name: `KIB ${k.kode} (${k.nama})`,
+        kode: k.kode,
+        value: totalAssets
+      };
     });
 
     return {
@@ -582,6 +643,7 @@ export async function getDashboardStats(opdId: string) {
       charts: {
         byDistribution: distChartData,
         byType: jenisChartData,
+        byKib: kibChartData,
       },
       latestAssets,
     };

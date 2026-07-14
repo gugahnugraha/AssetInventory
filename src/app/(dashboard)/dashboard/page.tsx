@@ -36,6 +36,13 @@ export default async function DashboardPage() {
           ...asset.category,
           createdAt: asset.category.createdAt.toISOString(),
           updatedAt: asset.category.updatedAt.toISOString(),
+          kib: asset.category.kib
+            ? {
+                ...asset.category.kib,
+                createdAt: asset.category.kib.createdAt.toISOString(),
+                updatedAt: asset.category.kib.updatedAt.toISOString(),
+              }
+            : null,
         }
       })),
     };

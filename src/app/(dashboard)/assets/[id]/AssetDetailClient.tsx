@@ -387,6 +387,14 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
                   <span className="font-semibold text-zinc-950 dark:text-zinc-100">{asset.namaAset}</span>
                 </div>
                 <div className="flex justify-between py-2 text-sm">
+                  <span className="text-zinc-500 font-medium">KIB</span>
+                  <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                    <Badge className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 font-bold">
+                      KIB {asset.category?.kib?.kode || "B"} - {asset.category?.kib?.nama || "Peralatan dan Mesin"}
+                    </Badge>
+                  </span>
+                </div>
+                <div className="flex justify-between py-2 text-sm">
                   <span className="text-zinc-500 font-medium">Kategori</span>
                   <span className="font-semibold text-zinc-800 dark:text-zinc-200">
                     <Badge variant="secondary" className="bg-emerald-50 text-emerald-800 border border-emerald-250">

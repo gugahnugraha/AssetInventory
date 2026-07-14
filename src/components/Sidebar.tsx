@@ -31,7 +31,7 @@ export function Sidebar({ user }: SidebarProps) {
 
   // Auto-expand accordion if path matches one of the child links
   const isAssetPathActive = React.useMemo(() => {
-    const assetSubPaths = ["/assets", "/mutasi", "/distribusi", "/pemegang", "/kategori"];
+    const assetSubPaths = ["/assets", "/mutasi", "/distribusi", "/pemegang", "/kategori", "/kib"];
     return assetSubPaths.some(path => pathname.startsWith(path));
   }, [pathname]);
 
@@ -84,6 +84,11 @@ export function Sidebar({ user }: SidebarProps) {
         {
           label: "Kategori Aset",
           href: "/kategori",
+          roles: [Role.ADMINISTRATOR],
+        },
+        {
+          label: "Master KIB",
+          href: "/kib",
           roles: [Role.ADMINISTRATOR],
         },
       ]

@@ -36,6 +36,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 // VALIDATION SCHEMAS
 const categorySchema = z.object({
   nama: z.string().min(1, "Nama kategori wajib diisi"),
+  kibId: z.string().min(1, "Harap pilih KIB"),
 });
 
 const attributeSchema = z.object({
@@ -50,9 +51,10 @@ type AttributeFormValues = z.infer<typeof attributeSchema>;
 
 interface KategoriClientProps {
   initialCategories: any[];
+  kibs: { id: string; kode: string; nama: string }[];
 }
 
-export function KategoriClient({ initialCategories }: KategoriClientProps) {
+export function KategoriClient({ initialCategories, kibs }: KategoriClientProps) {
   const router = useRouter();
   const [categories, setCategories] = React.useState(initialCategories);
   const [selectedCatId, setSelectedCatId] = React.useState<string | null>(null);
@@ -86,7 +88,7 @@ export function KategoriClient({ initialCategories }: KategoriClientProps) {
   // Forms hook-form
   const catForm = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
-    defaultValues: { nama: "" },
+    defaultValues: { nama: "", kibId: "" },
   });
 
   const attrForm = useForm<AttributeFormValues>({
@@ -102,7 +104,7 @@ export function KategoriClient({ initialCategories }: KategoriClientProps) {
   // CATEGORY HANDLERS
 
   const handleOpenCatCreate = () => {
-    catForm.reset({ nama: "" });
+    catForm.reset({ nama: "", kibId: "" });
     setError(null);
     setIsCatCreateOpen(true);
   };
@@ -110,7 +112,10 @@ export function KategoriClient({ initialCategories }: KategoriClientProps) {
   const handleOpenCatEdit = (cat: any, e: React.MouseEvent) => {
     e.stopPropagation();
     setSelectedCat(cat);
-    catForm.setValue("nama", cat.nama);
+    catForm.reset({
+      nama: cat.nama,
+      kibId: cat.kibId || "",
+    });
     setError(null);
     setIsCatEditOpen(true);
   };
@@ -119,7 +124,7 @@ export function KategoriClient({ initialCategories }: KategoriClientProps) {
     setIsSubmitting(true);
     setError(null);
     try {
-      const res = await createCategoryAction(values.nama);
+      const res = await createCategoryAction(values.nama, values.kibId);
       if (res.error) {
         setError(res.error);
       } else if (res.success) {
@@ -139,7 +144,7 @@ export function KategoriClient({ initialCategories }: KategoriClientProps) {
     setIsSubmitting(true);
     setError(null);
     try {
-      const res = await updateCategoryAction(selectedCat.id, values.nama);
+      const res = await updateCategoryAction(selectedCat.id, values.nama, values.kibId);
       if (res.error) {
         setError(res.error);
       } else if (res.success) {
@@ -329,7 +334,7 @@ export function KategoriClient({ initialCategories }: KategoriClientProps) {
                           {cat.nama}
                         </span>
                         <span className="text-[10px] text-zinc-400 font-medium">
-                          {cat._count?.assets || 0} Aset | {cat.attributes?.length || 0} Atribut
+                          KIB {cat.kib?.kode || "B"} • {cat._count?.assets || 0} Aset | {cat.attributes?.length || 0} Atribut
                         </span>
                       </div>
                       <div className="flex items-center gap-1 opacity-70 hover:opacity-100 shrink-0">
@@ -478,6 +483,21 @@ export function KategoriClient({ initialCategories }: KategoriClientProps) {
             />
             {catForm.formState.errors.nama && <p className="text-xs text-rose-500 mt-1">{catForm.formState.errors.nama.message}</p>}
           </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Pilih KIB</label>
+            <select
+              {...catForm.register("kibId")}
+              className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="" className="bg-background text-foreground">-- Pilih KIB --</option>
+              {kibs.map((kib) => (
+                <option key={kib.id} value={kib.id} className="bg-background text-foreground">
+                  KIB {kib.kode} - {kib.nama}
+                </option>
+              ))}
+            </select>
+            {catForm.formState.errors.kibId && <p className="text-xs text-rose-500 mt-1">{catForm.formState.errors.kibId.message}</p>}
+          </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsCatCreateOpen(false)} className="cursor-pointer">
               Batal
@@ -509,6 +529,21 @@ export function KategoriClient({ initialCategories }: KategoriClientProps) {
               {...catForm.register("nama")}
             />
             {catForm.formState.errors.nama && <p className="text-xs text-rose-500 mt-1">{catForm.formState.errors.nama.message}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Pilih KIB</label>
+            <select
+              {...catForm.register("kibId")}
+              className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="" className="bg-background text-foreground">-- Pilih KIB --</option>
+              {kibs.map((kib) => (
+                <option key={kib.id} value={kib.id} className="bg-background text-foreground">
+                  KIB {kib.kode} - {kib.nama}
+                </option>
+              ))}
+            </select>
+            {catForm.formState.errors.kibId && <p className="text-xs text-rose-500 mt-1">{catForm.formState.errors.kibId.message}</p>}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsCatEditOpen(false)} className="cursor-pointer">

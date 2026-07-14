@@ -49,6 +49,8 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const [selectedBidang, setSelectedBidang] = React.useState<string>("ALL");
   const [selectedTahun, setSelectedTahun] = React.useState<string>("ALL");
   const [selectedReconStatus, setSelectedReconStatus] = React.useState<string>("ALL");
+  const [selectedKib, setSelectedKib] = React.useState<string>("ALL");
+  const [selectedKategori, setSelectedKategori] = React.useState<string>("ALL");
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; code: string } | null>(null);
@@ -113,12 +115,45 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
     return years.sort((a, b) => b - a);
   }, [assets]);
 
+  // Compute unique sorted KIBs from asset data
+  const availableKibs = React.useMemo(() => {
+    const kibMap = new Map();
+    assets.forEach(a => {
+      const kib = a.category?.kib;
+      if (kib) {
+        kibMap.set(kib.id, kib);
+      }
+    });
+    return Array.from(kibMap.values()).sort((a: any, b: any) => a.kode.localeCompare(b.kode)) as any[];
+  }, [assets]);
+
+  // Compute unique sorted Categories from asset data, optionally filtered by selected KIB
+  const availableCategories = React.useMemo(() => {
+    const catMap = new Map();
+    assets.forEach(a => {
+      const cat = a.category;
+      if (cat) {
+        if (selectedKib === "ALL" || cat.kibId === selectedKib) {
+          catMap.set(cat.id, cat);
+        }
+      }
+    });
+    return Array.from(catMap.values()).sort((a: any, b: any) => a.nama.localeCompare(b.nama)) as any[];
+  }, [assets, selectedKib]);
+
+  // Reset selected category if KIB filter changes
+  React.useEffect(() => {
+    setSelectedKategori("ALL");
+  }, [selectedKib]);
+
   // Custom filtering based on dropdowns
   const filteredData = React.useMemo(() => {
     return assets.filter(asset => {
       const matchKondisi = selectedKondisi === "ALL" || asset.kondisi === selectedKondisi;
       const matchBidang = selectedBidang === "ALL" || asset.distributionId === selectedBidang;
       const matchTahun = selectedTahun === "ALL" || String(asset.tahunPembelian) === selectedTahun;
+      const matchKib = selectedKib === "ALL" || asset.category?.kibId === selectedKib;
+      const matchKategori = selectedKategori === "ALL" || asset.categoryId === selectedKategori;
       
       let matchRecon = true;
       if (selectedReconStatus !== "ALL") {
@@ -134,13 +169,22 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         }
       }
       
-      return matchKondisi && matchBidang && matchTahun && matchRecon;
+      return matchKondisi && matchBidang && matchTahun && matchRecon && matchKib && matchKategori;
     });
-  }, [assets, selectedKondisi, selectedBidang, selectedTahun, selectedReconStatus]);
+  }, [assets, selectedKondisi, selectedBidang, selectedTahun, selectedReconStatus, selectedKib, selectedKategori]);
 
   // Define Columns
   const columns = React.useMemo<ColumnDef<any>[]>(
     () => [
+      {
+        id: "index",
+        header: "No.",
+        cell: ({ row }) => (
+          <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+            {row.index + 1}
+          </span>
+        ),
+      },
       {
         accessorKey: "kodeLengkap",
         header: ({ column }) => (
@@ -162,13 +206,13 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="flex flex-col min-w-40">
-            <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-50">{row.getValue("namaAset")}</span>
-            <Badge variant="outline" className="text-[10px] w-fit bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-200/50 font-medium mt-1">
-              {row.original.category?.nama || "Lainnya"}
-            </Badge>
-          </div>
+          <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-50">{row.getValue("namaAset")}</span>
         ),
+      },
+      {
+        id: "kategori",
+        header: "Kategori",
+        cell: ({ row }) => <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300">{row.original.category?.nama || "-"}</span>,
       },
       {
         accessorKey: "merkType",
@@ -204,27 +248,6 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         id: "pemegang",
         header: "Pemegang Barang",
         cell: ({ row }) => <span className="text-sm font-medium">{row.original.holder?.nama || "-"}</span>,
-      },
-      {
-        id: "statusRekon",
-        header: "Status Rekon",
-        cell: ({ row }) => {
-          const recons = row.original.reconciliations || [];
-          if (recons.length === 0) {
-            return <Badge variant="outline" className="text-[10px] text-zinc-500">Belum Direkon</Badge>;
-          }
-          const sorted = [...recons].sort((a: any, b: any) => {
-            return new Date(b.period.tanggalMulai).getTime() - new Date(a.period.tanggalMulai).getTime();
-          });
-          const status = sorted[0]?.status || "BELUM_DIREKON";
-          if (status === "SESUAI") {
-            return <Badge variant="success" className="text-[10px]">Sesuai</Badge>;
-          }
-          if (status === "TIDAK_SESUAI") {
-            return <Badge variant="destructive" className="text-[10px]">Tidak Sesuai</Badge>;
-          }
-          return <Badge variant="outline" className="text-[10px] text-zinc-500">Belum Direkon</Badge>;
-        }
       },
       {
         id: "actions",
@@ -313,6 +336,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       const asset = row.original;
       const baseData: any = {
         "Kode Aset": asset.kodeLengkap,
+        "KIB": asset.category?.kib ? `KIB ${asset.category.kib.kode} - ${asset.category.kib.nama}` : "-",
         "Kategori Aset": asset.category?.nama || "-",
         "Nama Aset": asset.namaAset,
         "Merk / Type": asset.merkType || "-",
@@ -380,7 +404,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         <CardContent className="p-4 sm:p-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Input Search */}
-            <div className="relative sm:col-span-2 lg:col-span-1">
+            <div className="relative lg:col-span-2">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
               <Input
                 placeholder="Cari kode, jenis, merk, pemegang..."
@@ -388,6 +412,21 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
                 onChange={e => setGlobalFilter(e.target.value)}
                 className="pl-9"
               />
+            </div>
+
+            {/* Filter Kategori */}
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-zinc-400 shrink-0" />
+              <select
+                value={selectedKategori}
+                onChange={e => setSelectedKategori(e.target.value)}
+                className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="ALL" className="bg-background text-foreground">Semua Kategori</option>
+                {availableCategories.map(cat => (
+                  <option key={cat.id} value={cat.id} className="bg-background text-foreground">{cat.nama}</option>
+                ))}
+              </select>
             </div>
 
             {/* Filter Bidang */}
@@ -405,24 +444,6 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
               </select>
             </div>
 
-            {/* Filter Kondisi */}
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-zinc-400 shrink-0" />
-              <select
-                value={selectedKondisi}
-                onChange={e => setSelectedKondisi(e.target.value)}
-                className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="ALL" className="bg-background text-foreground">Semua Kondisi</option>
-                <option value={Kondisi.NORMAL} className="bg-background text-foreground">Normal</option>
-                <option value={Kondisi.RUSAK_RINGAN} className="bg-background text-foreground">Rusak Ringan</option>
-                <option value={Kondisi.RUSAK_BERAT} className="bg-background text-foreground">Rusak Berat</option>
-                <option value={Kondisi.HILANG} className="bg-background text-foreground">Hilang</option>
-                <option value={Kondisi.DALAM_PERBAIKAN} className="bg-background text-foreground">Dalam Perbaikan</option>
-                <option value={Kondisi.DIPINJAM} className="bg-background text-foreground">Dipinjam</option>
-              </select>
-            </div>
-
             {/* Filter Tahun */}
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-zinc-400 shrink-0" />
@@ -435,21 +456,6 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
                 {availableYears.map(year => (
                   <option key={year} value={String(year)} className="bg-background text-foreground">{year}</option>
                 ))}
-              </select>
-            </div>
-
-            {/* Filter Status Rekonsiliasi */}
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-zinc-400 shrink-0" />
-              <select
-                value={selectedReconStatus}
-                onChange={e => setSelectedReconStatus(e.target.value)}
-                className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="ALL" className="bg-background text-foreground">Semua Rekonsiliasi</option>
-                <option value="BELUM_DIREKON" className="bg-background text-foreground">Belum Direkon</option>
-                <option value="SESUAI" className="bg-background text-foreground">Sesuai</option>
-                <option value="TIDAK_SESUAI" className="bg-background text-foreground">Tidak Sesuai</option>
               </select>
             </div>
           </div>

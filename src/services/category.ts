@@ -6,6 +6,7 @@ export async function getAllCategories() {
   try {
     const categories = await prisma.category.findMany({
       include: {
+        kib: true,
         attributes: {
           orderBy: { displayOrder: "asc" }
         },
@@ -46,23 +47,23 @@ export async function getCategoryById(id: string) {
   }
 }
 
-export async function createCategory(nama: string) {
+export async function createCategory(nama: string, kibId: string) {
   try {
     const cleanNama = nama.trim();
     if (!cleanNama) {
       throw new Error("Nama kategori tidak boleh kosong.");
     }
     
-    // Check if category already exists
+    // Check if category already exists under this KIB
     const existing = await prisma.category.findUnique({
-      where: { nama: cleanNama }
+      where: { nama_kibId: { nama: cleanNama, kibId } }
     });
     if (existing) {
-      throw new Error(`Kategori ${cleanNama} sudah terdaftar.`);
+      throw new Error(`Kategori ${cleanNama} sudah terdaftar pada KIB tersebut.`);
     }
 
     return await prisma.category.create({
-      data: { nama: cleanNama }
+      data: { nama: cleanNama, kibId }
     });
   } catch (error: any) {
     console.error("Error in createCategory:", error);
@@ -70,24 +71,34 @@ export async function createCategory(nama: string) {
   }
 }
 
-export async function updateCategory(id: string, nama: string) {
+export async function updateCategory(id: string, nama: string, kibId?: string) {
   try {
     const cleanNama = nama.trim();
     if (!cleanNama) {
       throw new Error("Nama kategori tidak boleh kosong.");
     }
 
-    // Check if name is taken by another category
+    const existingCategory = await prisma.category.findUnique({ where: { id } });
+    if (!existingCategory) {
+      throw new Error("Kategori tidak ditemukan.");
+    }
+
+    const targetKibId = kibId || existingCategory.kibId;
+
+    // Check if name is taken by another category under this KIB
     const existing = await prisma.category.findUnique({
-      where: { nama: cleanNama }
+      where: { nama_kibId: { nama: cleanNama, kibId: targetKibId } }
     });
     if (existing && existing.id !== id) {
-      throw new Error(`Kategori dengan nama ${cleanNama} sudah terdaftar.`);
+      throw new Error(`Kategori dengan nama ${cleanNama} sudah terdaftar pada KIB tersebut.`);
     }
+
+    const updateData: any = { nama: cleanNama };
+    if (kibId) updateData.kibId = kibId;
 
     return await prisma.category.update({
       where: { id },
-      data: { nama: cleanNama }
+      data: updateData
     });
   } catch (error: any) {
     console.error("Error in updateCategory:", error);

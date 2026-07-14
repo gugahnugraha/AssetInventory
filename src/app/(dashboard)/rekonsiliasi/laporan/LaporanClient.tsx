@@ -85,10 +85,11 @@ export function LaporanClient({ periods, initialReportData, userRole, opdId }: L
 
     // Sheet 2: Aset Direkonsiliasi
     const reconRows = [
-      ["No", "Kode Aset", "Nama Aset", "Distribusi/Bidang", "Pemegang Barang", "Status Rekonsiliasi", "Pemeriksa", "Tanggal Periksa", "Jumlah Temuan", "Catatan"],
+      ["No", "Kode Aset", "KIB", "Nama Aset", "Distribusi/Bidang", "Pemegang Barang", "Status Rekonsiliasi", "Pemeriksa", "Tanggal Periksa", "Jumlah Temuan", "Catatan"],
       ...reconciliations.map((r: any, i: number) => [
         i + 1,
         r.asset.kodeLengkap,
+        r.asset.category?.kib ? `KIB ${r.asset.category.kib.kode} - ${r.asset.category.kib.nama}` : "-",
         r.asset.namaAset,
         r.asset.distribution?.nama || "-",
         r.asset.holder?.nama || "-",
@@ -103,10 +104,11 @@ export function LaporanClient({ periods, initialReportData, userRole, opdId }: L
 
     // Sheet 3: Belum Direkonsiliasi
     const belumRows = [
-      ["No", "Kode Aset", "Nama Aset", "Kategori", "Distribusi/Bidang", "Pemegang Barang", "Kondisi"],
+      ["No", "Kode Aset", "KIB", "Nama Aset", "Kategori", "Distribusi/Bidang", "Pemegang Barang", "Kondisi"],
       ...belumDirekonAssets.map((a: any, i: number) => [
         i + 1,
         a.kodeLengkap,
+        a.category?.kib ? `KIB ${a.category.kib.kode} - ${a.category.kib.nama}` : "-",
         a.namaAset,
         a.category?.nama || "-",
         a.distribution?.nama || "-",

@@ -55,7 +55,8 @@ model User {
 
 model Distribution {
   id        String   @id @default(uuid())
-  nama      String   // e.g. Sekretariat, Keuangan, Aset
+  nama      String   // e.g. Sekretariat, Aptika, Persandian
+  kode      Int      // e.g. 1, 2, 3
   opdId     String
   opd       Opd      @relation(fields: [opdId], references: [id])
   holders       Holder[]
@@ -66,6 +67,7 @@ model Distribution {
   updatedAt     DateTime @updatedAt
 
   @@unique([nama, opdId])
+  @@unique([kode, opdId])
 }
 
 model Holder {
@@ -141,7 +143,7 @@ model Asset {
   kode3          String            // e.g. "01"
   kode4          String            // e.g. "03"
   kode5          String            // e.g. "02"
-  nomorRegister  String            // e.g. "001"
+  nomorRegister  Int               // e.g. 1, 1000
   kodeLengkap    String            @unique // XX.XX.XX.XX.XX.XXX
   categoryId     String
   category       Category          @relation(fields: [categoryId], references: [id])

@@ -433,7 +433,12 @@ export async function generateReportData(periodId: string, opdId: string) {
         asset: {
           include: {
             distribution: { select: { nama: true } },
-            category: { select: { nama: true } },
+            category: {
+              select: {
+                nama: true,
+                kib: { select: { kode: true, nama: true } }
+              }
+            },
             holder: { select: { nama: true } },
           },
         },
@@ -465,7 +470,12 @@ export async function generateReportData(periodId: string, opdId: string) {
     include: {
       distribution: { select: { nama: true } },
       holder: { select: { nama: true } },
-      category: { select: { nama: true } },
+      category: {
+        select: {
+          nama: true,
+          kib: { select: { kode: true, nama: true } }
+        }
+      },
     },
     orderBy: { namaAset: "asc" },
   });

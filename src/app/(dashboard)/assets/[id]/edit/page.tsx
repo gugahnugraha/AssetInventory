@@ -5,6 +5,7 @@ import { DocumentService } from "@/services/document";
 import { getAllDistributions } from "@/services/distribution";
 import { getAllHolders } from "@/services/holder";
 import { getAllCategories } from "@/services/category";
+import { getAllKibs } from "@/services/kib";
 import { AssetFormClient } from "../../AssetFormClient";
 import { Role } from "@prisma/client";
 
@@ -38,9 +39,12 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
       notFound();
     }
 
-    const distributions = await getAllDistributions(opdId);
-    const holders = await getAllHolders(opdId);
-    const categories = await getAllCategories();
+    const [distributions, holders, categories, kibs] = await Promise.all([
+      getAllDistributions(opdId),
+      getAllHolders(opdId),
+      getAllCategories(),
+      getAllKibs()
+    ]);
 
     // Serialize database models (convert Date objects to JSON-friendly string ISO dates)
     const serializedAsset = {
@@ -88,9 +92,16 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
       distributionId: holder.distributionId,
     }));
 
+    const serializedKibs = kibs.filter(k => k.isActive).map(k => ({
+      id: k.id,
+      kode: k.kode,
+      nama: k.nama,
+    }));
+
     const serializedCategories = categories.map((cat) => ({
       id: cat.id,
       nama: cat.nama,
+      kibId: cat.kibId,
       attributes: cat.attributes.map((attr) => ({
         id: attr.id,
         nama: attr.nama,
@@ -106,6 +117,7 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
         distributions={serializedDistributions}
         holders={serializedHolders}
         categories={serializedCategories}
+        kibs={serializedKibs}
       />
     );
   } catch (error) {

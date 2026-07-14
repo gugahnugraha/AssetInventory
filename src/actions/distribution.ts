@@ -17,15 +17,18 @@ async function requireWriteAccess() {
   return session;
 }
 
-export async function createDistributionAction(nama: string) {
+export async function createDistributionAction(nama: string, kode: number) {
   try {
     const session = await requireWriteAccess();
     const cleanNama = nama.trim();
     if (!cleanNama) {
       return { error: "Nama bidang tidak boleh kosong." };
     }
+    if (kode === undefined || kode === null || isNaN(kode) || kode <= 0) {
+      return { error: "Kode bidang harus berupa angka positif." };
+    }
 
-    const newDist = await createDistribution(cleanNama, session.user.opdId);
+    const newDist = await createDistribution(cleanNama, kode, session.user.opdId);
     revalidatePath("/distribusi");
     return { success: true, distribution: newDist };
   } catch (error: any) {
@@ -34,15 +37,18 @@ export async function createDistributionAction(nama: string) {
   }
 }
 
-export async function updateDistributionAction(id: string, nama: string) {
+export async function updateDistributionAction(id: string, nama: string, kode: number) {
   try {
     await requireWriteAccess();
     const cleanNama = nama.trim();
     if (!cleanNama) {
       return { error: "Nama bidang tidak boleh kosong." };
     }
+    if (kode === undefined || kode === null || isNaN(kode) || kode <= 0) {
+      return { error: "Kode bidang harus berupa angka positif." };
+    }
 
-    const updatedDist = await updateDistribution(id, cleanNama);
+    const updatedDist = await updateDistribution(id, cleanNama, kode);
     revalidatePath("/distribusi");
     return { success: true, distribution: updatedDist };
   } catch (error: any) {

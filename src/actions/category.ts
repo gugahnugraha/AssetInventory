@@ -26,10 +26,10 @@ async function requireAdminAccess() {
 
 // CATEGORY ACTIONS
 
-export async function createCategoryAction(nama: string) {
+export async function createCategoryAction(nama: string, kibId: string) {
   try {
     await requireAdminAccess();
-    const newCat = await createCategory(nama);
+    const newCat = await createCategory(nama, kibId);
     revalidatePath("/kategori");
     revalidatePath("/assets");
     return { success: true, category: newCat };
@@ -39,10 +39,10 @@ export async function createCategoryAction(nama: string) {
   }
 }
 
-export async function updateCategoryAction(id: string, nama: string) {
+export async function updateCategoryAction(id: string, nama: string, kibId?: string) {
   try {
     await requireAdminAccess();
-    const updated = await updateCategory(id, nama);
+    const updated = await updateCategory(id, nama, kibId);
     revalidatePath("/kategori");
     revalidatePath("/assets");
     return { success: true, category: updated };

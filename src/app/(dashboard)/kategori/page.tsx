@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Role } from "@prisma/client";
 import { getAllCategories } from "@/services/category";
+import { getAllKibs } from "@/services/kib";
 import { KategoriClient } from "./KategoriClient";
 
 export const metadata = {
@@ -27,7 +28,17 @@ export default async function KategoriPage() {
   }
 
   try {
-    const categories = await getAllCategories();
+    const [categories, kibs] = await Promise.all([
+      getAllCategories(),
+      getAllKibs()
+    ]);
+
+    // Filter active KIBs
+    const activeKibs = kibs.filter(k => k.isActive).map(k => ({
+      id: k.id,
+      kode: k.kode,
+      nama: k.nama
+    }));
 
     // Serialize dates for Client Component safety
     const serializedCategories = categories.map((cat) => ({
@@ -44,6 +55,7 @@ export default async function KategoriPage() {
     return (
       <KategoriClient
         initialCategories={serializedCategories}
+        kibs={activeKibs}
       />
     );
   } catch (error) {

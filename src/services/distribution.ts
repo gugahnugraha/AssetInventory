@@ -9,7 +9,7 @@ export async function getAllDistributions(opdId: string) {
           select: { assets: true, holders: true },
         },
       },
-      orderBy: { nama: "asc" },
+      orderBy: { kode: "asc" },
     });
   } catch (error) {
     console.error("Error in getAllDistributions:", error);
@@ -32,11 +32,12 @@ export async function getDistributionById(id: string) {
   }
 }
 
-export async function createDistribution(nama: string, opdId: string) {
+export async function createDistribution(nama: string, kode: number, opdId: string) {
   try {
     return await prisma.distribution.create({
       data: {
         nama,
+        kode,
         opdId,
       },
     });
@@ -46,11 +47,11 @@ export async function createDistribution(nama: string, opdId: string) {
   }
 }
 
-export async function updateDistribution(id: string, nama: string) {
+export async function updateDistribution(id: string, nama: string, kode: number) {
   try {
     return await prisma.distribution.update({
       where: { id },
-      data: { nama },
+      data: { nama, kode },
     });
   } catch (error) {
     console.error("Error in updateDistribution:", error);

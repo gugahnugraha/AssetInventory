@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 
 const distSchema = z.object({
   nama: z.string().min(1, "Nama bidang wajib diisi"),
+  kode: z.coerce.number().min(1, "Kode bidang harus berupa angka positif"),
 });
 
 type DistFormValues = z.infer<typeof distSchema>;
@@ -53,8 +54,8 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
     reset,
     formState: { errors },
   } = useForm<DistFormValues>({
-    resolver: zodResolver(distSchema),
-    defaultValues: { nama: "" },
+    resolver: zodResolver(distSchema) as any,
+    defaultValues: { nama: "", kode: "" as any },
   });
 
   React.useEffect(() => {
@@ -65,6 +66,7 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
     if (userRole === Role.MANAGER) return;
     setSelectedDist(dist);
     setValue("nama", dist.nama);
+    setValue("kode", dist.kode);
     setIsEditOpen(true);
   };
 
@@ -78,7 +80,7 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
     setIsSubmitting(true);
     setError(null);
     try {
-      const res = await createDistributionAction(values.nama);
+      const res = await createDistributionAction(values.nama, values.kode);
       if (res.error) {
         setError(res.error);
         setIsSubmitting(false);
@@ -99,7 +101,7 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
     setIsSubmitting(true);
     setError(null);
     try {
-      const res = await updateDistributionAction(selectedDist.id, values.nama);
+      const res = await updateDistributionAction(selectedDist.id, values.nama, values.kode);
       if (res.error) {
         setError(res.error);
         setIsSubmitting(false);
@@ -173,7 +175,10 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
                   <div className="p-2.5 bg-emerald-500/10 text-emerald-800 rounded-lg">
                     <GitFork className="h-5 w-5" />
                   </div>
-                  <CardTitle className="text-base font-bold truncate leading-tight text-zinc-950">{dist.nama}</CardTitle>
+                  <div className="flex flex-col min-w-0">
+                    <CardTitle className="text-base font-bold truncate leading-tight text-zinc-950">{dist.nama}</CardTitle>
+                    <span className="text-[10px] w-fit text-emerald-600 font-mono font-bold bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded-md border border-emerald-250/30 mt-1">Kode: {dist.kode}</span>
+                  </div>
                 </div>
                 {userRole !== Role.MANAGER && (
                   <div className="flex items-center gap-1">
@@ -223,7 +228,7 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
       <Dialog isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)}>
         <DialogHeader>
           <DialogTitle>Tambah Bidang Kerja</DialogTitle>
-          <DialogDescription>Masukkan nama bidang atau unit kerja baru untuk OPD.</DialogDescription>
+          <DialogDescription>Masukkan nama bidang dan kode angka baru untuk OPD.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onCreateSubmit)} className="space-y-4 pt-2">
           {error && (
@@ -232,13 +237,24 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
               <span>{error}</span>
             </div>
           )}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Nama Bidang</label>
-            <Input
-              placeholder="Contoh: Bidang Informatika"
-              {...register("nama")}
-            />
-            {errors.nama && <p className="text-xs text-rose-500 mt-1">{errors.nama.message}</p>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Nama Bidang</label>
+              <Input
+                placeholder="Contoh: Sekretariat"
+                {...register("nama")}
+              />
+              {errors.nama && <p className="text-xs text-rose-500 mt-1">{errors.nama.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Kode Bidang</label>
+              <Input
+                type="number"
+                placeholder="Contoh: 1"
+                {...register("kode")}
+              />
+              {errors.kode && <p className="text-xs text-rose-500 mt-1">{errors.kode.message}</p>}
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)} className="cursor-pointer">
@@ -255,7 +271,7 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
       <Dialog isOpen={isEditOpen} onClose={() => setIsEditOpen(false)}>
         <DialogHeader>
           <DialogTitle>Sunting Bidang Kerja</DialogTitle>
-          <DialogDescription>Ubah nama bidang atau unit kerja terpilih.</DialogDescription>
+          <DialogDescription>Ubah nama bidang atau kode angka terpilih.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onEditSubmit)} className="space-y-4 pt-2">
           {error && (
@@ -264,13 +280,24 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
               <span>{error}</span>
             </div>
           )}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Nama Bidang</label>
-            <Input
-              placeholder="Contoh: Bidang Informatika"
-              {...register("nama")}
-            />
-            {errors.nama && <p className="text-xs text-rose-500 mt-1">{errors.nama.message}</p>}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Nama Bidang</label>
+              <Input
+                placeholder="Contoh: Sekretariat"
+                {...register("nama")}
+              />
+              {errors.nama && <p className="text-xs text-rose-500 mt-1">{errors.nama.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Kode Bidang</label>
+              <Input
+                type="number"
+                placeholder="Contoh: 1"
+                {...register("kode")}
+              />
+              {errors.kode && <p className="text-xs text-rose-500 mt-1">{errors.kode.message}</p>}
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setIsEditOpen(false)} className="cursor-pointer">
