@@ -29,6 +29,7 @@ model Opd {
   users         User[]
   distributions Distribution[]
   assets        Asset[]
+  reconPeriods  ReconciliationPeriod[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 }
@@ -46,6 +47,8 @@ model User {
   auditLogs    AuditLog[]
   assetHistories AssetHistory[]
   documents    Document[]
+  createdPeriods ReconciliationPeriod[] @relation("PeriodCreator")
+  assetReconciliations AssetReconciliation[] @relation("AssetReconChecker")
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 }
@@ -143,6 +146,7 @@ model Asset {
   attributes     AssetAttribute[]
   auditLogs      AuditLog[]
   history        AssetHistory[]
+  reconciliations AssetReconciliation[]
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 }
@@ -195,6 +199,7 @@ enum EntityType {
   MUTATION
   MAINTENANCE
   DISPOSAL
+  RECONCILIATION
 }
 
 enum DocumentType {
@@ -204,6 +209,8 @@ enum DocumentType {
   INVOICE
   WARRANTY
   MANUAL
+  CHECKLIST
+  REPORT
   OTHER
 }
 
@@ -223,3 +230,110 @@ model Document {
   uploadedAt       DateTime     @default(now())
   archivedAt       DateTime?
 }
+
+// =============================================
+// REKONSILIASI ASET
+// =============================================
+
+enum ReconciliationStatus {
+  OPEN
+  LOCKED
+  CLOSED
+}
+
+enum AssetReconciliationStatus {
+  BELUM_DIREKON
+  SESUAI
+  TIDAK_SESUAI
+}
+
+enum FindingType {
+  DATA_PEMEGANG
+  DATA_DISTRIBUSI
+  KONDISI
+  LABEL
+  FOTO
+  DOKUMEN
+  ASET_TIDAK_DITEMUKAN
+  ASET_RUSAK
+  ASET_HILANG
+  LAINNYA
+}
+
+enum FindingSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum FindingRecommendation {
+  MUTASI_ASET
+  PERBAIKAN_DATA
+  PENGHAPUSAN_ASET
+  UPLOAD_DOKUMEN
+  PENGADAAN_LABEL
+  TIDAK_ADA
+}
+
+model ReconciliationPeriod {
+  id             String                 @id @default(uuid())
+  nama           String
+  semester       Int                    // 1 or 2
+  tahun          Int
+  tanggalMulai   DateTime
+  tanggalSelesai DateTime
+  status         ReconciliationStatus   @default(OPEN)
+  opdId          String
+  opd            Opd                    @relation(fields: [opdId], references: [id])
+  createdBy      String
+  creator        User                   @relation("PeriodCreator", fields: [createdBy], references: [id])
+  reconciliations AssetReconciliation[]
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+}
+
+model AssetReconciliation {
+  id             String                    @id @default(uuid())
+  periodId       String
+  period         ReconciliationPeriod      @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  assetId        String
+  asset          Asset                     @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  status         AssetReconciliationStatus @default(BELUM_DIREKON)
+  checkedBy      String?
+  checker        User?                     @relation("AssetReconChecker", fields: [checkedBy], references: [id])
+  checkedAt      DateTime?
+  notes          String?
+  checklists     AssetReconciliationChecklist[]
+  findings       ReconciliationFinding[]
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @updatedAt
+
+  @@unique([periodId, assetId])
+}
+
+model AssetReconciliationChecklist {
+  id                    String              @id @default(uuid())
+  assetReconciliationId String
+  reconciliation        AssetReconciliation @relation(fields: [assetReconciliationId], references: [id], onDelete: Cascade)
+  checklistItem         String
+  checked               Boolean             @default(false)
+  notes                 String?
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+}
+
+model ReconciliationFinding {
+  id                    String                @id @default(uuid())
+  assetReconciliationId String
+  reconciliation        AssetReconciliation   @relation(fields: [assetReconciliationId], references: [id], onDelete: Cascade)
+  findingType           FindingType
+  severity              FindingSeverity
+  description           String
+  recommendation        FindingRecommendation @default(TIDAK_ADA)
+  resolved              Boolean               @default(false)
+  resolvedAt            DateTime?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+}
+
