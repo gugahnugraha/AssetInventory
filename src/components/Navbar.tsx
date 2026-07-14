@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Menu, User, LogOut, ChevronDown } from "lucide-react"
+import Link from "next/link"
+import { Menu, User, LogOut, ChevronDown, UserCircle } from "lucide-react"
 import { Badge } from "./ui/badge"
 import { ConfirmDialog } from "./ui/confirm-dialog"
 import { Role } from "@prisma/client"
@@ -101,6 +102,14 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
                 <p className="text-sm font-semibold text-zinc-950 truncate mt-1">{user.nama}</p>
                 <p className="text-xs text-zinc-800 font-normal truncate">@{user.username}</p>
               </div>
+              <Link
+                href="/profile"
+                onClick={() => setDropdownOpen(false)}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded-lg transition-colors font-semibold cursor-pointer"
+              >
+                <UserCircle className="h-4 w-4 text-zinc-500" />
+                Profil Saya
+              </Link>
               <button
                 onClick={() => { setDropdownOpen(false); setShowLogoutConfirm(true); }}
                 className="flex items-center gap-2 w-full px-3 py-2 text-sm text-rose-600 hover:bg-rose-50 rounded-lg transition-colors font-bold cursor-pointer text-left"

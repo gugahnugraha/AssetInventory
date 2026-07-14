@@ -6,9 +6,10 @@ export interface DialogProps {
   isOpen: boolean
   onClose: () => void
   children: React.ReactNode
+  className?: string
 }
 
-export function Dialog({ isOpen, onClose, children }: DialogProps) {
+export function Dialog({ isOpen, onClose, children, className }: DialogProps) {
   React.useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden"
@@ -30,7 +31,7 @@ export function Dialog({ isOpen, onClose, children }: DialogProps) {
         onClick={onClose}
       />
       {/* Dialog container */}
-      <div className="relative z-10 w-full max-w-lg rounded-xl border bg-background p-6 shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200">
+      <div className={cn("relative z-10 w-full max-w-lg rounded-xl border bg-background p-6 shadow-2xl animate-in fade-in-0 zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto", className)}>
         <button
           onClick={onClose}
           className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"

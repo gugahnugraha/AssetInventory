@@ -9,7 +9,6 @@ import {
   GitFork,
   UserCheck,
   Users,
-  User,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -93,12 +92,6 @@ export function Sidebar({ user }: SidebarProps) {
       href: "/users",
       icon: Users,
       roles: [Role.ADMINISTRATOR],
-    },
-    {
-      label: "Profil Saya",
-      href: "/profile",
-      icon: User,
-      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
     },
     {
       label: "Pengaturan",

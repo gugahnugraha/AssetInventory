@@ -367,7 +367,7 @@ export function MutasiClient({
       </div>
 
       {/* Mutation Form Modal */}
-      <Dialog isOpen={isOpen} onClose={() => { if (!isSubmitting) { setIsOpen(false); resetForm(); } }}>
+      <Dialog isOpen={isOpen} onClose={() => { if (!isSubmitting) { setIsOpen(false); resetForm(); } }} className="max-w-4xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ArrowRightLeft className="h-5 w-5 text-emerald-600" />
@@ -386,226 +386,235 @@ export function MutasiClient({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Autocomplete Asset Search */}
-          <div className="space-y-1.5 relative">
-            <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider flex items-center gap-1">
-              Cari Aset <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <Input
-                placeholder="Ketik nama aset atau kode lengkap..."
-                value={assetSearch}
-                onChange={(e) => {
-                  setAssetSearch(e.target.value);
-                  setSelectedAsset(null);
-                  setShowAssetDropdown(true);
-                }}
-                onFocus={() => setShowAssetDropdown(true)}
-                disabled={isSubmitting || !!preselectedAssetId}
-                className="font-medium"
-              />
-              <Search className="h-4 w-4 text-zinc-400 absolute right-3 top-2.5" />
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Column 1: Aset & Tujuan Penempatan Baru */}
+            <div className="space-y-4">
+              {/* Autocomplete Asset Search */}
+              <div className="space-y-1.5 relative">
+                <label className="text-xs font-bold text-zinc-705 uppercase tracking-wider flex items-center gap-1">
+                  Cari Aset <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <Input
+                    placeholder="Ketik nama aset atau kode lengkap..."
+                    value={assetSearch}
+                    onChange={(e) => {
+                      setAssetSearch(e.target.value);
+                      setSelectedAsset(null);
+                      setShowAssetDropdown(true);
+                    }}
+                    onFocus={() => setShowAssetDropdown(true)}
+                    disabled={isSubmitting || !!preselectedAssetId}
+                    className="font-medium bg-white"
+                  />
+                  <Search className="h-4 w-4 text-zinc-400 absolute right-3 top-2.5" />
+                </div>
 
-            {/* Dropdown list for autocomplete */}
-            {showAssetDropdown && assetSearch.length > 0 && !selectedAsset && (
-              <div className="absolute z-50 w-full left-0 mt-1 max-h-48 overflow-y-auto bg-white border border-zinc-200 rounded-lg shadow-lg divide-y text-sm">
-                {filteredAssetsForSelect.length === 0 ? (
-                  <div className="p-3 text-zinc-500 italic text-center">Aset tidak ditemukan.</div>
-                ) : (
-                  filteredAssetsForSelect.map((a) => (
-                    <div
-                      key={a.id}
-                      onClick={() => {
-                        setSelectedAsset(a);
-                        setAssetSearch(`${a.namaAset} (${a.kodeLengkap})`);
-                        // Prepopulate default fields
-                        setToDistributionId(a.distributionId);
-                        setToHolderId(a.holderId || "");
-                        setToCondition(a.kondisi);
-                        setShowAssetDropdown(false);
-                      }}
-                      className="p-3 hover:bg-zinc-50 cursor-pointer flex flex-col font-medium"
-                    >
-                      <span className="text-zinc-950 font-bold">{a.namaAset}</span>
-                      <span className="text-xs font-semibold text-emerald-800 font-mono mt-0.5">{a.kodeLengkap}</span>
-                    </div>
-                  ))
+                {/* Dropdown list for autocomplete */}
+                {showAssetDropdown && assetSearch.length > 0 && !selectedAsset && (
+                  <div className="absolute z-50 w-full left-0 mt-1 max-h-48 overflow-y-auto bg-white border border-zinc-200 rounded-lg shadow-lg divide-y text-sm">
+                    {filteredAssetsForSelect.length === 0 ? (
+                      <div className="p-3 text-zinc-500 italic text-center">Aset tidak ditemukan.</div>
+                    ) : (
+                      filteredAssetsForSelect.map((a) => (
+                        <div
+                          key={a.id}
+                          onClick={() => {
+                            setSelectedAsset(a);
+                            setAssetSearch(`${a.namaAset} (${a.kodeLengkap})`);
+                            // Prepopulate default fields
+                            setToDistributionId(a.distributionId);
+                            setToHolderId(a.holderId || "");
+                            setToCondition(a.kondisi);
+                            setShowAssetDropdown(false);
+                          }}
+                          className="p-3 hover:bg-zinc-50 cursor-pointer flex flex-col font-medium"
+                        >
+                          <span className="text-zinc-950 font-bold">{a.namaAset}</span>
+                          <span className="text-xs font-semibold text-emerald-800 font-mono mt-0.5">{a.kodeLengkap}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
 
-          {/* Current Asset Info Summary Box */}
-          {selectedAsset && (
-            <div className="p-3 rounded-lg bg-zinc-50 border border-zinc-200 text-xs space-y-2 text-zinc-800 font-medium">
-              <div className="font-bold text-zinc-900 border-b pb-1 mb-1">
-                Informasi Aset Saat Ini
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="space-y-0.5">
-                  <span className="font-semibold text-zinc-550 block">Bidang Lama:</span>
-                  <span className="font-bold text-zinc-950 truncate flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
-                    {selectedAsset.distributionName}
-                  </span>
+              {/* Current Asset Info Summary Box */}
+              {selectedAsset && (
+                <div className="p-3 rounded-lg bg-zinc-50 border border-zinc-200 text-xs space-y-2 text-zinc-800 font-medium">
+                  <div className="font-bold text-zinc-900 border-b border-zinc-200/60 pb-1 mb-1 flex items-center gap-1">
+                    <Info className="h-3.5 w-3.5 text-zinc-500" />
+                    Informasi Aset Saat Ini
+                  </div>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Bidang Lama:</span>
+                      <span className="font-bold text-zinc-900 truncate max-w-[180px]">{selectedAsset.distributionName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Pemegang Lama:</span>
+                      <span className="font-bold text-zinc-900 truncate max-w-[180px]">{selectedAsset.holderName || "Gudang / Umum"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-zinc-500">Kondisi Lama:</span>
+                      <span className="font-bold text-zinc-900">{getKondisiLabel(selectedAsset.kondisi)}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <span className="font-semibold text-zinc-550 block">Pemegang Lama:</span>
-                  <span className="font-bold text-zinc-950 truncate flex items-center gap-1">
-                    <User className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
-                    {selectedAsset.holderName || "Gudang / Umum"}
-                  </span>
+              )}
+
+              {/* Target Mutasi Inputs */}
+              {selectedAsset && (
+                <div className="border border-emerald-100 bg-emerald-50/20 p-4 rounded-xl space-y-3.5">
+                  <div className="font-bold text-xs text-emerald-850 uppercase tracking-wider border-b border-emerald-100/50 pb-1 flex items-center gap-1.5">
+                    <ArrowRightLeft className="h-3.5 w-3.5 text-emerald-600" />
+                    Data Mutasi Baru (Tujuan)
+                  </div>
+                  <div className="space-y-3">
+                    {/* Target Distribution Selector */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+                        Distribusi Aset Baru (Bidang)
+                      </label>
+                      <select
+                        value={toDistributionId}
+                        onChange={(e) => {
+                          setToDistributionId(e.target.value);
+                          setToHolderId(""); // Reset holder when distribution changes
+                        }}
+                        disabled={isSubmitting}
+                        className="w-full h-9 rounded-md border border-input bg-white text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring font-medium"
+                      >
+                        {distributions.map((d) => (
+                          <option key={d.id} value={d.id}>
+                            {d.nama}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Target Holder Selector */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+                        Pemegang Barang Baru
+                      </label>
+                      <select
+                        value={toHolderId}
+                        onChange={(e) => setToHolderId(e.target.value)}
+                        disabled={isSubmitting}
+                        className="w-full h-9 rounded-md border border-input bg-white text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring font-medium"
+                      >
+                        <option value="">Tanpa Pemegang (Gudang/Umum)</option>
+                        {filteredHoldersForSelect.map((h) => (
+                          <option key={h.id} value={h.id}>
+                            {h.nama} ({h.jabatan})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Target Condition Selector */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+                        Kondisi Aset Baru
+                      </label>
+                      <select
+                        value={toCondition}
+                        onChange={(e) => setToCondition(e.target.value as Kondisi)}
+                        disabled={isSubmitting}
+                        className="w-full h-9 rounded-md border border-input bg-white text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring font-medium"
+                      >
+                        <option value={Kondisi.NORMAL}>{getKondisiLabel(Kondisi.NORMAL)}</option>
+                        <option value={Kondisi.RUSAK_RINGAN}>{getKondisiLabel(Kondisi.RUSAK_RINGAN)}</option>
+                        <option value={Kondisi.RUSAK_BERAT}>{getKondisiLabel(Kondisi.RUSAK_BERAT)}</option>
+                        <option value={Kondisi.DALAM_PERBAIKAN}>{getKondisiLabel(Kondisi.DALAM_PERBAIKAN)}</option>
+                        <option value={Kondisi.DIPINJAM}>{getKondisiLabel(Kondisi.DIPINJAM)}</option>
+                        <option value={Kondisi.HILANG}>{getKondisiLabel(Kondisi.HILANG)}</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  <span className="font-semibold text-zinc-550 block">Kondisi Lama:</span>
-                  <span className="font-bold text-zinc-950 flex items-center gap-1">
-                    <Info className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
-                    {getKondisiLabel(selectedAsset.kondisi)}
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
-          )}
 
-          {/* Target Mutasi Inputs */}
-          {selectedAsset && (
-            <div className="border border-emerald-100 bg-emerald-50/20 p-4 rounded-xl space-y-4">
-              <div className="font-bold text-xs text-emerald-800 uppercase tracking-wider border-b border-emerald-100/50 pb-1 flex items-center gap-1">
-                <ArrowRightLeft className="h-3.5 w-3.5" />
-                Data Mutasi Baru (Tujuan)
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Target Distribution Selector */}
+            {/* Column 2: Berita Acara & Dokumen Pendukung */}
+            <div className="space-y-4 flex flex-col justify-between">
+              <div className="space-y-4">
+                {/* Section Header */}
+                <div className="font-bold text-xs text-zinc-500 uppercase tracking-wider border-b pb-1 flex items-center gap-1.5">
+                  <FileText className="h-3.5 w-3.5 text-zinc-400" />
+                  Administrasi Berita Acara
+                </div>
+
+                {/* Berita Acara Number */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
-                    Distribusi Aset Baru (Bidang)
+                    Nomor Berita Acara <span className="text-rose-500">*</span>
                   </label>
-                  <select
-                    value={toDistributionId}
+                  <Input
+                    placeholder="Contoh: BA/MUTASI/08/VIII/2026"
+                    value={beritaAcaraNumber}
+                    onChange={(e) => setBeritaAcaraNumber(e.target.value)}
+                    disabled={isSubmitting}
+                    className="font-medium bg-white"
+                  />
+                </div>
+
+                {/* Berita Acara Date */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+                    Tanggal Berita Acara <span className="text-rose-500">*</span>
+                  </label>
+                  <Input
+                    type="date"
+                    value={beritaAcaraDate}
+                    onChange={(e) => setBeritaAcaraDate(e.target.value)}
+                    disabled={isSubmitting}
+                    className="font-medium bg-white"
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+                    Keterangan Alasan Mutasi
+                  </label>
+                  <textarea
+                    placeholder="Masukkan alasan perpindahan penempatan barang atau perubahan kondisi..."
+                    rows={3}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    disabled={isSubmitting}
+                    className="flex w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-medium"
+                  />
+                </div>
+
+                {/* File Document Upload */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
+                    Unggah Dokumen Berita Acara (PDF/Gambar)
+                  </label>
+                  <Input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,application/pdf"
                     onChange={(e) => {
-                      setToDistributionId(e.target.value);
-                      setToHolderId(""); // Reset holder when distribution changes
+                      if (e.target.files && e.target.files.length > 0) {
+                        setSelectedFile(e.target.files[0]);
+                      }
                     }}
                     disabled={isSubmitting}
-                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring font-medium"
-                  >
-                    {distributions.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.nama}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Target Holder Selector */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
-                    Pemegang Barang Baru
-                  </label>
-                  <select
-                    value={toHolderId}
-                    onChange={(e) => setToHolderId(e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring font-medium"
-                  >
-                    <option value="">Tanpa Pemegang (Gudang/Umum)</option>
-                    {filteredHoldersForSelect.map((h) => (
-                      <option key={h.id} value={h.id}>
-                        {h.nama} ({h.jabatan})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Target Condition Selector */}
-                <div className="space-y-1.5 sm:col-span-2">
-                  <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
-                    Kondisi Aset Baru
-                  </label>
-                  <select
-                    value={toCondition}
-                    onChange={(e) => setToCondition(e.target.value as Kondisi)}
-                    disabled={isSubmitting}
-                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring font-medium"
-                  >
-                    <option value={Kondisi.NORMAL}>{getKondisiLabel(Kondisi.NORMAL)}</option>
-                    <option value={Kondisi.RUSAK_RINGAN}>{getKondisiLabel(Kondisi.RUSAK_RINGAN)}</option>
-                    <option value={Kondisi.RUSAK_BERAT}>{getKondisiLabel(Kondisi.RUSAK_BERAT)}</option>
-                    <option value={Kondisi.DALAM_PERBAIKAN}>{getKondisiLabel(Kondisi.DALAM_PERBAIKAN)}</option>
-                    <option value={Kondisi.DIPINJAM}>{getKondisiLabel(Kondisi.DIPINJAM)}</option>
-                    <option value={Kondisi.HILANG}>{getKondisiLabel(Kondisi.HILANG)}</option>
-                  </select>
+                    className="font-semibold cursor-pointer bg-white"
+                  />
+                  <p className="text-[10px] text-zinc-500">Format pendukung: PDF, JPG, JPEG, PNG (Maks. 5MB)</p>
                 </div>
               </div>
-            </div>
-          )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Berita Acara Number */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
-                Nomor Berita Acara <span className="text-rose-500">*</span>
-              </label>
-              <Input
-                placeholder="Contoh: BA/MUTASI/08/VIII/2026"
-                value={beritaAcaraNumber}
-                onChange={(e) => setBeritaAcaraNumber(e.target.value)}
-                disabled={isSubmitting}
-                className="font-medium"
-              />
-            </div>
-
-            {/* Berita Acara Date */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
-                Tanggal Berita Acara <span className="text-rose-500">*</span>
-              </label>
-              <Input
-                type="date"
-                value={beritaAcaraDate}
-                onChange={(e) => setBeritaAcaraDate(e.target.value)}
-                disabled={isSubmitting}
-                className="font-medium"
-              />
+              {/* Empty placeholder or spacing helper */}
+              <div className="hidden md:block h-6"></div>
             </div>
           </div>
 
-          {/* Description */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
-              Keterangan Alasan Mutasi
-            </label>
-            <textarea
-              placeholder="Masukkan alasan perpindahan penempatan barang atau perubahan kondisi..."
-              rows={2}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={isSubmitting}
-              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-medium"
-            />
-          </div>
-
-          {/* File Document Upload */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-zinc-700 uppercase tracking-wider">
-              Unggah Dokumen Berita Acara (PDF/Gambar)
-            </label>
-            <Input
-              type="file"
-              accept="image/jpeg,image/jpg,image/png,application/pdf"
-              onChange={(e) => {
-                if (e.target.files && e.target.files.length > 0) {
-                  setSelectedFile(e.target.files[0]);
-                }
-              }}
-              disabled={isSubmitting}
-              className="font-semibold cursor-pointer"
-            />
-            <p className="text-[10px] text-zinc-500">Format pendukung: PDF, JPG, JPEG, PNG (Maks. 5MB)</p>
-          </div>
-
-          <DialogFooter>
+          <DialogFooter className="mt-6">
             <Button
               type="button"
               variant="outline"

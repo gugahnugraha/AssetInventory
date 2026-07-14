@@ -70,8 +70,7 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
       orderBy: { createdAt: "desc" },
     });
   } catch (error) {
-    console.error("Error in getAllAssets:", error);
-    throw new Error("Gagal mengambil data aset");
+    throw new Error(`Gagal mengambil data aset: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

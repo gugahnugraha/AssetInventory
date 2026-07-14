@@ -46,6 +46,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [selectedKondisi, setSelectedKondisi] = React.useState<string>("ALL");
   const [selectedBidang, setSelectedBidang] = React.useState<string>("ALL");
+  const [selectedTahun, setSelectedTahun] = React.useState<string>("ALL");
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; code: string } | null>(null);
@@ -104,14 +105,21 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
     }
   };
 
+  // Compute unique sorted years from asset data
+  const availableYears = React.useMemo(() => {
+    const years = Array.from(new Set(assets.map(a => a.tahunPembelian).filter(Boolean))) as number[];
+    return years.sort((a, b) => b - a);
+  }, [assets]);
+
   // Custom filtering based on dropdowns
   const filteredData = React.useMemo(() => {
     return assets.filter(asset => {
       const matchKondisi = selectedKondisi === "ALL" || asset.kondisi === selectedKondisi;
       const matchBidang = selectedBidang === "ALL" || asset.distributionId === selectedBidang;
-      return matchKondisi && matchBidang;
+      const matchTahun = selectedTahun === "ALL" || String(asset.tahunPembelian) === selectedTahun;
+      return matchKondisi && matchBidang && matchTahun;
     });
-  }, [assets, selectedKondisi, selectedBidang]);
+  }, [assets, selectedKondisi, selectedBidang, selectedTahun]);
 
   // Define Columns
   const columns = React.useMemo<ColumnDef<any>[]>(
@@ -323,9 +331,9 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       {/* Filters card */}
       <Card className="border-zinc-200/80 dark:border-zinc-800/80">
         <CardContent className="p-4 sm:p-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Input Search */}
-            <div className="relative">
+            <div className="relative sm:col-span-2 lg:col-span-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
               <Input
                 placeholder="Cari kode, jenis, merk, pemegang..."
@@ -365,6 +373,21 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
                 <option value={Kondisi.HILANG} className="bg-background text-foreground">Hilang</option>
                 <option value={Kondisi.DALAM_PERBAIKAN} className="bg-background text-foreground">Dalam Perbaikan</option>
                 <option value={Kondisi.DIPINJAM} className="bg-background text-foreground">Dipinjam</option>
+              </select>
+            </div>
+
+            {/* Filter Tahun */}
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-zinc-400 shrink-0" />
+              <select
+                value={selectedTahun}
+                onChange={e => setSelectedTahun(e.target.value)}
+                className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="ALL" className="bg-background text-foreground">Semua Tahun</option>
+                {availableYears.map(year => (
+                  <option key={year} value={String(year)} className="bg-background text-foreground">{year}</option>
+                ))}
               </select>
             </div>
           </div>
