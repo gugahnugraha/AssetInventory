@@ -169,7 +169,7 @@ export function LoginClient() {
                       placeholder="Masukkan username"
                       autoComplete="username"
                       disabled={loading}
-                      className={`pl-10.5 bg-zinc-950/50 border-zinc-800 text-zinc-150 focus-visible:ring-emerald-500/40 focus:border-emerald-500/50 ${
+                      className={`pl-10.5 bg-zinc-950/50 border-zinc-800 text-white focus-visible:ring-emerald-500/40 focus:border-emerald-500/50 ${
                         errors.username ? "border-rose-500 focus-visible:ring-rose-500/40 focus:border-rose-500" : ""
                       }`}
                       {...register("username")}
@@ -192,7 +192,7 @@ export function LoginClient() {
                       placeholder="••••••••"
                       autoComplete="current-password"
                       disabled={loading}
-                      className={`pl-10.5 bg-zinc-950/50 border-zinc-800 text-zinc-150 focus-visible:ring-emerald-500/40 focus:border-emerald-500/50 ${
+                      className={`pl-10.5 bg-zinc-950/50 border-zinc-800 text-white focus-visible:ring-emerald-500/40 focus:border-emerald-500/50 ${
                         errors.password ? "border-rose-500 focus-visible:ring-rose-500/40 focus:border-rose-500" : ""
                       }`}
                       {...register("password")}
