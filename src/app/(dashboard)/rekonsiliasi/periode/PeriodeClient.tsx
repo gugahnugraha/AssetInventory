@@ -13,7 +13,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Role } from "@prisma/client";
 import { createPeriodAction, lockPeriodAction, closePeriodAction } from "@/actions/reconciliation";
@@ -22,7 +22,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 interface Period {
   id: string;
   nama: string;
-  semester: number;
+  triwulan: number;
   tahun: number;
   tanggalMulai: string;
   tanggalSelesai: string;
@@ -51,7 +51,7 @@ export function PeriodeClient({ periods, userRole }: PeriodeClientProps) {
 
   const [form, setForm] = React.useState({
     nama: "",
-    semester: 1,
+    triwulan: 1,
     tahun: new Date().getFullYear(),
     tanggalMulai: "",
     tanggalSelesai: "",
@@ -137,7 +137,7 @@ export function PeriodeClient({ periods, userRole }: PeriodeClientProps) {
                     <PeriodStatusBadge status={p.status} />
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-500">
-                    <span>Semester {p.semester} — {p.tahun}</span>
+                    <span>Triwulan {p.triwulan} — {p.tahun}</span>
                     <span>·</span>
                     <span>
                       {new Date(p.tanggalMulai).toLocaleDateString("id-ID")} s/d {new Date(p.tanggalSelesai).toLocaleDateString("id-ID")}
@@ -183,8 +183,7 @@ export function PeriodeClient({ periods, userRole }: PeriodeClientProps) {
       )}
 
       {/* Create Dialog */}
-      <Dialog open={showCreate} onOpenChange={setShowCreate}>
-        <DialogContent className="max-w-md">
+      <Dialog isOpen={showCreate} onClose={() => setShowCreate(false)} className="max-w-md">
           <DialogHeader>
             <DialogTitle>Buat Periode Rekonsiliasi Baru</DialogTitle>
           </DialogHeader>
@@ -193,21 +192,23 @@ export function PeriodeClient({ periods, userRole }: PeriodeClientProps) {
             <div>
               <label className="text-xs font-semibold text-zinc-600 mb-1 block">Nama Periode *</label>
               <Input
-                placeholder="Rekonsiliasi Semester I Tahun 2026"
+                placeholder="Rekonsiliasi Triwulan I Tahun 2026"
                 value={form.nama}
                 onChange={(e) => setForm({ ...form, nama: e.target.value })}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-zinc-600 mb-1 block">Semester *</label>
+                <label className="text-xs font-semibold text-zinc-600 mb-1 block">Triwulan *</label>
                 <select
-                  value={form.semester}
-                  onChange={(e) => setForm({ ...form, semester: Number(e.target.value) })}
+                  value={form.triwulan}
+                  onChange={(e) => setForm({ ...form, triwulan: Number(e.target.value) })}
                   className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
                 >
-                  <option value={1}>Semester I</option>
-                  <option value={2}>Semester II</option>
+                  <option value={1}>Triwulan I</option>
+                  <option value={2}>Triwulan II</option>
+                  <option value={3}>Triwulan III</option>
+                  <option value={4}>Triwulan IV</option>
                 </select>
               </div>
               <div>
@@ -248,7 +249,6 @@ export function PeriodeClient({ periods, userRole }: PeriodeClientProps) {
               {loading ? "Menyimpan..." : "Buat Periode"}
             </Button>
           </DialogFooter>
-        </DialogContent>
       </Dialog>
 
       {/* Lock Confirm */}
@@ -270,7 +270,7 @@ export function PeriodeClient({ periods, userRole }: PeriodeClientProps) {
         title="Tutup Periode?"
         description="Periode akan ditutup permanen. Tidak ada perubahan lebih lanjut yang bisa dilakukan."
         confirmLabel="Ya, Tutup"
-        variant="destructive"
+        variant="danger"
       />
     </div>
   );

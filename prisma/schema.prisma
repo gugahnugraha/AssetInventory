@@ -279,7 +279,7 @@ enum FindingRecommendation {
 model ReconciliationPeriod {
   id             String                 @id @default(uuid())
   nama           String
-  semester       Int                    // 1 or 2
+  triwulan       Int                    // 1, 2, 3, or 4
   tahun          Int
   tanggalMulai   DateTime
   tanggalSelesai DateTime

@@ -47,6 +47,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const [selectedKondisi, setSelectedKondisi] = React.useState<string>("ALL");
   const [selectedBidang, setSelectedBidang] = React.useState<string>("ALL");
   const [selectedTahun, setSelectedTahun] = React.useState<string>("ALL");
+  const [selectedReconStatus, setSelectedReconStatus] = React.useState<string>("ALL");
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; code: string } | null>(null);
@@ -117,9 +118,24 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       const matchKondisi = selectedKondisi === "ALL" || asset.kondisi === selectedKondisi;
       const matchBidang = selectedBidang === "ALL" || asset.distributionId === selectedBidang;
       const matchTahun = selectedTahun === "ALL" || String(asset.tahunPembelian) === selectedTahun;
-      return matchKondisi && matchBidang && matchTahun;
+      
+      let matchRecon = true;
+      if (selectedReconStatus !== "ALL") {
+        const recons = asset.reconciliations || [];
+        if (recons.length === 0) {
+          matchRecon = selectedReconStatus === "BELUM_DIREKON";
+        } else {
+          const sorted = [...recons].sort((a: any, b: any) => {
+            return new Date(b.period.tanggalMulai).getTime() - new Date(a.period.tanggalMulai).getTime();
+          });
+          const latestStatus = sorted[0]?.status || "BELUM_DIREKON";
+          matchRecon = latestStatus === selectedReconStatus;
+        }
+      }
+      
+      return matchKondisi && matchBidang && matchTahun && matchRecon;
     });
-  }, [assets, selectedKondisi, selectedBidang, selectedTahun]);
+  }, [assets, selectedKondisi, selectedBidang, selectedTahun, selectedReconStatus]);
 
   // Define Columns
   const columns = React.useMemo<ColumnDef<any>[]>(
@@ -178,6 +194,27 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         accessorKey: "tahunPembelian",
         header: "Tahun",
         cell: ({ row }) => <span className="text-sm">{row.getValue("tahunPembelian")}</span>,
+      },
+      {
+        id: "statusRekon",
+        header: "Status Rekon",
+        cell: ({ row }) => {
+          const recons = row.original.reconciliations || [];
+          if (recons.length === 0) {
+            return <Badge variant="outline" className="text-[10px] text-zinc-500">Belum Direkon</Badge>;
+          }
+          const sorted = [...recons].sort((a: any, b: any) => {
+            return new Date(b.period.tanggalMulai).getTime() - new Date(a.period.tanggalMulai).getTime();
+          });
+          const status = sorted[0]?.status || "BELUM_DIREKON";
+          if (status === "SESUAI") {
+            return <Badge variant="success" className="text-[10px]">Sesuai</Badge>;
+          }
+          if (status === "TIDAK_SESUAI") {
+            return <Badge variant="destructive" className="text-[10px]">Tidak Sesuai</Badge>;
+          }
+          return <Badge variant="outline" className="text-[10px] text-zinc-500">Belum Direkon</Badge>;
+        }
       },
       {
         id: "actions",
@@ -331,7 +368,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       {/* Filters card */}
       <Card className="border-zinc-200/80 dark:border-zinc-800/80">
         <CardContent className="p-4 sm:p-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Input Search */}
             <div className="relative sm:col-span-2 lg:col-span-1">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
@@ -388,6 +425,21 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
                 {availableYears.map(year => (
                   <option key={year} value={String(year)} className="bg-background text-foreground">{year}</option>
                 ))}
+              </select>
+            </div>
+
+            {/* Filter Status Rekonsiliasi */}
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-zinc-400 shrink-0" />
+              <select
+                value={selectedReconStatus}
+                onChange={e => setSelectedReconStatus(e.target.value)}
+                className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="ALL" className="bg-background text-foreground">Semua Rekonsiliasi</option>
+                <option value="BELUM_DIREKON" className="bg-background text-foreground">Belum Direkon</option>
+                <option value="SESUAI" className="bg-background text-foreground">Sesuai</option>
+                <option value="TIDAK_SESUAI" className="bg-background text-foreground">Tidak Sesuai</option>
               </select>
             </div>
           </div>

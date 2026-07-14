@@ -15,7 +15,8 @@ import {
   ChevronDown,
   Shield,
   Tags,
-  ArrowRightLeft
+  ArrowRightLeft,
+  ClipboardCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Role } from "@prisma/client"
@@ -40,13 +41,17 @@ export function Sidebar({ user }: SidebarProps) {
     return assetSubPaths.some(path => pathname.startsWith(path));
   }, [pathname]);
 
+  const isRekonPathActive = React.useMemo(() => {
+    return pathname.startsWith("/rekonsiliasi");
+  }, [pathname]);
+
   const [assetsExpanded, setAssetsExpanded] = React.useState(isAssetPathActive);
+  const [rekonExpanded, setRekonExpanded] = React.useState(isRekonPathActive);
 
   React.useEffect(() => {
-    if (isAssetPathActive) {
-      setAssetsExpanded(true);
-    }
-  }, [pathname, isAssetPathActive]);
+    if (isAssetPathActive) setAssetsExpanded(true);
+    if (isRekonPathActive) setRekonExpanded(true);
+  }, [pathname, isAssetPathActive, isRekonPathActive]);
 
   const links = [
     {
@@ -86,6 +91,40 @@ export function Sidebar({ user }: SidebarProps) {
           roles: [Role.ADMINISTRATOR],
         },
       ]
+    },
+    {
+      label: "Rekonsiliasi Aset",
+      icon: ClipboardCheck,
+      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+      expandedState: rekonExpanded,
+      setExpanded: setRekonExpanded,
+      children: [
+        {
+          label: "Dashboard Rekonsiliasi",
+          href: "/rekonsiliasi/dashboard",
+          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+        },
+        {
+          label: "Periode Rekonsiliasi",
+          href: "/rekonsiliasi/periode",
+          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+        },
+        {
+          label: "Pemeriksaan Aset",
+          href: "/rekonsiliasi/pemeriksaan",
+          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+        },
+        {
+          label: "Temuan Rekonsiliasi",
+          href: "/rekonsiliasi/temuan",
+          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+        },
+        {
+          label: "Laporan Rekonsiliasi",
+          href: "/rekonsiliasi/laporan",
+          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+        },
+      ],
     },
     {
       label: "Kelola User",
@@ -148,9 +187,10 @@ export function Sidebar({ user }: SidebarProps) {
                   onClick={() => {
                     if (collapsed) {
                       setCollapsed(false);
-                      setAssetsExpanded(true);
+                      (link.setExpanded || setAssetsExpanded)(true);
                     } else {
-                      setAssetsExpanded(!assetsExpanded);
+                      const current = link.expandedState !== undefined ? link.expandedState : assetsExpanded;
+                      (link.setExpanded || setAssetsExpanded)(!current);
                     }
                   }}
                   className={cn(
@@ -167,16 +207,15 @@ export function Sidebar({ user }: SidebarProps) {
                     )} />
                     {!collapsed && <span>{link.label}</span>}
                   </div>
-                  {!collapsed && (
-                    assetsExpanded ? (
-                      <ChevronDown className="h-4 w-4 text-emerald-300" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 text-emerald-300" />
-                    )
-                  )}
+                  {!collapsed && (() => {
+                    const isExpanded = link.expandedState !== undefined ? link.expandedState : assetsExpanded;
+                    return isExpanded
+                      ? <ChevronDown className="h-4 w-4 text-emerald-300" />
+                      : <ChevronRight className="h-4 w-4 text-emerald-300" />;
+                  })()}
                 </button>
 
-                {assetsExpanded && !collapsed && (
+                {(link.expandedState !== undefined ? link.expandedState : assetsExpanded) && !collapsed && (
                   <div className="pl-4 space-y-1 border-l border-emerald-700/30 ml-5 mt-1">
                     {visibleChildren.map((child) => {
                       const isChildActive = pathname.startsWith(child.href);

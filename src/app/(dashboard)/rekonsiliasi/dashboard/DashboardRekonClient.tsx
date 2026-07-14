@@ -97,7 +97,7 @@ export function DashboardRekonClient({
           <div className="flex-1">
             <p className="text-sm font-bold text-emerald-900">Periode Aktif: {activePeriod.nama}</p>
             <p className="text-xs text-emerald-700">
-              Semester {activePeriod.semester} — Tahun {activePeriod.tahun} &nbsp;·&nbsp;
+              Triwulan {activePeriod.triwulan} — Tahun {activePeriod.tahun} &nbsp;·&nbsp;
               Status: <span className="font-bold uppercase">{activePeriod.status}</span>
             </p>
           </div>

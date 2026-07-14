@@ -65,6 +65,11 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
           include: {
             categoryAttribute: true
           }
+        },
+        reconciliations: {
+          include: {
+            period: true
+          }
         }
       },
       orderBy: { createdAt: "desc" },

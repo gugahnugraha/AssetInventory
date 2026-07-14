@@ -31,9 +31,10 @@ import { useRouter } from "next/navigation";
 interface AssetDetailClientProps {
   asset: any;
   userRole: Role;
+  reconHistory?: any[];
 }
 
-export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
+export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetDetailClientProps) {
   const router = useRouter();
   const [activePhoto, setActivePhoto] = React.useState<string>(asset.fotoUtama || "/placeholder-asset.png");
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
@@ -622,6 +623,53 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
                 </table>
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Riwayat Rekonsiliasi */}
+      {reconHistory && reconHistory.length > 0 && (
+        <Card className="border-zinc-200/80">
+          <CardHeader className="border-b pb-4">
+            <CardTitle className="text-sm font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-2">
+              <Shield className="h-4 w-4 text-emerald-500" />
+              Riwayat Rekonsiliasi
+            </CardTitle>
+            <CardDescription className="text-zinc-800 font-medium">
+              Hasil pemeriksaan rekonsiliasi aset dari setiap periode.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y">
+              {reconHistory.map((r: any) => (
+                <div key={r.id} className="px-4 py-3 flex items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-bold text-zinc-900">{r.period?.nama}</span>
+                      <Badge
+                        variant={r.status === "SESUAI" ? "success" : r.status === "TIDAK_SESUAI" ? "destructive" : "outline"}
+                        className="text-[10px]"
+                      >
+                        {r.status === "SESUAI" ? "Sesuai" : r.status === "TIDAK_SESUAI" ? "Tidak Sesuai" : "Belum Direkon"}
+                      </Badge>
+                      {r._count?.findings > 0 && (
+                        <span className="text-[10px] text-rose-600 font-bold">{r._count.findings} temuan</span>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-zinc-500 mt-0.5">
+                      {r.checker && <span>Pemeriksa: {r.checker.nama}</span>}
+                      {r.checkedAt && <span> · {formatDate(r.checkedAt)}</span>}
+                      {r.notes && <span> · {r.notes}</span>}
+                    </div>
+                  </div>
+                  <Link href={`/rekonsiliasi/pemeriksaan/${r.id}`}>
+                    <Button variant="outline" size="sm" className="text-xs cursor-pointer">
+                      Lihat Detail
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}

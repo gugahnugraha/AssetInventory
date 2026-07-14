@@ -58,6 +58,19 @@ export default async function AssetsPage() {
             updatedAt: asset.holder.updatedAt.toISOString(),
           }
         : null,
+      reconciliations: (asset as any).reconciliations.map((r: any) => ({
+        ...r,
+        checkedAt: r.checkedAt ? r.checkedAt.toISOString() : null,
+        createdAt: r.createdAt.toISOString(),
+        updatedAt: r.updatedAt.toISOString(),
+        period: {
+          ...r.period,
+          tanggalMulai: r.period.tanggalMulai.toISOString(),
+          tanggalSelesai: r.period.tanggalSelesai.toISOString(),
+          createdAt: r.period.createdAt.toISOString(),
+          updatedAt: r.period.updatedAt.toISOString(),
+        }
+      }))
     }));
 
     const serializedDistributions = distributions.map((dist) => ({

@@ -26,7 +26,7 @@ export const DEFAULT_CHECKLIST_ITEMS = [
 
 export interface CreatePeriodInput {
   nama: string;
-  semester: number;
+  triwulan: number;
   tahun: number;
   tanggalMulai: Date | string;
   tanggalSelesai: Date | string;
@@ -40,7 +40,7 @@ export async function createPeriod(
   const period = await prisma.reconciliationPeriod.create({
     data: {
       nama: data.nama,
-      semester: data.semester,
+      triwulan: data.triwulan,
       tahun: data.tahun,
       tanggalMulai: new Date(data.tanggalMulai),
       tanggalSelesai: new Date(data.tanggalSelesai),
@@ -66,7 +66,7 @@ export async function createPeriod(
 export async function getPeriodsByOpd(opdId: string) {
   return prisma.reconciliationPeriod.findMany({
     where: { opdId },
-    orderBy: [{ tahun: "desc" }, { semester: "desc" }],
+    orderBy: [{ tahun: "desc" }, { triwulan: "desc" }],
     include: {
       creator: { select: { nama: true } },
       _count: { select: { reconciliations: true } },
@@ -409,7 +409,7 @@ export async function getAssetReconciliationHistory(assetId: string) {
     where: { assetId },
     orderBy: { createdAt: "desc" },
     include: {
-      period: { select: { nama: true, semester: true, tahun: true } },
+      period: { select: { nama: true, triwulan: true, tahun: true } },
       checker: { select: { nama: true } },
       _count: { select: { findings: true } },
     },
@@ -497,7 +497,7 @@ export async function getAllFindings(opdId: string, periodId?: string) {
       reconciliation: {
         include: {
           asset: { select: { namaAset: true, kodeLengkap: true, distribution: { select: { nama: true } } } },
-          period: { select: { nama: true, tahun: true, semester: true } },
+          period: { select: { nama: true, tahun: true, triwulan: true } },
           checker: { select: { nama: true } },
         },
       },

@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { getAssetById } from "@/services/asset";
 import { DocumentService } from "@/services/document";
+import { getAssetReconciliationHistory } from "@/services/reconciliation";
 import { AssetDetailClient } from "./AssetDetailClient";
 import { Role } from "@prisma/client";
 
@@ -120,10 +121,24 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
       })) : [],
     };
 
+    // Fetch reconciliation history for this asset
+    const reconHistory = await getAssetReconciliationHistory(id);
+    const serializedReconHistory = reconHistory.map((r) => ({
+      id: r.id,
+      status: r.status,
+      notes: r.notes,
+      checkedAt: r.checkedAt ? r.checkedAt.toISOString() : null,
+      createdAt: r.createdAt.toISOString(),
+      period: r.period,
+      checker: r.checker,
+      _count: r._count,
+    }));
+
     return (
       <AssetDetailClient
         asset={serializedAsset}
         userRole={userRole}
+        reconHistory={serializedReconHistory}
       />
     );
   } catch (error) {
