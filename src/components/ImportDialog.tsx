@@ -294,20 +294,17 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
             <div className="flex justify-between text-xs font-semibold text-zinc-700">
               <span className="flex items-center gap-1.5">
                 <Loader2 className="h-4 w-4 text-emerald-600 animate-spin" />
-                Mengimpor data aset...
+                Sedang memproses seluruh data ({rows.length} baris)...
               </span>
-              <span>
-                {processedCount} / {rows.length} ({progress}%)
+              <span className="text-[10px] bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded-full animate-pulse">
+                Transaksi Database Aktif
               </span>
             </div>
-            <div className="w-full bg-zinc-200 rounded-full h-2.5 overflow-hidden">
-              <div
-                className="bg-emerald-600 h-2.5 rounded-full transition-all duration-300 ease-out"
-                style={{ width: `${progress}%` }}
-              />
+            <div className="w-full bg-zinc-200 rounded-full h-2 relative overflow-hidden">
+              <div className="bg-emerald-600 h-2 rounded-full absolute left-0 top-0 bottom-0 animate-pulse w-full" />
             </div>
             <p className="text-[10px] text-zinc-500 italic">
-              Harap jangan menutup jendela browser Anda hingga proses import selesai.
+              Proses ini berjalan dalam satu transaksi aman database. Harap jangan menutup jendela browser Anda hingga selesai.
             </p>
           </div>
         )}
