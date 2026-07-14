@@ -2,7 +2,7 @@ import prisma from "./db";
 
 export interface CreateAuditLogInput {
   userId: string;
-  assetId: string;
+  assetId?: string | null;
   action: "CREATE" | "UPDATE" | "DELETE";
   oldValue?: string;
   newValue?: string;

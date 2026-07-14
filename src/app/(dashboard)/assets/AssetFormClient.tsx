@@ -141,7 +141,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
   const categoryAttributes = selectedCategory?.attributes || [];
 
   // Compiled asset code preview
-  const kodeLengkapPreview = `01.03.${watchKode1 || "XX"}.${watchKode2 || "XX"}.${watchKode3 || "XX"}.${watchKode4 || "XX"}.${watchKode5 || "XX"}.${watchRegister || "XXX"}`;
+  const kodeLengkapPreview = `1.3.${watchKode1 || "XX"}.${watchKode2 || "XX"}.${watchKode3 || "XX"}.${watchKode4 || "XX"}.${watchKode5 || "XX"}.${watchRegister || "XXX"}`;
 
   // Filter holders based on selected distribution/department
   const filteredHolders = React.useMemo(() => {
@@ -346,10 +346,10 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                 <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
                   Kode Klasifikasi & Register
                 </label>
-                <div className="grid grid-cols-8 gap-2">
+                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
                   <div>
                     <Input
-                      value="01"
+                      value="1"
                       disabled
                       readOnly
                       className="text-center font-mono font-bold bg-zinc-100 text-zinc-400 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-500 dark:border-zinc-700"
@@ -358,7 +358,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   </div>
                   <div>
                     <Input
-                      value="03"
+                      value="3"
                       disabled
                       readOnly
                       className="text-center font-mono font-bold bg-zinc-100 text-zinc-400 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-500 dark:border-zinc-700"

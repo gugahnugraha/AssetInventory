@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Menu, User, LogOut, ChevronDown, UserCircle } from "lucide-react"
+import { Menu, User, LogOut, ChevronDown, UserCircle, Users, Settings } from "lucide-react"
 import { Badge } from "./ui/badge"
 import { ConfirmDialog } from "./ui/confirm-dialog"
 import { Role } from "@prisma/client"
@@ -109,6 +109,24 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
               >
                 <UserCircle className="h-4 w-4 text-zinc-500" />
                 Profil Saya
+              </Link>
+              {user.role === Role.ADMINISTRATOR && (
+                <Link
+                  href="/users"
+                  onClick={() => setDropdownOpen(false)}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded-lg transition-colors font-semibold cursor-pointer"
+                >
+                  <Users className="h-4 w-4 text-zinc-500" />
+                  Kelola Pengguna
+                </Link>
+              )}
+              <Link
+                href="/pengaturan"
+                onClick={() => setDropdownOpen(false)}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded-lg transition-colors font-semibold cursor-pointer border-b border-slate-100 dark:border-zinc-800 pb-2 mb-1.5"
+              >
+                <Settings className="h-4 w-4 text-zinc-500" />
+                Pengaturan
               </Link>
               <button
                 onClick={() => { setDropdownOpen(false); setShowLogoutConfirm(true); }}

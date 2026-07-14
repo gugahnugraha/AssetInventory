@@ -6,16 +6,10 @@ import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
   Boxes,
-  GitFork,
-  UserCheck,
-  Users,
-  Settings,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
   Shield,
-  Tags,
-  ArrowRightLeft,
   ClipboardCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -125,18 +119,6 @@ export function Sidebar({ user }: SidebarProps) {
           roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
         },
       ],
-    },
-    {
-      label: "Kelola User",
-      href: "/users",
-      icon: Users,
-      roles: [Role.ADMINISTRATOR],
-    },
-    {
-      label: "Pengaturan",
-      href: "/pengaturan",
-      icon: Settings,
-      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
     },
   ]
 

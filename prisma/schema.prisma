@@ -156,8 +156,8 @@ model AuditLog {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id])
-  assetId   String
-  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  assetId   String?
+  asset     Asset?    @relation(fields: [assetId], references: [id], onDelete: Cascade)
   action    String   // "CREATE", "UPDATE", "DELETE"
   oldValue  String?  // JSON stringified old value
   newValue  String?  // JSON stringified new value

@@ -412,7 +412,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
                 </div>
                 <div className="flex justify-between py-2 text-sm">
                   <span className="text-zinc-500 font-medium">Kode Bidang (Kelompok)</span>
-                  <span className="font-mono font-semibold text-zinc-900">01.03.{asset.kode1}.{asset.kode2}.{asset.kode3}.{asset.kode4}.{asset.kode5}</span>
+                  <span className="font-mono font-semibold text-zinc-900">1.3.{asset.kode1}.{asset.kode2}.{asset.kode3}.{asset.kode4}.{asset.kode5}</span>
                 </div>
               </CardContent>
             </Card>

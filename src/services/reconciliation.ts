@@ -54,7 +54,7 @@ export async function createPeriod(
   await prisma.auditLog.create({
     data: {
       userId,
-      assetId: period.id, // repurpose for period id; fine for now
+      assetId: null,
       action: "CREATE_REKON_PERIOD",
       newValue: JSON.stringify({ nama: data.nama, tahun: data.tahun }),
     },
@@ -110,7 +110,7 @@ export async function lockPeriod(id: string, userId: string) {
   await prisma.auditLog.create({
     data: {
       userId,
-      assetId: id,
+      assetId: null,
       action: "LOCK_REKON_PERIOD",
       newValue: JSON.stringify({ periodId: id, status: "LOCKED" }),
     },
@@ -128,7 +128,7 @@ export async function closePeriod(id: string, userId: string) {
   await prisma.auditLog.create({
     data: {
       userId,
-      assetId: id,
+      assetId: null,
       action: "CLOSE_REKON_PERIOD",
       newValue: JSON.stringify({ periodId: id, status: "CLOSED" }),
     },
