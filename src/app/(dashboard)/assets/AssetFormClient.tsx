@@ -162,16 +162,19 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
   // Dynamic Zod validation schema to dynamically enforce required attributes
   const schema = React.useMemo(() => {
     return z.object({
-      kode1: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
-      kode2: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
-      kode3: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
-      kode4: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
-      kode5: z.string().regex(/^\d{2}$/, "Wajib 2 digit angka"),
+      kode1: z.string().regex(/^\d+$/, "Wajib berupa angka"),
+      kode2: z.string().regex(/^\d+$/, "Wajib berupa angka"),
+      kode3: z.string().regex(/^\d+$/, "Wajib berupa angka"),
+      kode4: z.string().regex(/^\d+$/, "Wajib berupa angka"),
+      kode5: z.string().regex(/^\d+$/, "Wajib berupa angka"),
       nomorRegister: z.string().regex(/^\d+$/, "Wajib berupa angka"),
       kibId: z.string().min(1, "KIB wajib diisi"),
       categoryId: z.string().min(1, "Kategori wajib diisi"),
       namaAset: z.string().min(1, "Nama aset wajib diisi"),
       merkType: z.string().min(1, "Merk/Type wajib diisi"),
+      material: z.string().nullable().optional(),
+      caraPerolehan: z.string().nullable().optional(),
+      spesifikasi: z.string().nullable().optional(),
       harga: z.coerce.number().min(0, "Harga tidak boleh negatif"),
       tahunPembelian: z.coerce.number()
         .min(1900, "Tahun tidak valid")
@@ -228,6 +231,9 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
           categoryId: initialData.categoryId as string,
           namaAset: initialData.namaAset as string,
           merkType: initialData.merkType as string,
+          material: initialData.material || null,
+          caraPerolehan: initialData.caraPerolehan || null,
+          spesifikasi: initialData.spesifikasi || null,
           harga: initialData.harga as number,
           tahunPembelian: initialData.tahunPembelian as number,
           distributionId: initialData.distributionId as string,
@@ -252,6 +258,9 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
           categoryId: "",
           namaAset: "",
           merkType: "",
+          material: null,
+          caraPerolehan: null,
+          spesifikasi: null,
           harga: 0,
           tahunPembelian: new Date().getFullYear(),
           distributionId: "",
@@ -292,6 +301,14 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
     if (!selectedCategory) return [];
     return BRANDS_BY_CATEGORY[selectedCategory.nama] || [];
   }, [selectedCategory]);
+
+  // Auto-set kibId to KIB B since the selector is locked (only KIB B exists)
+  React.useEffect(() => {
+    const kibB = kibs.find((k: any) => k.kode === "B");
+    if (kibB && !watchKibId) {
+      setValue("kibId", kibB.id, { shouldValidate: true });
+    }
+  }, [kibs, watchKibId, setValue]);
 
   // Synchronize dynamic brand states on mount / edit initialData
   React.useEffect(() => {
@@ -357,7 +374,36 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
   }, [watchKibId, filteredCategories, watchCategoryId, setValue]);
 
   // Compiled asset code preview
-  // Compiled asset code preview
+  const previewKode1 = React.useMemo(() => {
+    const valInt = parseInt(watchKode1, 10);
+    if (!isNaN(valInt)) return String(valInt).padStart(2, '0');
+    return watchKode1 || "XX";
+  }, [watchKode1]);
+
+  const previewKode2 = React.useMemo(() => {
+    const valInt = parseInt(watchKode2, 10);
+    if (!isNaN(valInt)) return String(valInt).padStart(2, '0');
+    return watchKode2 || "XX";
+  }, [watchKode2]);
+
+  const previewKode3 = React.useMemo(() => {
+    const valInt = parseInt(watchKode3, 10);
+    if (!isNaN(valInt)) return String(valInt).padStart(2, '0');
+    return watchKode3 || "XX";
+  }, [watchKode3]);
+
+  const previewKode4 = React.useMemo(() => {
+    const valInt = parseInt(watchKode4, 10);
+    if (!isNaN(valInt)) return String(valInt).padStart(2, '0');
+    return watchKode4 || "XX";
+  }, [watchKode4]);
+
+  const previewKode5 = React.useMemo(() => {
+    const valInt = parseInt(watchKode5, 10);
+    if (!isNaN(valInt)) return String(valInt).padStart(2, '0');
+    return watchKode5 || "XX";
+  }, [watchKode5]);
+
   const previewRegister = React.useMemo(() => {
     const regInt = parseInt(watchRegister, 10);
     if (!isNaN(regInt)) {
@@ -366,7 +412,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
     return watchRegister || "XXXX";
   }, [watchRegister]);
 
-  const kodeLengkapPreview = `1.3.${watchKode1 || "XX"}.${watchKode2 || "XX"}.${watchKode3 || "XX"}.${watchKode4 || "XX"}.${watchKode5 || "XX"}.${previewRegister}`;
+  const kodeLengkapPreview = `1.3.${previewKode1}.${previewKode2}.${previewKode3}.${previewKode4}.${previewKode5}.${previewRegister}`;
 
   // Filter holders based on selected distribution/department
   const filteredHolders = React.useMemo(() => {
@@ -577,7 +623,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                       value="1"
                       disabled
                       readOnly
-                      className="text-center font-mono font-bold bg-zinc-100 text-zinc-400 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-500 dark:border-zinc-700"
+                      className="text-center font-mono font-bold bg-sky-50 text-sky-600 border-sky-200 dark:bg-sky-900/20 dark:text-sky-400 dark:border-sky-800"
                     />
                     <p className="text-[10px] text-zinc-400 text-center mt-1">Sistem</p>
                   </div>
@@ -586,7 +632,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                       value="3"
                       disabled
                       readOnly
-                      className="text-center font-mono font-bold bg-zinc-100 text-zinc-400 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-500 dark:border-zinc-700"
+                      className="text-center font-mono font-bold bg-sky-50 text-sky-600 border-sky-200 dark:bg-sky-900/20 dark:text-sky-400 dark:border-sky-800"
                     />
                     <p className="text-[10px] text-zinc-400 text-center mt-1">Sistem</p>
                   </div>
@@ -637,8 +683,8 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   </div>
                   <div>
                     <Input
-                      placeholder="e.g. 1"
-                      className="text-center font-mono font-bold border-emerald-500 focus-visible:ring-emerald-500 bg-emerald-500/5"
+                      placeholder="XXXX"
+                      className="text-center font-mono font-bold focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
                       {...register("nomorRegister")}
                     />
                     {errors.nomorRegister && <p className="text-[10px] text-rose-500 mt-1">{errors.nomorRegister.message}</p>}
@@ -660,17 +706,14 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
                     Klasifikasi KIB <span className="text-rose-500">*</span>
                   </label>
-                  <select
-                    {...register("kibId")}
-                    className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="" className="bg-background text-foreground">Pilih KIB</option>
-                    {kibs.map((k) => (
-                      <option key={k.id} value={k.id} className="bg-background text-foreground">
-                        KIB {k.kode} - {k.nama}
-                      </option>
-                    ))}
-                  </select>
+                  {/* KIB is locked to KIB B (only active KIB). Hidden field keeps form value in sync. */}
+                  <input type="hidden" {...register("kibId")} />
+                  <div className="w-full h-10 rounded-md border border-sky-200 bg-sky-50 dark:bg-sky-900/20 dark:border-sky-800 px-3 py-2 text-sm flex items-center gap-2 cursor-not-allowed">
+                    <span className="font-mono font-bold text-sky-600 dark:text-sky-400">
+                      {(() => { const kibB = kibs.find((k: any) => k.kode === "B"); return kibB ? `KIB ${kibB.kode} - ${kibB.nama}` : "KIB B - Peralatan dan Mesin"; })()}
+                    </span>
+                    <span className="ml-auto text-[10px] uppercase tracking-widest text-sky-500 bg-sky-100 dark:bg-sky-900/40 px-1.5 py-0.5 rounded font-semibold">Sistem</span>
+                  </div>
                   {errors.kibId && <p className="text-xs text-rose-500 mt-1">{errors.kibId.message}</p>}
                 </div>
 
@@ -774,6 +817,54 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   )}
                   {errors.merkType && <p className="text-xs text-rose-500 mt-1">{errors.merkType.message}</p>}
                 </div>
+              </div>
+
+              {/* Material, Cara Perolehan & Spesifikasi */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                    Material / Bahan
+                  </label>
+                  <Input
+                    placeholder="Contoh: Aluminium, Kayu Jati, Plastik ABS"
+                    {...register("material")}
+                  />
+                  {errors.material && <p className="text-xs text-rose-500 mt-1">{errors.material.message}</p>}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                    Cara Perolehan
+                  </label>
+                  <select
+                    {...register("caraPerolehan")}
+                    className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">-- Pilih Cara Perolehan --</option>
+                    <option value="Pembelian">Pembelian</option>
+                    <option value="Hibah">Hibah</option>
+                    <option value="Produksi Sendiri">Produksi Sendiri</option>
+                    <option value="Tukar Menukar">Tukar Menukar</option>
+                    <option value="Bantuan Pusat">Bantuan Pusat</option>
+                    <option value="Bantuan Provinsi">Bantuan Provinsi</option>
+                    <option value="Sumbangan / Donasi">Sumbangan / Donasi</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
+                  {errors.caraPerolehan && <p className="text-xs text-rose-500 mt-1">{errors.caraPerolehan.message}</p>}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                  Spesifikasi Teknis
+                </label>
+                <textarea
+                  placeholder="Contoh: Prosesor Intel Core i5 Gen 11, RAM 8GB DDR4, SSD 512GB NVMe, Layar 14 inci FHD IPS"
+                  rows={3}
+                  className="flex w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  {...register("spesifikasi")}
+                />
+                {errors.spesifikasi && <p className="text-xs text-rose-500 mt-1">{errors.spesifikasi.message}</p>}
               </div>
 
               {/* Harga & Tahun Perolehan */}

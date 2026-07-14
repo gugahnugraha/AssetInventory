@@ -194,6 +194,9 @@ export interface CreateAssetInput {
   categoryId: string;
   namaAset: string;
   merkType: string;
+  material?: string | null;
+  caraPerolehan?: string | null;
+  spesifikasi?: string | null;
   harga: number;
   tahunPembelian: number;
   distributionId: string;
@@ -214,7 +217,23 @@ export async function createAsset(data: CreateAssetInput, userId: string) {
       throw new Error("Nomor register harus berupa angka/integer.");
     }
     const registerStr = String(registerInt).padStart(4, '0');
-    const kodeLengkap = `1.3.${data.kode1}.${data.kode2}.${data.kode3}.${data.kode4}.${data.kode5}.${registerStr}`;
+
+    const k1 = parseInt(data.kode1, 10);
+    const k2 = parseInt(data.kode2, 10);
+    const k3 = parseInt(data.kode3, 10);
+    const k4 = parseInt(data.kode4, 10);
+    const k5 = parseInt(data.kode5, 10);
+
+    if (isNaN(k1) || isNaN(k2) || isNaN(k3) || isNaN(k4) || isNaN(k5)) {
+      throw new Error("Kode klasifikasi aset harus berupa angka/integer.");
+    }
+
+    const k1Str = String(k1).padStart(2, '0');
+    const k2Str = String(k2).padStart(2, '0');
+    const k3Str = String(k3).padStart(2, '0');
+    const k4Str = String(k4).padStart(2, '0');
+    const k5Str = String(k5).padStart(2, '0');
+    const kodeLengkap = `1.3.${k1Str}.${k2Str}.${k3Str}.${k4Str}.${k5Str}.${registerStr}`;
 
     // Verify uniqueness of full code
     const existing = await prisma.asset.findUnique({
@@ -229,16 +248,19 @@ export async function createAsset(data: CreateAssetInput, userId: string) {
       // 1. Create the Asset
       const asset = await tx.asset.create({
         data: {
-          kode1: data.kode1,
-          kode2: data.kode2,
-          kode3: data.kode3,
-          kode4: data.kode4,
-          kode5: data.kode5,
+          kode1: k1,
+          kode2: k2,
+          kode3: k3,
+          kode4: k4,
+          kode5: k5,
           nomorRegister: registerInt,
           kodeLengkap,
           categoryId: data.categoryId,
           namaAset: data.namaAset,
           merkType: data.merkType,
+          material: data.material || null,
+          caraPerolehan: data.caraPerolehan || null,
+          spesifikasi: data.spesifikasi || null,
           harga: data.harga,
           tahunPembelian: data.tahunPembelian,
           distributionId: data.distributionId,
@@ -322,6 +344,9 @@ export interface UpdateAssetInput {
   categoryId?: string;
   namaAset?: string;
   merkType?: string;
+  material?: string | null;
+  caraPerolehan?: string | null;
+  spesifikasi?: string | null;
   harga?: number;
   tahunPembelian?: number;
   distributionId?: string;
@@ -347,14 +372,20 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
 
     // Recompute complete code if parts are updated
     let kodeLengkap = existingAsset.kodeLengkap;
-    const k1 = data.kode1 !== undefined ? data.kode1 : existingAsset.kode1;
-    const k2 = data.kode2 !== undefined ? data.kode2 : existingAsset.kode2;
-    const k3 = data.kode3 !== undefined ? data.kode3 : existingAsset.kode3;
-    const k4 = data.kode4 !== undefined ? data.kode4 : existingAsset.kode4;
-    const k5 = data.kode5 !== undefined ? data.kode5 : existingAsset.kode5;
+    const k1 = data.kode1 !== undefined ? parseInt(data.kode1, 10) : existingAsset.kode1;
+    const k2 = data.kode2 !== undefined ? parseInt(data.kode2, 10) : existingAsset.kode2;
+    const k3 = data.kode3 !== undefined ? parseInt(data.kode3, 10) : existingAsset.kode3;
+    const k4 = data.kode4 !== undefined ? parseInt(data.kode4, 10) : existingAsset.kode4;
+    const k5 = data.kode5 !== undefined ? parseInt(data.kode5, 10) : existingAsset.kode5;
     const regInt = data.nomorRegister !== undefined ? parseInt(data.nomorRegister, 10) : existingAsset.nomorRegister;
+    
     const regStr = String(regInt).padStart(4, '0');
-    const newKodeLengkap = `1.3.${k1}.${k2}.${k3}.${k4}.${k5}.${regStr}`;
+    const k1Str = String(k1).padStart(2, '0');
+    const k2Str = String(k2).padStart(2, '0');
+    const k3Str = String(k3).padStart(2, '0');
+    const k4Str = String(k4).padStart(2, '0');
+    const k5Str = String(k5).padStart(2, '0');
+    const newKodeLengkap = `1.3.${k1Str}.${k2Str}.${k3Str}.${k4Str}.${k5Str}.${regStr}`;
 
     if (newKodeLengkap !== existingAsset.kodeLengkap) {
       // Verify uniqueness of the new full code
@@ -430,16 +461,19 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
       const asset = await tx.asset.update({
         where: { id },
         data: {
-          kode1: data.kode1,
-          kode2: data.kode2,
-          kode3: data.kode3,
-          kode4: data.kode4,
-          kode5: data.kode5,
+          kode1: data.kode1 !== undefined ? parseInt(data.kode1, 10) : undefined,
+          kode2: data.kode2 !== undefined ? parseInt(data.kode2, 10) : undefined,
+          kode3: data.kode3 !== undefined ? parseInt(data.kode3, 10) : undefined,
+          kode4: data.kode4 !== undefined ? parseInt(data.kode4, 10) : undefined,
+          kode5: data.kode5 !== undefined ? parseInt(data.kode5, 10) : undefined,
           nomorRegister: data.nomorRegister !== undefined ? parseInt(data.nomorRegister, 10) : undefined,
           kodeLengkap,
           categoryId: data.categoryId,
           namaAset: data.namaAset,
           merkType: data.merkType,
+          material: data.material,
+          caraPerolehan: data.caraPerolehan,
+          spesifikasi: data.spesifikasi,
           harga: data.harga,
           tahunPembelian: data.tahunPembelian,
           kondisi: data.kondisi,

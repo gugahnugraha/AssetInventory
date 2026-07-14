@@ -138,17 +138,20 @@ model AssetAttribute {
 
 model Asset {
   id             String            @id @default(uuid())
-  kode1          String            // e.g. "02"
-  kode2          String            // e.g. "05"
-  kode3          String            // e.g. "01"
-  kode4          String            // e.g. "03"
-  kode5          String            // e.g. "02"
+  kode1          Int               // e.g. 2
+  kode2          Int               // e.g. 5
+  kode3          Int               // e.g. 1
+  kode4          Int               // e.g. 3
+  kode5          Int               // e.g. 2
   nomorRegister  Int               // e.g. 1, 1000
   kodeLengkap    String            @unique // XX.XX.XX.XX.XX.XXX
   categoryId     String
   category       Category          @relation(fields: [categoryId], references: [id])
   namaAset       String            // e.g. "Mobil Avanza"
   merkType       String
+  material       String?           // e.g. "Kayu Jati", "Aluminium"
+  caraPerolehan  String?           // e.g. "Pembelian", "Hibah"
+  spesifikasi    String?           // e.g. "Intel i5, RAM 8GB, SSD 512GB"
   harga          Float             @default(0.0)
   tahunPembelian Int
   distributionId String

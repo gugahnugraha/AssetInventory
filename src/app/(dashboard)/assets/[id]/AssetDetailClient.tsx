@@ -407,6 +407,18 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
                   <span className="font-semibold text-zinc-900 dark:text-zinc-200">{asset.merkType || "-"}</span>
                 </div>
                 <div className="flex justify-between py-2 text-sm">
+                  <span className="text-zinc-500 font-medium">Material / Bahan</span>
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-200">{asset.material || "-"}</span>
+                </div>
+                <div className="flex justify-between py-2 text-sm">
+                  <span className="text-zinc-500 font-medium">Cara Perolehan</span>
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-200">{asset.caraPerolehan || "-"}</span>
+                </div>
+                <div className="flex justify-between py-2 text-sm gap-4">
+                  <span className="text-zinc-500 font-medium shrink-0">Spesifikasi</span>
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-200 text-right break-words max-w-[70%]">{asset.spesifikasi || "-"}</span>
+                </div>
+                <div className="flex justify-between py-2 text-sm">
                   <span className="text-zinc-500 font-medium">Harga Perolehan</span>
                   <span className="font-bold text-emerald-850 dark:text-emerald-400">Rp {asset.harga ? asset.harga.toLocaleString("id-ID") : "0"}</span>
                 </div>
@@ -420,7 +432,14 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
                 </div>
                 <div className="flex justify-between py-2 text-sm">
                   <span className="text-zinc-500 font-medium">Kode Bidang (Kelompok)</span>
-                  <span className="font-mono font-semibold text-zinc-900">1.3.{asset.kode1}.{asset.kode2}.{asset.kode3}.{asset.kode4}.{asset.kode5}</span>
+                  <span className="font-mono font-semibold text-zinc-900">
+                    1.3.
+                    {String(asset.kode1).padStart(2, '0')}.
+                    {String(asset.kode2).padStart(2, '0')}.
+                    {String(asset.kode3).padStart(2, '0')}.
+                    {String(asset.kode4).padStart(2, '0')}.
+                    {String(asset.kode5).padStart(2, '0')}
+                  </span>
                 </div>
               </CardContent>
             </Card>
