@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createAsset, updateAsset, deleteAsset, CreateAssetInput, UpdateAssetInput } from "@/services/asset";
 import { DocumentService } from "@/services/document";
 import { Role, Kondisi } from "@prisma/client";
+import { importAssetsBatch, ExcelAssetRow } from "@/services/import";
 
 // Guard to check if current user has write access (Admin or Operator)
 async function requireWriteAccess() {
@@ -152,5 +153,22 @@ export async function deleteAssetPhotoAction(assetId: string, photoId: string) {
   } catch (error: any) {
     console.error("Error in deleteAssetPhotoAction:", error);
     return { error: error.message || "Gagal menghapus foto." };
+  }
+}
+
+/**
+ * Server Action to import assets in batches from Excel
+ */
+export async function importAssetsBatchAction(rows: ExcelAssetRow[], defaultDistributionId: string) {
+  try {
+    const session = await requireWriteAccess();
+    const result = await importAssetsBatch(rows, session.user.opdId, defaultDistributionId, session.user.id);
+    
+    revalidatePath("/assets");
+    revalidatePath("/dashboard");
+    return { success: true, result };
+  } catch (error: any) {
+    console.error("Error in importAssetsBatchAction:", error);
+    return { error: error.message || "Gagal melakukan proses import data." };
   }
 }

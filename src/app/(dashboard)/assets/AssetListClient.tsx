@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   Plus, 
   Search, 
@@ -12,7 +13,8 @@ import {
   ChevronDown,
   ArrowUpDown,
   Filter,
-  Check
+  Check,
+  Upload
 } from "lucide-react";
 import { 
   useReactTable, 
@@ -35,6 +37,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Kondisi, Role } from "@prisma/client";
 import * as XLSX from "xlsx";
 import { cn, formatRupiah } from "@/lib/utils";
+import { ImportDialog } from "@/components/ImportDialog";
 
 interface AssetListClientProps {
   initialAssets: any[];
@@ -43,11 +46,13 @@ interface AssetListClientProps {
 }
 
 export function AssetListClient({ initialAssets, distributions, userRole }: AssetListClientProps) {
+  const router = useRouter();
   const [assets, setAssets] = React.useState(initialAssets);
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [selectedKondisi, setSelectedKondisi] = React.useState<string>("ALL");
   const [selectedBidang, setSelectedBidang] = React.useState<string>("ALL");
   const [selectedTahun, setSelectedTahun] = React.useState<string>("ALL");
+  const [isImportOpen, setIsImportOpen] = React.useState(false);
   const [selectedReconStatus, setSelectedReconStatus] = React.useState<string>("ALL");
   const [selectedKib, setSelectedKib] = React.useState<string>("ALL");
   const [selectedKategori, setSelectedKategori] = React.useState<string>("ALL");
@@ -389,12 +394,18 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
             Ekspor Excel
           </Button>
           {userRole !== Role.MANAGER && (
-            <Link href="/assets/tambah" prefetch={false}>
-              <Button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-xs">
-                <Plus className="h-4 w-4" />
-                Tambah Aset
+            <>
+              <Button onClick={() => setIsImportOpen(true)} variant="outline" className="flex items-center gap-2 border-emerald-600/30 hover:border-emerald-650 hover:bg-emerald-50/5 text-emerald-700 dark:text-emerald-400 cursor-pointer">
+                <Upload className="h-4 w-4" />
+                Import Excel
               </Button>
-            </Link>
+              <Link href="/assets/tambah" prefetch={false}>
+                <Button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-xs">
+                  <Plus className="h-4 w-4" />
+                  Tambah Aset
+                </Button>
+              </Link>
+            </>
           )}
         </div>
       </div>
@@ -561,6 +572,15 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       description={`Anda akan menghapus aset dengan kode "${deleteTarget?.code}". Tindakan ini akan dicatat di log audit dan tidak dapat dibatalkan.`}
       confirmLabel="Ya, Hapus Aset"
       variant="danger"
+    />
+
+    <ImportDialog
+      isOpen={isImportOpen}
+      onClose={() => setIsImportOpen(false)}
+      distributions={distributions}
+      onSuccess={() => {
+        router.refresh();
+      }}
     />
     </>
   );
