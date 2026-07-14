@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getAllAssets } from "@/services/asset";
+import { DocumentService } from "@/services/document";
 import { getAllDistributions } from "@/services/distribution";
 import { AssetListClient } from "./AssetListClient";
 import { Role } from "@prisma/client";
@@ -29,6 +30,7 @@ export default async function AssetsPage() {
       ...asset,
       createdAt: asset.createdAt.toISOString(),
       updatedAt: asset.updatedAt.toISOString(),
+      fotoUtama: DocumentService.generateFileUrl(asset.fotoUtama),
       category: {
         ...asset.category,
         createdAt: asset.category.createdAt.toISOString(),
@@ -56,10 +58,6 @@ export default async function AssetsPage() {
             updatedAt: asset.holder.updatedAt.toISOString(),
           }
         : null,
-      photos: asset.photos.map((photo) => ({
-        ...photo,
-        createdAt: photo.createdAt.toISOString(),
-      })),
     }));
 
     const serializedDistributions = distributions.map((dist) => ({

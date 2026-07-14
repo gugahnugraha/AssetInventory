@@ -72,6 +72,7 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
         originalFileName: photo.originalFileName,
         mimeType: photo.mimeType,
         size: photo.size,
+        isPrimary: photo.isPrimary,
         uploadedAt: photo.uploadedAt.toISOString(),
       })),
       auditLogs: asset.auditLogs.map((log) => ({

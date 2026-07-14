@@ -16,14 +16,15 @@ import {
   History,
   AlertTriangle,
   ImageIcon,
-  ArrowRightLeft
+  ArrowRightLeft,
+  Star
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { formatDate } from "@/lib/utils";
-import { deleteAssetAction } from "@/actions/asset";
+import { deleteAssetAction, deleteAssetPhotoAction, setPrimaryPhotoAction } from "@/actions/asset";
 import { Kondisi, Role, MutationType } from "@prisma/client";
 import { useRouter } from "next/navigation";
 
@@ -37,6 +38,8 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
   const [activePhoto, setActivePhoto] = React.useState<string>(asset.fotoUtama || "/placeholder-asset.png");
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<"spec" | "history">("spec");
+  const [isSubmittingPhoto, setIsSubmittingPhoto] = React.useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
 
   // Sync active photo if asset changes or uploads complete
   React.useEffect(() => {
@@ -44,6 +47,48 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
       setActivePhoto(asset.fotoUtama);
     }
   }, [asset.fotoUtama]);
+
+  const selectedDoc = React.useMemo(() => {
+    return asset.photos?.find((p: any) => p.url === activePhoto);
+  }, [asset.photos, activePhoto]);
+
+  const handleSetPrimary = async () => {
+    if (!selectedDoc || userRole === Role.MANAGER) return;
+    setIsSubmittingPhoto(true);
+    try {
+      const res = await setPrimaryPhotoAction(asset.id, selectedDoc.id);
+      if (res.success) {
+        router.refresh();
+      } else {
+        alert(res.error || "Gagal mengubah foto utama.");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmittingPhoto(false);
+    }
+  };
+
+  const handleDeletePhoto = async () => {
+    if (!selectedDoc || userRole === Role.MANAGER) return;
+    if (!confirm("Apakah Anda yakin ingin menghapus foto ini?")) return;
+    setIsSubmittingPhoto(true);
+    try {
+      const res = await deleteAssetPhotoAction(asset.id, selectedDoc.id);
+      if (res.success) {
+        // Find next active photo
+        const remaining = asset.photos.filter((p: any) => p.id !== selectedDoc.id);
+        setActivePhoto(remaining.length > 0 ? remaining[0].url : "/placeholder-asset.png");
+        router.refresh();
+      } else {
+        alert(res.error || "Gagal menghapus foto.");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmittingPhoto(false);
+    }
+  };
 
   const getKondisiLabel = (kondisi: Kondisi) => {
     switch (kondisi) {
@@ -210,12 +255,15 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
           {/* Photos Gallery (Left column) */}
           <div className="space-y-4">
             <Card className="border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden">
-              <div className="relative aspect-4/3 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center border-b">
+              <div 
+                className="relative aspect-4/3 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center border-b cursor-zoom-in group"
+                onClick={() => activePhoto && activePhoto !== "/placeholder-asset.png" && setIsLightboxOpen(true)}
+              >
                 {activePhoto && activePhoto !== "/placeholder-asset.png" ? (
                   <img
                     src={activePhoto}
                     alt={asset.namaAset}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
                   />
                 ) : (
                   <div className="flex flex-col items-center gap-2 text-zinc-400">
@@ -228,8 +276,41 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
                 </Badge>
               </div>
               
+              {/* Photo Actions for Admin/Operator */}
+              {selectedDoc && userRole !== Role.MANAGER && (
+                <div className="flex justify-between items-center px-4 py-2 bg-zinc-50 border-b gap-2">
+                  {!selectedDoc.isPrimary ? (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleSetPrimary}
+                      disabled={isSubmittingPhoto}
+                      className="text-xs h-8 cursor-pointer flex gap-1 items-center"
+                    >
+                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                      Set Utama
+                    </Button>
+                  ) : (
+                    <Badge variant="outline" className="text-xs bg-amber-50 text-amber-800 border-amber-250 flex gap-1 items-center">
+                      <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
+                      Foto Utama
+                    </Badge>
+                  )}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleDeletePhoto}
+                    disabled={isSubmittingPhoto}
+                    className="text-xs h-8 text-rose-600 hover:text-rose-750 hover:bg-rose-50 cursor-pointer flex gap-1 items-center"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Hapus
+                  </Button>
+                </div>
+              )}
+
               {/* Small thumbnails row */}
-              {asset.photos.length > 0 && (
+              {asset.photos && asset.photos.length > 0 && (
                 <CardContent className="p-3">
                   <div className="flex gap-2 overflow-x-auto pb-1">
                     {asset.photos.map((photo: any, index: number) => (
@@ -245,6 +326,11 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
                           alt={`Aset thumbnail ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
+                        {photo.isPrimary && (
+                          <div className="absolute top-0.5 right-0.5 bg-amber-500 rounded-full p-0.5 text-[6px]">
+                            <Star className="h-1.5 w-1.5 fill-white text-white" />
+                          </div>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -540,6 +626,26 @@ export function AssetDetailClient({ asset, userRole }: AssetDetailClientProps) {
         </Card>
       )}
     </div>
+
+    {/* Lightbox / Fullscreen Image Preview */}
+    {isLightboxOpen && activePhoto && (
+      <div 
+        className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center cursor-zoom-out"
+        onClick={() => setIsLightboxOpen(false)}
+      >
+        <button 
+          className="absolute top-4 right-4 text-white hover:text-zinc-350 font-bold text-xl bg-zinc-800/60 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer"
+          onClick={() => setIsLightboxOpen(false)}
+        >
+          ✕
+        </button>
+        <img 
+          src={activePhoto} 
+          alt="Preview ukuran penuh" 
+          className="max-w-[95%] max-h-[90vh] object-contain rounded shadow-2xl"
+        />
+      </div>
+    )}
 
     <ConfirmDialog
       isOpen={showDeleteConfirm}

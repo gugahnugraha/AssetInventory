@@ -217,6 +217,7 @@ model Document {
   originalFileName String
   mimeType         String
   size             Int
+  isPrimary        Boolean      @default(false)
   uploadedBy       String
   uploader         User         @relation(fields: [uploadedBy], references: [id])
   uploadedAt       DateTime     @default(now())

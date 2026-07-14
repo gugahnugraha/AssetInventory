@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getAllHistories } from "@/services/history";
 import { getAllAssets } from "@/services/asset";
+import { DocumentService } from "@/services/document";
 import { getAllDistributions } from "@/services/distribution";
 import { getAllHolders } from "@/services/holder";
 import { MutasiClient } from "./MutasiClient";
@@ -58,8 +59,8 @@ export default async function MutasiPage({ searchParams }: MutasiPageProps) {
       fromHolder: h.fromHolder ? { nama: h.fromHolder.nama } : null,
       toHolder: h.toHolder ? { nama: h.toHolder.nama } : null,
       documents: h.documents.map((doc) => ({
-        fileName: doc.fileName,
-        fileUrl: doc.fileUrl,
+        fileName: doc.originalFileName,
+        fileUrl: DocumentService.generateFileUrl(doc.objectKey),
       })),
     }));
 

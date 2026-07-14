@@ -116,3 +116,41 @@ export async function deleteTemporaryPhotoAction(tempKey: string) {
     return { error: error.message || "Gagal menghapus file sementara." };
   }
 }
+
+/**
+ * Server Action to set an existing detail photo as the primary photo
+ */
+export async function setPrimaryPhotoAction(assetId: string, photoId: string) {
+  try {
+    const session = await requireWriteAccess();
+
+    await DocumentService.replacePrimaryPhoto(photoId, assetId, session.user.id);
+
+    revalidatePath(`/assets/${assetId}`);
+    revalidatePath("/assets");
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error in setPrimaryPhotoAction:", error);
+    return { error: error.message || "Gagal mengatur foto utama baru." };
+  }
+}
+
+/**
+ * Server Action to delete (archive) a photo from asset gallery
+ */
+export async function deleteAssetPhotoAction(assetId: string, photoId: string) {
+  try {
+    const session = await requireWriteAccess();
+
+    await DocumentService.deletePhoto(photoId, session.user.id);
+
+    revalidatePath(`/assets/${assetId}`);
+    revalidatePath("/assets");
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error in deleteAssetPhotoAction:", error);
+    return { error: error.message || "Gagal menghapus foto." };
+  }
+}

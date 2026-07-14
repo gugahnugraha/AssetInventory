@@ -61,7 +61,6 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
         category: true,
         distribution: true,
         holder: true,
-        photos: true,
         attributes: {
           include: {
             categoryAttribute: true
@@ -222,36 +221,23 @@ export async function createAsset(data: CreateAssetInput, userId: string) {
 
       // 2. Commit photos in R2 & DB Document
       if (data.photos && data.photos.length > 0) {
-        let primaryKey: string | null = null;
-        let photoIndex = 1;
-
         for (const p of data.photos) {
-          const targetKey = p.isPrimary
-            ? `assets/${asset.id}/primary.webp`
-            : `assets/${asset.id}/photo-${String(photoIndex++).padStart(3, "0")}.webp`;
-
-          await DocumentService.commitDocument(p.tempKey, targetKey, {
-            entityType: EntityType.ASSET,
-            entityId: asset.id,
-            documentType: DocumentType.PHOTO,
-            originalFileName: p.originalFileName,
-            mimeType: p.mimeType,
-            size: p.size,
-            userId,
-          }, tx);
-
-          committedKeys.push(targetKey);
-
           if (p.isPrimary) {
-            primaryKey = targetKey;
+            const targetKey = DocumentService.generateObjectKey(asset.id, "PRIMARY");
+            await DocumentService.commitPrimaryPhoto(p.tempKey, asset.id, userId, {
+              originalFileName: p.originalFileName,
+              mimeType: p.mimeType,
+              size: p.size,
+            }, tx);
+            committedKeys.push(targetKey);
+          } else {
+            const doc = await DocumentService.commitDetailPhoto(p.tempKey, asset.id, userId, {
+              originalFileName: p.originalFileName,
+              mimeType: p.mimeType,
+              size: p.size,
+            }, tx);
+            committedKeys.push(doc.objectKey);
           }
-        }
-
-        if (primaryKey) {
-          await tx.asset.update({
-            where: { id: asset.id },
-            data: { fotoUtama: primaryKey },
-          });
         }
       }
 
@@ -353,7 +339,7 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
       // 1. Process deletePhotoIds
       if (data.deletePhotoIds && data.deletePhotoIds.length > 0) {
         for (const docId of data.deletePhotoIds) {
-          await DocumentService.archiveDocument(docId, userId, tx);
+          await DocumentService.deletePhoto(docId, userId, tx);
         }
       }
 
@@ -371,58 +357,40 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
       let primaryKey: string | null = existingAsset.fotoUtama;
       
       if (data.photos && data.photos.length > 0) {
-        // Soft delete old primary photo if a new primary photo is uploaded
-        const hasNewPrimary = data.photos.some(p => p.isPrimary);
-        if (hasNewPrimary) {
-          const oldPrimary = activeDocs.find(d => d.objectKey.endsWith("primary.webp"));
-          if (oldPrimary) {
-            await DocumentService.archiveDocument(oldPrimary.id, userId, tx);
-          }
-        }
-
-        // Determine next index for non-primary photos
-        let photoIndex = 1;
-        const additionalDocs = activeDocs.filter(d => !d.objectKey.endsWith("primary.webp"));
-        if (additionalDocs.length > 0) {
-          const indices = additionalDocs.map(d => {
-            const match = d.objectKey.match(/photo-(\d+)\./);
-            return match ? parseInt(match[1]) : 0;
-          });
-          photoIndex = Math.max(...indices) + 1;
-        }
-
         for (const p of data.photos) {
-          const targetKey = p.isPrimary
-            ? `assets/${id}/primary.webp`
-            : `assets/${id}/photo-${String(photoIndex++).padStart(3, "0")}.webp`;
-
-          await DocumentService.commitDocument(p.tempKey, targetKey, {
-            entityType: EntityType.ASSET,
-            entityId: id,
-            documentType: DocumentType.PHOTO,
-            originalFileName: p.originalFileName,
-            mimeType: p.mimeType,
-            size: p.size,
-            userId,
-          }, tx);
-
-          committedKeys.push(targetKey);
-
           if (p.isPrimary) {
+            const targetKey = DocumentService.generateObjectKey(id, "PRIMARY");
+            await DocumentService.commitPrimaryPhoto(p.tempKey, id, userId, {
+              originalFileName: p.originalFileName,
+              mimeType: p.mimeType,
+              size: p.size,
+            }, tx);
+            committedKeys.push(targetKey);
             primaryKey = targetKey;
+          } else {
+            const doc = await DocumentService.commitDetailPhoto(p.tempKey, id, userId, {
+              originalFileName: p.originalFileName,
+              mimeType: p.mimeType,
+              size: p.size,
+            }, tx);
+            committedKeys.push(doc.objectKey);
           }
         }
       }
 
       // If the current primary photo was deleted and not replaced, set primaryKey to null
       if (data.deletePhotoIds && data.deletePhotoIds.length > 0 && primaryKey) {
-        const primaryDoc = activeDocs.find(d => d.objectKey === primaryKey);
-        if (primaryDoc && data.deletePhotoIds.includes(primaryDoc.id)) {
-          // If a new primary wasn't added in this request, set it to null
-          const hasNewPrimary = data.photos && data.photos.some(p => p.isPrimary);
-          if (!hasNewPrimary) {
-            primaryKey = null;
-          }
+        const activeDocsAfterDelete = await tx.document.findMany({
+          where: {
+            entityId: id,
+            entityType: EntityType.ASSET,
+            documentType: DocumentType.PHOTO,
+            archivedAt: null,
+          },
+        });
+        const primaryDoc = activeDocsAfterDelete.find(d => d.isPrimary);
+        if (!primaryDoc) {
+          primaryKey = null;
         }
       }
 
