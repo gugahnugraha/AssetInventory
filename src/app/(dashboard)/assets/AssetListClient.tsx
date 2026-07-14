@@ -34,6 +34,7 @@ import { deleteAssetAction } from "@/actions/asset";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Kondisi, Role } from "@prisma/client";
 import * as XLSX from "xlsx";
+import { cn, formatRupiah } from "@/lib/utils";
 
 interface AssetListClientProps {
   initialAssets: any[];
@@ -163,12 +164,34 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         cell: ({ row }) => (
           <div className="flex flex-col min-w-40">
             <span className="font-semibold text-sm text-zinc-900 dark:text-zinc-50">{row.getValue("namaAset")}</span>
-            <span className="text-xs text-zinc-500 mb-1">{row.original.merkType || "-"}</span>
-            <Badge variant="outline" className="text-[10px] w-fit bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-200/50 font-medium">
+            <Badge variant="outline" className="text-[10px] w-fit bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 border border-emerald-200/50 font-medium mt-1">
               {row.original.category?.nama || "Lainnya"}
             </Badge>
           </div>
         ),
+      },
+      {
+        accessorKey: "merkType",
+        header: "Merk / Type",
+        cell: ({ row }) => <span className="text-sm">{row.original.merkType || "-"}</span>,
+      },
+      {
+        accessorKey: "harga",
+        header: "Harga Perolehan",
+        cell: ({ row }) => <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{formatRupiah(row.original.harga || 0)}</span>,
+      },
+      {
+        accessorKey: "tahunPembelian",
+        header: "Tahun",
+        cell: ({ row }) => <span className="text-sm">{row.getValue("tahunPembelian")}</span>,
+      },
+      {
+        accessorKey: "kondisi",
+        header: "Kondisi",
+        cell: ({ row }) => {
+          const val = row.getValue("kondisi") as Kondisi;
+          return <Badge variant={getKondisiBadgeVariant(val)}>{getKondisiLabel(val)}</Badge>;
+        },
       },
       {
         accessorKey: "distribution.nama",
@@ -181,19 +204,6 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         id: "pemegang",
         header: "Pemegang Barang",
         cell: ({ row }) => <span className="text-sm font-medium">{row.original.holder?.nama || "-"}</span>,
-      },
-      {
-        accessorKey: "kondisi",
-        header: "Kondisi",
-        cell: ({ row }) => {
-          const val = row.getValue("kondisi") as Kondisi;
-          return <Badge variant={getKondisiBadgeVariant(val)}>{getKondisiLabel(val)}</Badge>;
-        },
-      },
-      {
-        accessorKey: "tahunPembelian",
-        header: "Tahun",
-        cell: ({ row }) => <span className="text-sm">{row.getValue("tahunPembelian")}</span>,
       },
       {
         id: "statusRekon",
@@ -454,13 +464,22 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
               <TableHeader className="bg-zinc-50 dark:bg-zinc-900/60 sticky top-0">
                 {table.getHeaderGroups().map(headerGroup => (
                   <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                    {headerGroup.headers.map(header => (
-                      <TableHead key={header.id} className="font-semibold text-zinc-700 dark:text-zinc-300">
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
+                    {headerGroup.headers.map(header => {
+                      const isActions = header.column.id === "actions";
+                      return (
+                        <TableHead
+                          key={header.id}
+                          className={cn(
+                            "font-semibold text-zinc-700 dark:text-zinc-300 whitespace-nowrap",
+                            isActions && "sticky right-0 bg-zinc-50 dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 shadow-[-6px_0_12px_rgba(0,0,0,0.03)] z-10"
+                          )}
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableHead>
+                      );
+                    })}
                   </TableRow>
                 ))}
               </TableHeader>
@@ -474,11 +493,20 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
                 ) : (
                   table.getRowModel().rows.map(row => (
                     <TableRow key={row.id}>
-                      {row.getVisibleCells().map(cell => (
-                        <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
+                      {row.getVisibleCells().map(cell => {
+                        const isActions = cell.column.id === "actions";
+                        return (
+                          <TableCell
+                            key={cell.id}
+                            className={cn(
+                              "whitespace-nowrap",
+                              isActions && "sticky right-0 bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 shadow-[-6px_0_12px_rgba(0,0,0,0.03)]"
+                            )}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        );
+                      })}
                     </TableRow>
                   ))
                 )}

@@ -58,6 +58,8 @@ export function Sidebar({ user }: SidebarProps) {
       label: "Manajemen Aset",
       icon: Boxes,
       roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+      expandedState: assetsExpanded,
+      setExpanded: setAssetsExpanded,
       children: [
         {
           label: "Data Aset",
@@ -169,10 +171,23 @@ export function Sidebar({ user }: SidebarProps) {
                   onClick={() => {
                     if (collapsed) {
                       setCollapsed(false);
-                      (link.setExpanded || setAssetsExpanded)(true);
+                      if (link.label === "Manajemen Aset") {
+                        setAssetsExpanded(true);
+                        setRekonExpanded(false);
+                      } else if (link.label === "Rekonsiliasi Aset") {
+                        setRekonExpanded(true);
+                        setAssetsExpanded(false);
+                      }
                     } else {
-                      const current = link.expandedState !== undefined ? link.expandedState : assetsExpanded;
-                      (link.setExpanded || setAssetsExpanded)(!current);
+                      if (link.label === "Manajemen Aset") {
+                        const nextVal = !assetsExpanded;
+                        setAssetsExpanded(nextVal);
+                        if (nextVal) setRekonExpanded(false);
+                      } else if (link.label === "Rekonsiliasi Aset") {
+                        const nextVal = !rekonExpanded;
+                        setRekonExpanded(nextVal);
+                        if (nextVal) setAssetsExpanded(false);
+                      }
                     }
                   }}
                   className={cn(
@@ -189,15 +204,14 @@ export function Sidebar({ user }: SidebarProps) {
                     )} />
                     {!collapsed && <span>{link.label}</span>}
                   </div>
-                  {!collapsed && (() => {
-                    const isExpanded = link.expandedState !== undefined ? link.expandedState : assetsExpanded;
-                    return isExpanded
+                  {!collapsed && (
+                    link.expandedState
                       ? <ChevronDown className="h-4 w-4 text-emerald-300" />
-                      : <ChevronRight className="h-4 w-4 text-emerald-300" />;
-                  })()}
+                      : <ChevronRight className="h-4 w-4 text-emerald-300" />
+                  )}
                 </button>
 
-                {(link.expandedState !== undefined ? link.expandedState : assetsExpanded) && !collapsed && (
+                {link.expandedState && !collapsed && (
                   <div className="pl-4 space-y-1 border-l border-emerald-700/30 ml-5 mt-1">
                     {visibleChildren.map((child) => {
                       const isChildActive = pathname.startsWith(child.href);
