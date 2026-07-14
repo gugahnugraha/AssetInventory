@@ -84,11 +84,26 @@ model Holder {
 
 model Category {
   id        String              @id @default(uuid())
-  nama      String              @unique
+  nama      String
+  kibId     String
+  kib       Kib                 @relation(fields: [kibId], references: [id])
   createdAt DateTime            @default(now())
   updatedAt DateTime            @updatedAt
   attributes CategoryAttribute[]
   assets     Asset[]
+
+  @@unique([nama, kibId])
+}
+
+model Kib {
+  id          String     @id @default(uuid())
+  kode        String     @unique // e.g. "A", "B", "C", "D", "E", "F"
+  nama        String
+  deskripsi   String?
+  isActive    Boolean    @default(true)
+  categories  Category[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model CategoryAttribute {
