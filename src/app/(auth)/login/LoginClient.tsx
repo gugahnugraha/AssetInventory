@@ -78,7 +78,7 @@ export function LoginClient() {
             <Shield className="h-6 w-6" />
           </div>
           <span className="font-extrabold text-xl tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-emerald-200">
-            INVENTORIA
+            ASET INVENTARIS
           </span>
         </div>
 
@@ -135,7 +135,7 @@ export function LoginClient() {
             <div className="p-3 bg-emerald-600/10 text-emerald-400 rounded-2xl border border-emerald-500/20 shadow-lg">
               <Shield className="h-7 w-7" />
             </div>
-            <h1 className="text-xl font-black tracking-wider text-emerald-400">INVENTORIA</h1>
+            <h1 className="text-xl font-black tracking-wider text-emerald-400">ASET INVENTARIS</h1>
             <p className="text-xs text-zinc-550">Aplikasi Manajemen &amp; Inventarisasi Aset</p>
           </div>
 
