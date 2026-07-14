@@ -438,7 +438,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
                     {String(asset.kode2).padStart(2, '0')}.
                     {String(asset.kode3).padStart(2, '0')}.
                     {String(asset.kode4).padStart(2, '0')}.
-                    {String(asset.kode5).padStart(2, '0')}
+                    {String(asset.kode5).padStart(3, '0')}
                   </span>
                 </div>
               </CardContent>

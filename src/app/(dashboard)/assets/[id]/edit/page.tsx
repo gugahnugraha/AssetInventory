@@ -53,7 +53,7 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
       kode2: String(asset.kode2).padStart(2, '0'),
       kode3: String(asset.kode3).padStart(2, '0'),
       kode4: String(asset.kode4).padStart(2, '0'),
-      kode5: String(asset.kode5).padStart(2, '0'),
+      kode5: String(asset.kode5).padStart(3, '0'),
       nomorRegister: asset.nomorRegister,
       categoryId: asset.categoryId,
       namaAset: asset.namaAset,

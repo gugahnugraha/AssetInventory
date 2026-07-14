@@ -232,7 +232,7 @@ export async function createAsset(data: CreateAssetInput, userId: string) {
     const k2Str = String(k2).padStart(2, '0');
     const k3Str = String(k3).padStart(2, '0');
     const k4Str = String(k4).padStart(2, '0');
-    const k5Str = String(k5).padStart(2, '0');
+    const k5Str = String(k5).padStart(3, '0');
     const kodeLengkap = `1.3.${k1Str}.${k2Str}.${k3Str}.${k4Str}.${k5Str}.${registerStr}`;
 
     // Verify uniqueness of full code
@@ -384,7 +384,7 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
     const k2Str = String(k2).padStart(2, '0');
     const k3Str = String(k3).padStart(2, '0');
     const k4Str = String(k4).padStart(2, '0');
-    const k5Str = String(k5).padStart(2, '0');
+    const k5Str = String(k5).padStart(3, '0');
     const newKodeLengkap = `1.3.${k1Str}.${k2Str}.${k3Str}.${k4Str}.${k5Str}.${regStr}`;
 
     if (newKodeLengkap !== existingAsset.kodeLengkap) {

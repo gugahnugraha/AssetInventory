@@ -202,6 +202,14 @@ export async function importAssetsBatch(
             kode5 = parseInt(parts[6], 10) || 0;
             nomorRegister = parseInt(parts[7], 10) || 1;
             parsedFromCodeString = true;
+          } else if (parts.length === 7) {
+            kode1 = parseInt(parts[2], 10) || 0;
+            kode2 = parseInt(parts[3], 10) || 0;
+            kode3 = parseInt(parts[4], 10) || 0;
+            kode4 = parseInt(parts[5], 10) || 0;
+            kode5 = parseInt(parts[6], 10) || 0;
+            nomorRegister = parseInt(cleanString(row.NomorRegister), 10) || 1;
+            parsedFromCodeString = true;
           } else if (parts.length === 6) {
             kode1 = parseInt(parts[0], 10) || 0;
             kode2 = parseInt(parts[1], 10) || 0;
@@ -209,6 +217,14 @@ export async function importAssetsBatch(
             kode4 = parseInt(parts[3], 10) || 0;
             kode5 = parseInt(parts[4], 10) || 0;
             nomorRegister = parseInt(parts[5], 10) || 1;
+            parsedFromCodeString = true;
+          } else if (parts.length === 5) {
+            kode1 = parseInt(parts[0], 10) || 0;
+            kode2 = parseInt(parts[1], 10) || 0;
+            kode3 = parseInt(parts[2], 10) || 0;
+            kode4 = parseInt(parts[3], 10) || 0;
+            kode5 = parseInt(parts[4], 10) || 0;
+            nomorRegister = parseInt(cleanString(row.NomorRegister), 10) || 1;
             parsedFromCodeString = true;
           }
         }
@@ -227,7 +243,7 @@ export async function importAssetsBatch(
         const k2Str = String(kode2).padStart(2, "0");
         const k3Str = String(kode3).padStart(2, "0");
         const k4Str = String(kode4).padStart(2, "0");
-        const k5Str = String(kode5).padStart(2, "0");
+        const k5Str = String(kode5).padStart(3, "0");
         const registerStr = String(nomorRegister).padStart(4, "0");
         const kodeLengkap = `1.3.${k1Str}.${k2Str}.${k3Str}.${k4Str}.${k5Str}.${registerStr}`;
 

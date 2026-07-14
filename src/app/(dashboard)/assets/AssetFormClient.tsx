@@ -400,8 +400,8 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
 
   const previewKode5 = React.useMemo(() => {
     const valInt = parseInt(watchKode5, 10);
-    if (!isNaN(valInt)) return String(valInt).padStart(2, '0');
-    return watchKode5 || "XX";
+    if (!isNaN(valInt)) return String(valInt).padStart(3, '0');
+    return watchKode5 || "XXX";
   }, [watchKode5]);
 
   const previewRegister = React.useMemo(() => {
@@ -674,8 +674,8 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   </div>
                   <div>
                     <Input
-                      placeholder="XX"
-                      maxLength={2}
+                      placeholder="XXX"
+                      maxLength={3}
                       className="text-center font-mono font-bold"
                       {...register("kode5")}
                     />
