@@ -57,13 +57,28 @@ export async function updateUserAction(
   }
 ) {
   try {
-    await requireAdmin();
+    const session = await auth();
+    if (!session || !session.user) {
+      throw new Error("Akses ditolak. Silakan login terlebih dahulu.");
+    }
+
+    const isSelfUpdate = session.user.id === id;
+    const isAdmin = session.user.role === Role.ADMINISTRATOR;
+
+    // Guard: Can only edit if it's self-update OR is administrator
+    if (!isSelfUpdate && !isAdmin) {
+      throw new Error("Akses ditolak. Anda tidak memiliki wewenang untuk memperbarui pengguna ini.");
+    }
 
     const updateData: any = {};
     if (data.nama !== undefined) updateData.nama = data.nama;
-    if (data.username !== undefined) updateData.username = data.username.toLowerCase().trim();
-    if (data.role !== undefined) updateData.role = data.role;
-    if (data.isActive !== undefined) updateData.isActive = data.isActive;
+
+    // Only administrator can update username, role, and active status
+    if (isAdmin) {
+      if (data.username !== undefined) updateData.username = data.username.toLowerCase().trim();
+      if (data.role !== undefined) updateData.role = data.role;
+      if (data.isActive !== undefined) updateData.isActive = data.isActive;
+    }
 
     if (data.password && data.password.trim() !== "") {
       const salt = await bcrypt.genSalt(10);
@@ -73,6 +88,7 @@ export async function updateUserAction(
     const updatedUser = await updateUser(id, updateData);
     
     revalidatePath("/users");
+    revalidatePath("/profile");
     return { success: true, user: updatedUser };
   } catch (error: any) {
     console.error("Error in updateUserAction:", error);
