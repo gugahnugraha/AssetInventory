@@ -190,7 +190,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
           return;
         }
 
-        if (response.url && response.objectKey) {
+        if (!response.error && "url" in response && "objectKey" in response) {
           uploadedUrls.push({
             url: response.url,
             tempKey: response.objectKey,
