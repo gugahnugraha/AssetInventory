@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { getAssetById } from "@/services/asset";
+import { DocumentService } from "@/services/document";
 import { getAllDistributions } from "@/services/distribution";
 import { getAllHolders } from "@/services/holder";
 import { getAllCategories } from "@/services/category";
@@ -59,11 +60,16 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
       holderId: asset.holderId,
       kondisi: asset.kondisi,
       catatan: asset.catatan,
-      fotoUtama: asset.fotoUtama,
-      photos: asset.photos.map((photo) => ({
-        url: photo.url,
-        caption: photo.caption,
-      })),
+      // Pass raw key or generate URL
+      fotoUtama: asset.fotoUtama ? DocumentService.generateFileUrl(asset.fotoUtama) : "",
+      photos: asset.photos ? (asset as any).photos.map((photo: any) => ({
+        id: photo.id,
+        url: DocumentService.generateFileUrl(photo.objectKey),
+        objectKey: photo.objectKey,
+        originalFileName: photo.originalFileName,
+        mimeType: photo.mimeType,
+        size: photo.size,
+      })) : [],
       attributes: asset.attributes.map((attr) => ({
         categoryAttributeId: attr.categoryAttributeId,
         value: attr.value,

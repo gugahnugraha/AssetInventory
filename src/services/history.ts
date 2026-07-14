@@ -1,5 +1,6 @@
 import prisma from "./db";
-import { MutationType, Kondisi } from "@prisma/client";
+import { MutationType, Kondisi, EntityType, DocumentType } from "@prisma/client";
+import { DocumentService } from "./document";
 
 export interface CreateHistoryInput {
   assetId: string;
@@ -11,8 +12,10 @@ export interface CreateHistoryInput {
   description?: string | null;
   createdBy: string;
   document?: {
-    fileName: string;
-    fileUrl: string;
+    tempKey: string;
+    originalFileName: string;
+    mimeType: string;
+    size: number;
   } | null;
 }
 
@@ -87,15 +90,23 @@ export async function createAssetHistory(data: CreateHistoryInput) {
         },
       });
 
-      // 3. Create document if provided
+      // 3. Commit document if provided in R2 & DB Document
       if (data.document) {
-        await tx.assetHistoryDocument.create({
-          data: {
-            assetHistoryId: historyRecord.id,
-            fileName: data.document.fileName,
-            fileUrl: data.document.fileUrl,
+        const targetKey = `mutations/${historyRecord.id}/berita-acara.pdf`;
+        await DocumentService.commitDocument(
+          data.document.tempKey,
+          targetKey,
+          {
+            entityType: EntityType.MUTATION,
+            entityId: historyRecord.id,
+            documentType: DocumentType.BERITA_ACARA,
+            originalFileName: data.document.originalFileName,
+            mimeType: data.document.mimeType,
+            size: data.document.size,
+            userId: data.createdBy,
           },
-        });
+          tx
+        );
       }
 
       // 4. Update Asset table
@@ -140,7 +151,7 @@ export async function createAssetHistory(data: CreateHistoryInput) {
  */
 export async function getHistoryByAssetId(assetId: string) {
   try {
-    return await prisma.assetHistory.findMany({
+    const histories = await prisma.assetHistory.findMany({
       where: { assetId },
       include: {
         fromDistribution: true,
@@ -153,10 +164,25 @@ export async function getHistoryByAssetId(assetId: string) {
             role: true,
           },
         },
-        documents: true,
       },
       orderBy: { createdAt: "desc" },
     });
+
+    return await Promise.all(
+      histories.map(async (h) => {
+        const docs = await prisma.document.findMany({
+          where: {
+            entityId: h.id,
+            entityType: EntityType.MUTATION,
+            archivedAt: null,
+          },
+        });
+        return {
+          ...h,
+          documents: docs,
+        };
+      })
+    );
   } catch (error) {
     console.error("Error in getHistoryByAssetId:", error);
     throw new Error("Gagal mengambil riwayat mutasi aset.");
@@ -168,7 +194,7 @@ export async function getHistoryByAssetId(assetId: string) {
  */
 export async function getAllHistories(opdId: string) {
   try {
-    return await prisma.assetHistory.findMany({
+    const histories = await prisma.assetHistory.findMany({
       where: {
         asset: {
           opdId,
@@ -192,10 +218,25 @@ export async function getAllHistories(opdId: string) {
             role: true,
           },
         },
-        documents: true,
       },
       orderBy: { createdAt: "desc" },
     });
+
+    return await Promise.all(
+      histories.map(async (h) => {
+        const docs = await prisma.document.findMany({
+          where: {
+            entityId: h.id,
+            entityType: EntityType.MUTATION,
+            archivedAt: null,
+          },
+        });
+        return {
+          ...h,
+          documents: docs,
+        };
+      })
+    );
   } catch (error) {
     console.error("Error in getAllHistories:", error);
     throw new Error("Gagal mengambil riwayat mutasi aset.");

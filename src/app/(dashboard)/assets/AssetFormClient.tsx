@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { createAssetAction, updateAssetAction, uploadAssetPhotoAction } from "@/actions/asset";
+import { createAssetAction, updateAssetAction, uploadAssetPhotoAction, deleteTemporaryPhotoAction } from "@/actions/asset";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +65,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
   const [error, setError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
+  const [deletePhotoIds, setDeletePhotoIds] = React.useState<string[]>([]);
 
   const isEditMode = !!initialData;
 
@@ -122,7 +123,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
         },
   });
 
-  const watchPhotos = (watch("photos") || []) as { url: string; caption?: string | null }[];
+  const watchPhotos = (watch("photos") || []) as any[];
   const watchFotoUtama = watch("fotoUtama") as string;
   const watchDistributionId = watch("distributionId") as string;
   const watchKode1 = (watch("kode1") || "") as string;
@@ -166,7 +167,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
     setUploading(true);
     setError(null);
 
-    const uploadedUrls: { url: string; caption: string }[] = [];
+    const uploadedUrls: any[] = [];
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -189,8 +190,14 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
           return;
         }
 
-        if (response.url) {
-          uploadedUrls.push({ url: response.url, caption: file.name });
+        if (response.url && response.objectKey) {
+          uploadedUrls.push({
+            url: response.url,
+            tempKey: response.objectKey,
+            originalFileName: response.originalFileName,
+            mimeType: response.mimeType,
+            size: response.size,
+          });
         }
       } catch (err) {
         console.error("Upload error:", err);
@@ -213,7 +220,14 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
   };
 
   // Remove Photo
-  const handleRemovePhoto = (urlToRemove: string) => {
+  const handleRemovePhoto = async (urlToRemove: string) => {
+    const photoToRemove = watchPhotos.find(p => p.url === urlToRemove);
+    if (photoToRemove && photoToRemove.id) {
+      setDeletePhotoIds(prev => [...prev, photoToRemove.id]);
+    } else if (photoToRemove && photoToRemove.tempKey) {
+      await deleteTemporaryPhotoAction(photoToRemove.tempKey);
+    }
+
     const newPhotos = watchPhotos.filter(p => p.url !== urlToRemove);
     setValue("photos", newPhotos);
 
@@ -231,11 +245,28 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     setError(null);
-    const values = data as AssetFormValues;
+    const values = data as any;
 
     try {
       if (isEditMode) {
-        const res = await updateAssetAction(initialData.id, values);
+        // Map photos and exclude those that are already committed and not deleted
+        const newPhotos = watchPhotos
+          .filter((p: any) => !!p.tempKey)
+          .map((p: any) => ({
+            tempKey: p.tempKey,
+            originalFileName: p.originalFileName,
+            mimeType: p.mimeType,
+            size: p.size,
+            isPrimary: p.url === watchFotoUtama,
+          }));
+
+        const payload = {
+          ...values,
+          photos: newPhotos,
+          deletePhotoIds,
+        };
+
+        const res = await updateAssetAction(initialData.id, payload as any);
         if (res.error) {
           setError(res.error);
           setIsSubmitting(false);
@@ -244,7 +275,20 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
           router.refresh();
         }
       } else {
-        const res = await createAssetAction(values);
+        const photosPayload = watchPhotos.map((p: any) => ({
+          tempKey: p.tempKey || "",
+          originalFileName: p.originalFileName || "image.png",
+          mimeType: p.mimeType || "image/png",
+          size: p.size || 0,
+          isPrimary: p.url === watchFotoUtama,
+        }));
+
+        const payload = {
+          ...values,
+          photos: photosPayload,
+        };
+
+        const res = await createAssetAction(payload as any);
         if (res.error) {
           setError(res.error);
           setIsSubmitting(false);

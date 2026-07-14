@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { createAsset, updateAsset, deleteAsset, CreateAssetInput, UpdateAssetInput } from "@/services/asset";
-import { uploadFile } from "@/lib/r2";
+import { DocumentService } from "@/services/document";
 import { Role, Kondisi } from "@prisma/client";
 
 // Guard to check if current user has write access (Admin or Operator)
@@ -19,7 +19,7 @@ async function requireWriteAccess() {
 }
 
 /**
- * Server Action to upload a photo to R2
+ * Server Action to upload a photo to R2 temporary directory
  */
 export async function uploadAssetPhotoAction(formData: FormData) {
   try {
@@ -30,8 +30,9 @@ export async function uploadAssetPhotoAction(formData: FormData) {
       return { error: "File foto tidak ditemukan." };
     }
 
-    const url = await uploadFile(file);
-    return { success: true, url };
+    const info = await DocumentService.uploadTemporaryFile(file);
+    const url = DocumentService.generateFileUrl(info.objectKey);
+    return { success: true, ...info, url };
   } catch (error: any) {
     console.error("Error in uploadAssetPhotoAction:", error);
     return { error: error.message || "Gagal mengupload foto." };
@@ -96,5 +97,22 @@ export async function deleteAssetAction(id: string) {
   } catch (error: any) {
     console.error("Error in deleteAssetAction:", error);
     return { error: error.message || "Gagal menghapus aset." };
+  }
+}
+
+/**
+ * Server Action to delete a temporary file if deleted from UI before form submit
+ */
+export async function deleteTemporaryPhotoAction(tempKey: string) {
+  try {
+    await requireWriteAccess();
+    if (tempKey.startsWith("temporary/")) {
+      await DocumentService.deleteFromR2(tempKey);
+      return { success: true };
+    }
+    return { error: "Berkas bukan file sementara." };
+  } catch (error: any) {
+    console.error("Error in deleteTemporaryPhotoAction:", error);
+    return { error: error.message || "Gagal menghapus file sementara." };
   }
 }

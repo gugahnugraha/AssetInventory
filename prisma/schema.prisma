@@ -45,6 +45,7 @@ model User {
   lastLogin    DateTime?
   auditLogs    AuditLog[]
   assetHistories AssetHistory[]
+  documents    Document[]
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 }
@@ -139,7 +140,6 @@ model Asset {
   fotoUtama      String?           // URL in Cloudflare R2
   opdId          String
   opd            Opd               @relation(fields: [opdId], references: [id])
-  photos         AssetPhoto[]
   attributes     AssetAttribute[]
   auditLogs      AuditLog[]
   history        AssetHistory[]
@@ -147,14 +147,6 @@ model Asset {
   updatedAt      DateTime          @updatedAt
 }
 
-model AssetPhoto {
-  id        String   @id @default(uuid())
-  assetId   String
-  asset     Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
-  url       String
-  caption   String?
-  createdAt DateTime @default(now())
-}
 
 model AuditLog {
   id        String   @id @default(uuid())
@@ -195,15 +187,38 @@ model AssetHistory {
   description        String?
   createdBy          String
   creator            User                   @relation(fields: [createdBy], references: [id])
-  documents          AssetHistoryDocument[]
   createdAt          DateTime               @default(now())
 }
 
-model AssetHistoryDocument {
-  id             String       @id @default(uuid())
-  assetHistoryId String
-  assetHistory   AssetHistory @relation(fields: [assetHistoryId], references: [id], onDelete: Cascade)
-  fileName       String
-  fileUrl        String
-  uploadedAt     DateTime     @default(now())
+enum EntityType {
+  ASSET
+  MUTATION
+  MAINTENANCE
+  DISPOSAL
+}
+
+enum DocumentType {
+  PHOTO
+  BERITA_ACARA
+  EVIDENCE
+  INVOICE
+  WARRANTY
+  MANUAL
+  OTHER
+}
+
+model Document {
+  id               String       @id @default(uuid())
+  entityType       EntityType
+  entityId         String
+  documentType     DocumentType
+  bucket           String
+  objectKey        String
+  originalFileName String
+  mimeType         String
+  size             Int
+  uploadedBy       String
+  uploader         User         @relation(fields: [uploadedBy], references: [id])
+  uploadedAt       DateTime     @default(now())
+  archivedAt       DateTime?
 }

@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { getAssetById } from "@/services/asset";
+import { DocumentService } from "@/services/document";
 import { AssetDetailClient } from "./AssetDetailClient";
 import { Role } from "@prisma/client";
 
@@ -64,9 +65,14 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
             updatedAt: asset.holder.updatedAt.toISOString(),
           }
         : null,
-      photos: asset.photos.map((photo) => ({
-        ...photo,
-        createdAt: photo.createdAt.toISOString(),
+      fotoUtama: DocumentService.generateFileUrl(asset.fotoUtama),
+      photos: (asset as any).photos.map((photo: any) => ({
+        id: photo.id,
+        url: DocumentService.generateFileUrl(photo.objectKey),
+        originalFileName: photo.originalFileName,
+        mimeType: photo.mimeType,
+        size: photo.size,
+        uploadedAt: photo.uploadedAt.toISOString(),
       })),
       auditLogs: asset.auditLogs.map((log) => ({
         ...log,
@@ -105,7 +111,9 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
           jabatan: h.toHolder.jabatan,
         } : null,
         documents: h.documents.map((d: any) => ({
-          ...d,
+          id: d.id,
+          fileName: d.originalFileName,
+          fileUrl: DocumentService.generateFileUrl(d.objectKey),
           uploadedAt: d.uploadedAt.toISOString(),
         })),
       })) : [],

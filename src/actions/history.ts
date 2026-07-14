@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { Role, Kondisi } from "@prisma/client";
-import { uploadFile } from "@/lib/r2";
+import { DocumentService } from "@/services/document";
 import { createAssetHistory } from "@/services/history";
 
 // Guard to check if current user has write access (Admin or Operator)
@@ -22,6 +22,7 @@ async function requireWriteAccess() {
  * Server Action to perform an asset mutation with optional Berita Acara upload
  */
 export async function createAssetMutationAction(formData: FormData) {
+  let tempKeyToCleanup: string | null = null;
   try {
     const session = await requireWriteAccess();
 
@@ -48,27 +49,38 @@ export async function createAssetMutationAction(formData: FormData) {
     // Check if a file was actually uploaded
     if (file && file.size > 0 && file.name !== "undefined") {
       try {
-        const fileUrl = await uploadFile(file);
+        const info = await DocumentService.uploadTemporaryFile(file);
         document = {
-          fileName: file.name,
-          fileUrl,
+          tempKey: info.objectKey,
+          originalFileName: info.originalFileName,
+          mimeType: info.mimeType,
+          size: info.size,
         };
+        tempKeyToCleanup = info.objectKey;
       } catch (uploadError: any) {
-        return { error: uploadError.message || "Gagal mengunggah dokumen Berita Acara." };
+        return { error: uploadError.message || "Gagal mengunggah dokumen Berita Acara ke folder sementara." };
       }
     }
 
-    await createAssetHistory({
-      assetId,
-      toDistributionId,
-      toHolderId,
-      toCondition,
-      beritaAcaraNumber,
-      beritaAcaraDate: new Date(beritaAcaraDateStr),
-      description,
-      createdBy: session.user.id,
-      document,
-    });
+    try {
+      await createAssetHistory({
+        assetId,
+        toDistributionId,
+        toHolderId,
+        toCondition,
+        beritaAcaraNumber,
+        beritaAcaraDate: new Date(beritaAcaraDateStr),
+        description,
+        createdBy: session.user.id,
+        document,
+      });
+    } catch (dbError: any) {
+      // Cleanup temporary file in R2 if db execution fails
+      if (tempKeyToCleanup) {
+        await DocumentService.deleteFromR2(tempKeyToCleanup);
+      }
+      return { error: dbError.message || "Gagal memproses mutasi aset." };
+    }
 
     revalidatePath("/assets");
     revalidatePath(`/assets/${assetId}`);
@@ -78,6 +90,9 @@ export async function createAssetMutationAction(formData: FormData) {
     return { success: true };
   } catch (error: any) {
     console.error("Error in createAssetMutationAction Server Action:", error);
+    if (tempKeyToCleanup) {
+      await DocumentService.deleteFromR2(tempKeyToCleanup);
+    }
     return { error: error.message || "Gagal memproses mutasi aset." };
   }
 }
