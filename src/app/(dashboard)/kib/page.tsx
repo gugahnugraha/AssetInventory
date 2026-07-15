@@ -5,7 +5,7 @@ import { getAllKibs } from "@/services/kib";
 import { KibClient } from "./KibClient";
 
 export const metadata = {
-  title: "Master KIB - SIM Inventaris Aset OPD",
+  title: "Master KIB - SIM Inventaris Aset SKPD",
   description: "Kelola klasifikasi Kartu Inventaris Barang (KIB) A-F.",
 };
 

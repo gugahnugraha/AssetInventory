@@ -18,7 +18,7 @@ export default async function PeriodeDetailPage({ params }: Props) {
 
   const stats = await getDashboardStats(id, session.user.opdId);
 
-  // Get total assets for this OPD
+  // Get total assets for this SKPD
   const totalAssets = await prisma.asset.count({ where: { opdId: session.user.opdId } });
 
   const serialized = {

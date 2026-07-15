@@ -5,7 +5,7 @@ import { DistribusiClient } from "./DistribusiClient";
 import { Role } from "@prisma/client";
 
 export const metadata = {
-  title: "Bidang Distribusi - SIM Inventaris Aset OPD",
+  title: "Bidang Distribusi - SIM Inventaris Aset SKPD",
   description: "Kelola data bidang dan unit penempatan barang milik daerah.",
 };
 

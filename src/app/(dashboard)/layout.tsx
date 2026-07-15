@@ -15,7 +15,7 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // Fetch the active OPD record directly from the database for dynamic updates
+  // Fetch the active SKPD record directly from the database for dynamic updates
   const rawOpd = await prisma.opd.findUnique({
     where: { id: session.user.opdId },
   });

@@ -10,7 +10,7 @@ import { AssetFormClient } from "../../AssetFormClient";
 import { Role } from "@prisma/client";
 
 export const metadata = {
-  title: "Edit Aset - SIM Inventaris Aset OPD",
+  title: "Edit Aset - SIM Inventaris Aset SKPD",
   description: "Formulir perubahan spesifikasi barang inventaris.",
 };
 

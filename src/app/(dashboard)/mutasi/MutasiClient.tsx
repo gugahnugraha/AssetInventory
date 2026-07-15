@@ -463,9 +463,9 @@ export function MutasiClient({
                             <span>
                               Bidang: <strong className="text-zinc-650">{a.distributionName}</strong>
                             </span>
-                            <span className="mt-0.5 sm:mt-0">
-                              Pemegang: <strong className="text-zinc-650">{a.holderName || "Tidak ada"}</strong>
-                            </span>
+                             <span className="mt-0.5 sm:mt-0">
+                               Pemegang: <strong className="text-zinc-650">{a.holderName || "Gudang / Umum"}</strong>
+                             </span>
                           </div>
                         </div>
                       ))

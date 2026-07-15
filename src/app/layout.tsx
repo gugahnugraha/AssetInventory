@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Inventaris Aset OPD - Kabupaten Bandung",
-  description: "Aplikasi pengelolaan dan penatausahaan barang milik daerah OPD Kabupaten Bandung.",
+  title: "Inventaris Aset SKPD - Kabupaten Bandung",
+  description: "Aplikasi pengelolaan dan penatausahaan barang milik daerah SKPD Kabupaten Bandung.",
 };
 
 export default function RootLayout({

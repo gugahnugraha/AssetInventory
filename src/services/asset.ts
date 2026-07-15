@@ -624,6 +624,24 @@ export async function getDashboardStats(opdId: string) {
       total: item._count.id,
     }));
 
+    // Trend by Year (Tahun Pembelian)
+    const assetsByTahun = await prisma.asset.groupBy({
+      by: ["tahunPembelian"],
+      where: { opdId },
+      _count: {
+        id: true,
+      },
+      orderBy: {
+        tahunPembelian: "asc",
+      },
+      take: 10,
+    });
+    
+    const tahunChartData = assetsByTahun.map(item => ({
+      name: String(item.tahunPembelian),
+      total: item._count.id,
+    }));
+
     // Latest assets
     const latestAssets = await prisma.asset.findMany({
       where: { opdId },
@@ -680,6 +698,7 @@ export async function getDashboardStats(opdId: string) {
         byDistribution: distChartData,
         byType: jenisChartData,
         byKib: kibChartData,
+        byTahun: tahunChartData,
       },
       latestAssets,
     };

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -11,15 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Kondisi } from "@prisma/client";
-import { 
-  ArrowLeft, 
-  Upload, 
-  Trash2, 
-  Check, 
+import {
+  ArrowLeft,
+  Upload,
+  Trash2,
+  Check,
   Star,
   Loader2,
   AlertTriangle,
-  Image as ImageIcon
+  Image as ImageIcon,
+  CheckCircle2
 } from "lucide-react";
 import Link from "next/link";
 
@@ -99,9 +100,9 @@ const BRANDS_BY_CATEGORY: Record<string, string[]> = {
 const parseMerkType = (merkTypeStr: string, categoryName: string) => {
   if (!merkTypeStr) return { brand: "", customBrand: "", type: "" };
   const brands = BRANDS_BY_CATEGORY[categoryName] || [];
-  
+
   // Find if any brand matches the start of the string (case-insensitive)
-  const matchedBrand = brands.find(b => 
+  const matchedBrand = brands.find(b =>
     merkTypeStr.toLowerCase().startsWith(b.toLowerCase())
   );
 
@@ -141,7 +142,11 @@ interface AssetFormClientProps {
 
 export function AssetFormClient({ initialData, distributions, holders, categories, kibs, userRole }: AssetFormClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [error, setError] = React.useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = React.useState<string | null>(
+    searchParams.get("success") === "1" ? "Data aset berhasil disimpan!" : null
+  );
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
   const [deletePhotoIds, setDeletePhotoIds] = React.useState<string[]>([]);
@@ -225,56 +230,56 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
     resolver: zodResolver(schema),
     defaultValues: initialData
       ? {
-          kode1: initialData.kode1 as string,
-          kode2: initialData.kode2 as string,
-          kode3: initialData.kode3 as string,
-          kode4: initialData.kode4 as string,
-          kode5: initialData.kode5 as string,
-          nomorRegister: initialData.nomorRegister !== undefined ? String(initialData.nomorRegister) : "",
-          kibId: initialKibId as string,
-          categoryId: initialData.categoryId as string,
-          namaAset: initialData.namaAset as string,
-          merkType: initialData.merkType as string,
-          material: initialData.material || null,
-          caraPerolehan: initialData.caraPerolehan || null,
-          spesifikasi: initialData.spesifikasi || null,
-          harga: initialData.harga as number,
-          tahunPembelian: initialData.tahunPembelian as number,
-          distributionId: initialData.distributionId as string,
-          holderId: initialData.holderId as string | null,
-          kondisi: initialData.kondisi,
-          catatan: initialData.catatan || "",
-          fotoUtama: initialData.fotoUtama || "",
-          photos: initialData.photos || [],
-          dynamicAttributes: initialData.attributes?.reduce((acc: any, attr: any) => {
-            acc[attr.categoryAttributeId] = attr.value;
-            return acc;
-          }, {}) || {},
-        }
+        kode1: initialData.kode1 as string,
+        kode2: initialData.kode2 as string,
+        kode3: initialData.kode3 as string,
+        kode4: initialData.kode4 as string,
+        kode5: initialData.kode5 as string,
+        nomorRegister: initialData.nomorRegister !== undefined ? String(initialData.nomorRegister) : "",
+        kibId: initialKibId as string,
+        categoryId: initialData.categoryId as string,
+        namaAset: initialData.namaAset as string,
+        merkType: initialData.merkType as string,
+        material: initialData.material || null,
+        caraPerolehan: initialData.caraPerolehan || null,
+        spesifikasi: initialData.spesifikasi || null,
+        harga: initialData.harga as number,
+        tahunPembelian: initialData.tahunPembelian as number,
+        distributionId: initialData.distributionId as string,
+        holderId: initialData.holderId as string | null,
+        kondisi: initialData.kondisi,
+        catatan: initialData.catatan || "",
+        fotoUtama: initialData.fotoUtama || "",
+        photos: initialData.photos || [],
+        dynamicAttributes: initialData.attributes?.reduce((acc: any, attr: any) => {
+          acc[attr.categoryAttributeId] = attr.value;
+          return acc;
+        }, {}) || {},
+      }
       : {
-          kode1: "",
-          kode2: "",
-          kode3: "",
-          kode4: "",
-          kode5: "",
-          nomorRegister: "",
-          kibId: "",
-          categoryId: "",
-          namaAset: "",
-          merkType: "",
-          material: null,
-          caraPerolehan: null,
-          spesifikasi: null,
-          harga: 0,
-          tahunPembelian: new Date().getFullYear(),
-          distributionId: "",
-          holderId: null,
-          kondisi: Kondisi.NORMAL,
-          catatan: "",
-          fotoUtama: "",
-          photos: [],
-          dynamicAttributes: {},
-        },
+        kode1: "",
+        kode2: "",
+        kode3: "",
+        kode4: "",
+        kode5: "",
+        nomorRegister: "",
+        kibId: "",
+        categoryId: "",
+        namaAset: "",
+        merkType: "",
+        material: null,
+        caraPerolehan: null,
+        spesifikasi: null,
+        harga: 0,
+        tahunPembelian: new Date().getFullYear(),
+        distributionId: "",
+        holderId: null,
+        kondisi: Kondisi.NORMAL,
+        catatan: "",
+        fotoUtama: "",
+        photos: [],
+        dynamicAttributes: {},
+      },
   });
 
   const watchPhotos = (watch("photos") || []) as any[];
@@ -286,10 +291,11 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
   const watchKode4 = (watch("kode4") || "") as string;
   const watchKode5 = (watch("kode5") || "") as string;
   const watchRegister = (watch("nomorRegister") || "") as string;
-  
+
   const watchKibId = watch("kibId") as string;
   const watchCategoryId = watch("categoryId") as string;
-  
+  const watchKondisi = watch("kondisi") as string;
+
   const filteredCategories = React.useMemo(() => {
     if (!watchKibId) return [];
     return categories.filter(c => c.kibId === watchKibId);
@@ -331,8 +337,8 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
     if (selectedBrand === "LAINNYA") {
       combined = customBrand.trim();
     } else if (selectedBrand) {
-      combined = typeDetail.trim() 
-        ? `${selectedBrand} ${typeDetail.trim()}` 
+      combined = typeDetail.trim()
+        ? `${selectedBrand} ${typeDetail.trim()}`
         : selectedBrand;
     } else {
       // If available brands list is empty and user inputted custom brand directly
@@ -544,9 +550,12 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
         const res = await updateAssetAction(initialData.id, payload as any);
         if (res.error) {
           setError(res.error);
+          setSuccessMsg(null);
           setIsSubmitting(false);
         } else if (res.success) {
-          router.push("/assets");
+          setSuccessMsg("Data aset berhasil diperbarui!");
+          setError(null);
+          setIsSubmitting(false);
           router.refresh();
         }
       } else {
@@ -566,10 +575,11 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
         const res = await createAssetAction(payload as any);
         if (res.error) {
           setError(res.error);
+          setSuccessMsg(null);
           setIsSubmitting(false);
         } else if (res.success) {
-          router.push("/assets");
-          router.refresh();
+          // Stay on edit page by redirecting to the newly created asset's edit URL
+          router.push(`/assets/${res.asset.id}/edit?success=1`);
         }
       }
     } catch (err) {
@@ -595,14 +605,21 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                 {isEditMode ? "Edit Aset" : "Tambah Aset Baru"}
               </h1>
               <p className="text-zinc-600 dark:text-zinc-400 font-medium">
-                {isEditMode 
-                  ? "Ubah data inventaris barang milik daerah." 
+                {isEditMode
+                  ? "Ubah data inventaris barang milik daerah."
                   : "Masukkan data spesifikasi barang baru ke dalam inventaris."}
               </p>
             </div>
           </div>
         </div>
       </div>
+
+      {successMsg && (
+        <div className="flex items-center gap-3 p-4 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-900/30 text-sm font-medium">
+          <CheckCircle2 className="h-5 w-5 shrink-0" />
+          <span>{successMsg}</span>
+        </div>
+      )}
 
       {error && (
         <div className="flex items-center gap-3 p-4 rounded-lg bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border border-rose-200/50 dark:border-rose-900/30 text-sm font-medium">
@@ -611,485 +628,469 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
         </div>
       )}
 
-            {/* Tabs Navigation */}
+      {/* Tabs Navigation */}
       <div className="flex border-b border-zinc-200 overflow-x-auto hide-scrollbar mb-6">
         <button
           type="button"
           onClick={() => setActiveTab("utama")}
-          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
-            activeTab === "utama"
+          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${activeTab === "utama"
               ? "border-emerald-600 text-emerald-800"
               : "border-transparent text-zinc-800 hover:text-zinc-950"
-          }`}
+            }`}
         >
           Data Utama
         </button>
         <button
           type="button"
           onClick={() => setActiveTab("spesifikasi")}
-          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
-            activeTab === "spesifikasi"
+          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${activeTab === "spesifikasi"
               ? "border-emerald-600 text-emerald-800"
               : "border-transparent text-zinc-800 hover:text-zinc-950"
-          }`}
+            }`}
         >
           Spesifikasi & Atribut
         </button>
         <button
           type="button"
           onClick={() => setActiveTab("penempatan")}
-          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
-            activeTab === "penempatan"
+          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${activeTab === "penempatan"
               ? "border-emerald-600 text-emerald-800"
               : "border-transparent text-zinc-800 hover:text-zinc-950"
-          }`}
+            }`}
         >
           Penempatan & Kondisi
         </button>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Form Inputs (Left/Center) */}
-                <div className="lg:col-span-2">
+        <div className="lg:col-span-2">
           {/* TAB: UTAMA */}
           <div className={activeTab === "utama" ? "space-y-6 block" : "hidden"}>
-            <CardTitle>Identitas Utama</CardTitle>
-              <CardDescription>Pilih KIB, kategori, dan detail identitas dasar aset.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              {/* KIB & Kategori */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                    Klasifikasi KIB <span className="text-rose-500">*</span>
-                  </label>
-                  <input type="hidden" {...register("kibId")} />
-                  <div className="w-full h-10 rounded-md border border-sky-200 bg-sky-50 dark:bg-sky-900/20 dark:border-sky-800 px-3 py-2 text-sm flex items-center gap-2 cursor-not-allowed">
-                    <span className="font-mono font-bold text-sky-600 dark:text-sky-400">
-                      {(() => { const kibB = kibs.find((k: any) => k.kode === "B"); return kibB ? `KIB ${kibB.kode} - ${kibB.nama}` : "KIB B - Peralatan dan Mesin"; })()}
-                    </span>
-                    <span className="ml-auto text-[10px] uppercase tracking-widest text-sky-500 bg-sky-100 dark:bg-sky-900/40 px-1.5 py-0.5 rounded font-semibold">Sistem</span>
-                  </div>
-                  {errors.kibId && <p className="text-xs text-rose-500 mt-1">{errors.kibId.message}</p>}
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                    Kategori Aset <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    {...register("categoryId")}
-                    disabled={!watchKibId}
-                    className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
-                  >
-                    <option value="" className="bg-background text-foreground">Pilih Kategori</option>
-                    {filteredCategories.map((c) => (
-                      <option key={c.id} value={c.id} className="bg-background text-foreground">
-                        {c.nama}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.categoryId && <p className="text-xs text-rose-500 mt-1">{errors.categoryId.message}</p>}
-                </div>
-              </div>
-
-              {/* Nama Aset & Merk/Type */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                    Nama Aset <span className="text-rose-500">*</span>
-                  </label>
-                  <Input
-                    placeholder="Contoh: Mobil Avanza, Laptop ThinkPad"
-                    {...register("namaAset")}
-                  />
-                  {errors.namaAset && <p className="text-xs text-rose-500 mt-1">{errors.namaAset.message}</p>}
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                    Merk / Type <span className="text-rose-500">*</span>
-                  </label>
-                  <input type="hidden" {...register("merkType")} />
-
-                  {!watchCategoryId ? (
-                    <div className="text-xs text-zinc-500 italic p-3 border border-dashed rounded-md bg-zinc-50/50 dark:bg-zinc-900/10">
-                      Pilih Kategori Aset terlebih dahulu untuk memunculkan pilihan Merk
-                    </div>
-                  ) : availableBrands.length > 0 ? (
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <div>
-                          <select
-                            value={selectedBrand}
-                            onChange={(e) => {
-                              setSelectedBrand(e.target.value);
-                              if (e.target.value !== "LAINNYA") {
-                                setCustomBrand("");
-                              }
-                            }}
-                            className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                          >
-                            <option value="" className="bg-background text-foreground">Pilih Merk / Brand</option>
-                            {availableBrands.map((b) => (
-                              <option key={b} value={b} className="bg-background text-foreground">
-                                {b}
-                              </option>
-                            ))}
-                            <option value="LAINNYA" className="bg-background text-foreground font-semibold">Lainnya (Input Manual)</option>
-                          </select>
-                        </div>
-
-                        {selectedBrand && selectedBrand !== "LAINNYA" && (
-                          <Input
-                            placeholder="Tipe / Model (e.g. L14 Gen 3)"
-                            value={typeDetail}
-                            onChange={(e) => setTypeDetail(e.target.value)}
-                          />
-                        )}
-
-                        {selectedBrand === "LAINNYA" && (
-                          <Input
-                            placeholder="Masukkan Merk & Tipe Aset..."
-                            value={customBrand}
-                            onChange={(e) => setCustomBrand(e.target.value)}
-                          />
-                        )}
+            <Card className="border-zinc-200/80 dark:border-zinc-800/80 shadow-xs">
+              <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                <CardTitle className="text-base font-bold text-zinc-900 dark:text-zinc-50">Kode & Nomor Register Aset</CardTitle>
+                <CardDescription className="text-xs">Masukkan kode klasifikasi aset barang dan nomor register.</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Kode Klasifikasi Section */}
+                  <div className="md:col-span-2 space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                      Kode Klasifikasi Aset
+                    </label>
+                    <div className="grid grid-cols-5 gap-1.5">
+                      <div>
+                        <Input
+                          placeholder="XX"
+                          maxLength={2}
+                          className="text-center font-mono font-bold h-9 text-xs"
+                          {...register("kode1")}
+                        />
+                        {errors.kode1 && <p className="text-[10px] text-rose-500 mt-0.5">{errors.kode1.message}</p>}
+                      </div>
+                      <div>
+                        <Input
+                          placeholder="XX"
+                          maxLength={2}
+                          className="text-center font-mono font-bold h-9 text-xs"
+                          {...register("kode2")}
+                        />
+                        {errors.kode2 && <p className="text-[10px] text-rose-500 mt-0.5">{errors.kode2.message}</p>}
+                      </div>
+                      <div>
+                        <Input
+                          placeholder="XX"
+                          maxLength={2}
+                          className="text-center font-mono font-bold h-9 text-xs"
+                          {...register("kode3")}
+                        />
+                        {errors.kode3 && <p className="text-[10px] text-rose-500 mt-0.5">{errors.kode3.message}</p>}
+                      </div>
+                      <div>
+                        <Input
+                          placeholder="XX"
+                          maxLength={2}
+                          className="text-center font-mono font-bold h-9 text-xs"
+                          {...register("kode4")}
+                        />
+                        {errors.kode4 && <p className="text-[10px] text-rose-500 mt-0.5">{errors.kode4.message}</p>}
+                      </div>
+                      <div>
+                        <Input
+                          placeholder="XXX"
+                          maxLength={3}
+                          className="text-center font-mono font-bold h-9 text-xs"
+                          {...register("kode5")}
+                        />
+                        {errors.kode5 && <p className="text-[10px] text-rose-500 mt-0.5">{errors.kode5.message}</p>}
                       </div>
                     </div>
-                  ) : (
-                    <Input
-                      placeholder="Contoh: Lenovo L14 Gen 3, Kayu Jati"
-                      value={customBrand}
-                      onChange={(e) => {
-                        setSelectedBrand("LAINNYA");
-                        setCustomBrand(e.target.value);
-                      }}
-                    />
-                  )}
-                  {errors.merkType && <p className="text-xs text-rose-500 mt-1">{errors.merkType.message}</p>}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  </div>
 
-          <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-            <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
-            
-            <CardTitle>Kode Aset</CardTitle>
-              <CardDescription>Masukkan kode registrasi aset barang.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              {/* Asset Code Parts */}
-              <div className="space-y-2">
-                <div className="grid grid-cols-5 gap-2">
-                  <div>
+                  {/* Nomor Register Section */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-emerald-850 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                      Nomor Register <span className="text-rose-500">*</span>
+                    </label>
                     <Input
-                      placeholder="XX"
-                      maxLength={2}
-                      className="text-center font-mono font-bold"
-                      {...register("kode1")}
+                      placeholder="XXXX"
+                      maxLength={4}
+                      className="font-mono font-bold focus-visible:ring-emerald-500 focus-visible:border-emerald-500 h-9 text-xs"
+                      {...register("nomorRegister")}
                     />
-                    {errors.kode1 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode1.message}</p>}
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="XX"
-                      maxLength={2}
-                      className="text-center font-mono font-bold"
-                      {...register("kode2")}
-                    />
-                    {errors.kode2 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode2.message}</p>}
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="XX"
-                      maxLength={2}
-                      className="text-center font-mono font-bold"
-                      {...register("kode3")}
-                    />
-                    {errors.kode3 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode3.message}</p>}
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="XX"
-                      maxLength={2}
-                      className="text-center font-mono font-bold"
-                      {...register("kode4")}
-                    />
-                    {errors.kode4 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode4.message}</p>}
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="XXX"
-                      maxLength={3}
-                      className="text-center font-mono font-bold"
-                      {...register("kode5")}
-                    />
-                    {errors.kode5 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode5.message}</p>}
+                    {errors.nomorRegister && <p className="text-[10px] text-rose-500 mt-0.5">{errors.nomorRegister.message}</p>}
                   </div>
                 </div>
 
-                {/* Compiled Preview */}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 border text-sm mt-2">
+                {/* Compiled Code Preview */}
+                <div className="flex items-center justify-between p-2.5 rounded-lg bg-emerald-50/40 dark:bg-emerald-950/10 border border-emerald-100/60 dark:border-emerald-900/30 text-xs">
                   <span className="text-zinc-500 dark:text-zinc-400 font-medium">Format Kode Lengkap:</span>
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-base tracking-wider">
+                  <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-sm tracking-wider">
                     {kodeLengkapPreview}
                   </span>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Nomor Register At Bottom */}
-          <Card className="border-emerald-200/80 dark:border-emerald-800/80 bg-emerald-50/30 dark:bg-emerald-900/10">
-            <CardHeader className="border-b border-emerald-100 dark:border-emerald-800/50 pb-4">
-            
-            <CardTitle className="text-emerald-800 dark:text-emerald-300">Nomor Register Aset</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                  Nomor Register <span className="text-rose-500">*</span>
-                </label>
-                <Input
-                  placeholder="XXXX"
-                  className="font-mono font-bold focus-visible:ring-emerald-500 focus-visible:border-emerald-500 bg-white dark:bg-zinc-950"
-                  {...register("nomorRegister")}
-                />
-                {errors.nomorRegister && <p className="text-[10px] text-rose-500 mt-1">{errors.nomorRegister.message}</p>}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Dynamic Attributes Form Section */}
-          {categoryAttributes.length > 0 && (
             <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-              <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+              <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
+                <CardTitle>Identitas Utama</CardTitle>
+                <CardDescription>Pilih KIB, kategori, dan detail identitas dasar aset.</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-4">
+                {/* KIB & Kategori */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                      Klasifikasi KIB <span className="text-rose-500">*</span>
+                    </label>
+                    <input type="hidden" {...register("kibId")} />
+                    <div className="w-full h-10 rounded-md border border-sky-200 bg-sky-50 dark:bg-sky-900/20 dark:border-sky-800 px-3 py-2 text-sm flex items-center gap-2 cursor-not-allowed">
+                      <span className="font-mono font-bold text-sky-600 dark:text-sky-400">
+                        {(() => { const kibB = kibs.find((k: any) => k.kode === "B"); return kibB ? `KIB ${kibB.kode} - ${kibB.nama}` : "KIB B - Peralatan dan Mesin"; })()}
+                      </span>
+                      {/* <span className="ml-auto text-[10px] uppercase tracking-widest text-sky-500 bg-sky-100 dark:bg-sky-900/40 px-1.5 py-0.5 rounded font-semibold">Sistem</span> */}
+                    </div>
+                    {errors.kibId && <p className="text-xs text-rose-500 mt-1">{errors.kibId.message}</p>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                      Kategori Aset <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      {...register("categoryId")}
+                      disabled={!watchKibId}
+                      className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                    >
+                      <option value="" className="bg-background text-foreground">Pilih Kategori</option>
+                      {filteredCategories.map((c) => (
+                        <option key={c.id} value={c.id} className="bg-background text-foreground">
+                          {c.nama}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.categoryId && <p className="text-xs text-rose-500 mt-1">{errors.categoryId.message}</p>}
+                  </div>
+                </div>
+
+                {/* Nama Aset & Merk/Type */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                      Nama Aset <span className="text-rose-500">*</span>
+                    </label>
+                    <Input
+                      placeholder="Contoh: Mobil Avanza, Laptop ThinkPad"
+                      {...register("namaAset")}
+                    />
+                    {errors.namaAset && <p className="text-xs text-rose-500 mt-1">{errors.namaAset.message}</p>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                      Merk / Type <span className="text-rose-500">*</span>
+                    </label>
+                    <input type="hidden" {...register("merkType")} />
+
+                    {!watchCategoryId ? (
+                      <div className="text-xs text-zinc-500 italic p-3 border border-dashed rounded-md bg-zinc-50/50 dark:bg-zinc-900/10">
+                        Pilih Kategori Aset terlebih dahulu untuk memunculkan pilihan Merk
+                      </div>
+                    ) : availableBrands.length > 0 ? (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <div>
+                            <select
+                              value={selectedBrand}
+                              onChange={(e) => {
+                                setSelectedBrand(e.target.value);
+                                if (e.target.value !== "LAINNYA") {
+                                  setCustomBrand("");
+                                }
+                              }}
+                              className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                            >
+                              <option value="" className="bg-background text-foreground">Pilih Merk / Brand</option>
+                              {availableBrands.map((b) => (
+                                <option key={b} value={b} className="bg-background text-foreground">
+                                  {b}
+                                </option>
+                              ))}
+                              <option value="LAINNYA" className="bg-background text-foreground font-semibold">Lainnya (Input Manual)</option>
+                            </select>
+                          </div>
+
+                          {selectedBrand && selectedBrand !== "LAINNYA" && (
+                            <Input
+                              placeholder="Tipe / Model (e.g. L14 Gen 3)"
+                              value={typeDetail}
+                              onChange={(e) => setTypeDetail(e.target.value)}
+                            />
+                          )}
+
+                          {selectedBrand === "LAINNYA" && (
+                            <Input
+                              placeholder="Masukkan Merk & Tipe Aset..."
+                              value={customBrand}
+                              onChange={(e) => setCustomBrand(e.target.value)}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <Input
+                        placeholder="Contoh: Lenovo L14 Gen 3, Kayu Jati"
+                        value={customBrand}
+                        onChange={(e) => {
+                          setSelectedBrand("LAINNYA");
+                          setCustomBrand(e.target.value);
+                        }}
+                      />
+                    )}
+                    {errors.merkType && <p className="text-xs text-rose-500 mt-1">{errors.merkType.message}</p>}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+
           </div>
 
           {/* TAB: SPESIFIKASI */}
           <div className={activeTab === "spesifikasi" ? "space-y-6 block" : "hidden"}>
-            <CardTitle>Spesifikasi & Harga</CardTitle>
-              <CardDescription>Lengkapi data spesifikasi fisik dan perolehan.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              {/* Material, Cara Perolehan & Spesifikasi */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                    Material / Bahan
-                  </label>
-                  <Input
-                    placeholder="Contoh: Aluminium, Kayu Jati, Plastik ABS"
-                    {...register("material")}
-                  />
-                  {errors.material && <p className="text-xs text-rose-500 mt-1">{errors.material.message}</p>}
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                    Cara Perolehan
-                  </label>
-                  <select
-                    {...register("caraPerolehan")}
-                    className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="">-- Pilih Cara Perolehan --</option>
-                    <option value="Pembelian">Pembelian</option>
-                    <option value="Hibah">Hibah</option>
-                    <option value="Produksi Sendiri">Produksi Sendiri</option>
-                    <option value="Tukar Menukar">Tukar Menukar</option>
-                    <option value="Bantuan Pusat">Bantuan Pusat</option>
-                    <option value="Bantuan Provinsi">Bantuan Provinsi</option>
-                    <option value="Sumbangan / Donasi">Sumbangan / Donasi</option>
-                    <option value="Lainnya">Lainnya</option>
-                  </select>
-                  {errors.caraPerolehan && <p className="text-xs text-rose-500 mt-1">{errors.caraPerolehan.message}</p>}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                  Spesifikasi Teknis
-                </label>
-                <textarea
-                  placeholder="Contoh: Prosesor Intel Core i5 Gen 11, RAM 8GB DDR4, SSD 512GB NVMe, Layar 14 inci FHD IPS"
-                  rows={3}
-                  className="flex w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  {...register("spesifikasi")}
-                />
-                {errors.spesifikasi && <p className="text-xs text-rose-500 mt-1">{errors.spesifikasi.message}</p>}
-              </div>
-
-              {/* Harga & Tahun Perolehan */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                    Harga Perolehan (Rp) <span className="text-rose-500">*</span>
-                  </label>
-                  <input type="hidden" {...register("harga")} />
-                  <Input
-                    type="text"
-                    placeholder="Contoh: 15.000.000"
-                    value={formattedHarga}
-                    onChange={(e) => {
-                      const rawValStr = e.target.value.replace(/\D/g, "");
-                      const rawNum = rawValStr ? parseInt(rawValStr, 10) : 0;
-                      setFormattedHarga(formatNumberWithSeparator(rawValStr));
-                      setValue("harga", rawNum, { shouldValidate: true });
-                    }}
-                  />
-                  {errors.harga && <p className="text-xs text-rose-500 mt-1">{errors.harga.message}</p>}
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                    Tahun Perolehan <span className="text-rose-500">*</span>
-                  </label>
-                  <Input
-                    type="number"
-                    placeholder="Tahun"
-                    {...register("tahunPembelian")}
-                  />
-                  {errors.tahunPembelian && <p className="text-xs text-rose-500 mt-1">{errors.tahunPembelian.message}</p>}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-            <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
-            
-            {categoryAttributes.length > 0 && (
             <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-              <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
-                <CardTitle className="text-emerald-700 font-bold">Atribut Tambahan ({selectedCategory?.nama})</CardTitle>
-                <CardDescription>Atribut kustom spesifik untuk kategori ini.</CardDescription>
+              <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
+                <CardTitle>Spesifikasi & Harga</CardTitle>
+                <CardDescription>Lengkapi data spesifikasi fisik dan perolehan.</CardDescription>
               </CardHeader>
-              <CardContent className="pt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {categoryAttributes.map((attr: any) => (
-                  <div key={attr.id} className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300 flex items-center gap-1">
-                      {attr.nama}
-                      {attr.required && <span className="text-rose-500">*</span>}
+              <CardContent className="pt-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                      Material / Bahan
                     </label>
                     <Input
-                      type={attr.fieldType === "NUMBER" ? "number" : "text"}
-                      placeholder={`Masukkan ${attr.nama.toLowerCase()}`}
-                      {...register(`dynamicAttributes.${attr.id}`, {
-                        required: attr.required ? `${attr.nama} wajib diisi` : false
-                      })}
+                      placeholder="Contoh: Aluminium, Kayu Jati, Plastik ABS"
+                      {...register("material")}
                     />
-                    {errors.dynamicAttributes?.[attr.id] && (
-                      <p className="text-xs text-rose-500 mt-1">
-                        {(errors.dynamicAttributes[attr.id] as any).message}
-                      </p>
-                    )}
+                    {errors.material && <p className="text-xs text-rose-500 mt-1">{errors.material.message}</p>}
                   </div>
-                ))}
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                      Cara Perolehan
+                    </label>
+                    <select
+                      {...register("caraPerolehan")}
+                      className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="">-- Pilih Cara Perolehan --</option>
+                      <option value="Pembelian">Pembelian</option>
+                      <option value="Hibah">Hibah</option>
+                      <option value="Produksi Sendiri">Produksi Sendiri</option>
+                      <option value="Tukar Menukar">Tukar Menukar</option>
+                      <option value="Bantuan Pusat">Bantuan Pusat</option>
+                      <option value="Bantuan Provinsi">Bantuan Provinsi</option>
+                      <option value="Sumbangan / Donasi">Sumbangan / Donasi</option>
+                      <option value="Lainnya">Lainnya</option>
+                    </select>
+                    {errors.caraPerolehan && <p className="text-xs text-rose-500 mt-1">{errors.caraPerolehan.message}</p>}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                    Spesifikasi Teknis
+                  </label>
+                  <textarea
+                    placeholder="Contoh: Prosesor Intel Core i5 Gen 11, RAM 8GB DDR4, SSD 512GB NVMe, Layar 14 inci FHD IPS"
+                    rows={3}
+                    className="flex w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    {...register("spesifikasi")}
+                  />
+                  {errors.spesifikasi && <p className="text-xs text-rose-500 mt-1">{errors.spesifikasi.message}</p>}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                      Harga Perolehan (Rp) <span className="text-rose-500">*</span>
+                    </label>
+                    <input type="hidden" {...register("harga")} />
+                    <Input
+                      type="text"
+                      placeholder="Contoh: 15.000.000"
+                      value={formattedHarga}
+                      onChange={(e) => {
+                        const rawValStr = e.target.value.replace(/\D/g, "");
+                        const rawNum = rawValStr ? parseInt(rawValStr, 10) : 0;
+                        setFormattedHarga(formatNumberWithSeparator(rawValStr));
+                        setValue("harga", rawNum, { shouldValidate: true });
+                      }}
+                    />
+                    {errors.harga && <p className="text-xs text-rose-500 mt-1">{errors.harga.message}</p>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                      Tahun Perolehan <span className="text-rose-500">*</span>
+                    </label>
+                    <Input
+                      type="number"
+                      placeholder="Tahun"
+                      {...register("tahunPembelian")}
+                    />
+                    {errors.tahunPembelian && <p className="text-xs text-rose-500 mt-1">{errors.tahunPembelian.message}</p>}
+                  </div>
+                </div>
               </CardContent>
             </Card>
-          )}
 
-          {/* Placement & Holder & Kondisi */}
-          <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-            <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
+            {/* Dynamic Attributes Form Section */}
+            {categoryAttributes.length > 0 && (
+              <Card className="border-zinc-200/80 dark:border-zinc-800/80">
+                <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+                  <CardTitle className="text-emerald-700 font-bold">Atribut Tambahan ({selectedCategory?.nama})</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {categoryAttributes.map((attr, index) => (
+                    <div key={`${attr.id}-${index}`} className="space-y-1.5">
+                      <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                        {attr.nama} {attr.required && <span className="text-rose-500">*</span>}
+                      </label>
+
+                      <Input
+                        type={attr.fieldType === "NUMBER" ? "number" : "text"}
+                        placeholder={`Masukkan ${attr.nama}`}
+                        {...register(`dynamicAttributes.${attr.id}`, {
+                          required: attr.required ? `${attr.nama} wajib diisi` : false
+                        })}
+                      />
+
+                      {errors.dynamicAttributes?.[attr.id] && (
+                        <p className="text-[10px] text-rose-500 mt-1">
+                          {(errors.dynamicAttributes as any)[attr.id]?.message}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* TAB: PENEMPATAN */}
           <div className={activeTab === "penempatan" ? "space-y-6 block" : "hidden"}>
-            <CardTitle>Penempatan & Kondisi Aset</CardTitle>
-              <CardDescription>Pilih bidang penempatan, pemegang tanggung jawab, dan kondisi fisik barang.</CardDescription>
-            </CardHeader>
-            {disableFields && (
-              <div className="mx-6 mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-xs font-semibold flex items-start gap-2">
-                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" />
-                <span>
-                  Penempatan Bidang, Pemegang Barang, dan Kondisi tidak dapat diubah dari formulir edit untuk role non-Admin. 
-                  Gunakan menu <strong>Mutasi Aset</strong> jika ingin memindahkan/memutasi barang atau hubungi Administrator.
-                </span>
-              </div>
-            )}
-            <CardContent className="pt-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Distribution */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                    Bidang Distribusi <span className="text-rose-500">*</span>
+            <Card className="border-zinc-200/80 dark:border-zinc-800/80">
+              <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
+                <CardTitle>Penempatan & Kondisi Aset</CardTitle>
+                <CardDescription>Tentukan pemegang barang dan kondisi terkini.</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                      Bidang / Distribusi <span className="text-rose-500">*</span>
+                    </label>
+                    <select
+                      {...register("distributionId")}
+                      disabled={disableFields}
+                      className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                    >
+                      <option value="">Pilih Bidang</option>
+                      {distributions.map((d) => (
+                        <option key={d.id} value={d.id}>{d.nama}</option>
+                      ))}
+                    </select>
+                    {errors.distributionId && <p className="text-[10px] text-rose-500 mt-1">{errors.distributionId.message}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                      Pemegang Barang
+                    </label>
+                    <select
+                      {...register("holderId")}
+                      disabled={disableFields}
+                      className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                    >
+                      <option value="">Disimpan di Gudang / Inventaris Umum</option>
+                      {filteredHolders.map((h) => (
+                        <option key={h.id} value={h.id}>{h.nama} ({h.nip})</option>
+                      ))}
+                    </select>
+                    {errors.holderId && <p className="text-[10px] text-rose-500 mt-1">{errors.holderId.message}</p>}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 pt-2">
+                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                    Kondisi Terkini <span className="text-rose-500">*</span>
                   </label>
-                  <select
-                    {...register("distributionId")}
-                    disabled={disableFields}
-                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    <option value="" className="bg-background text-foreground">Pilih Bidang</option>
-                    {distributions.map(d => (
-                      <option key={d.id} value={d.id} className="bg-background text-foreground">{d.nama}</option>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {[
+                      { value: "BAIK", label: "Baik (B)", color: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400" },
+                      { value: "KURANG_BAIK", label: "Kurang Baik (KB)", color: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-400" },
+                      { value: "RUSAK_BERAT", label: "Rusak Berat (RB)", color: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-900/20 dark:text-rose-400" }
+                    ].map((kondisi) => (
+                      <label
+                        key={kondisi.value}
+                        className={`relative flex cursor-pointer rounded-lg border ${watchKondisi === kondisi.value ? `ring-2 ring-emerald-500 ${kondisi.color}` : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900'} p-3 shadow-sm focus:outline-none`}
+                      >
+                        <input
+                          type="radio"
+                          value={kondisi.value}
+                          {...register("kondisi")}
+                          disabled={disableFields}
+                          className="sr-only"
+                        />
+                        <span className="flex flex-1">
+                          <span className="flex flex-col">
+                            <span className="block text-sm font-medium">{kondisi.label}</span>
+                          </span>
+                        </span>
+                        {watchKondisi === kondisi.value && (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        )}
+                      </label>
                     ))}
-                  </select>
-                  {errors.distributionId && <p className="text-xs text-rose-500 mt-1">{errors.distributionId.message}</p>}
+                  </div>
+                  {errors.kondisi && <p className="text-[10px] text-rose-500 mt-1">{errors.kondisi.message}</p>}
                 </div>
 
-                {/* Holder */}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 pt-2">
                   <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                    Pemegang Barang
+                    Catatan Tambahan
                   </label>
-                  <select
-                    {...register("holderId")}
-                    disabled={disableFields || !watchDistributionId}
-                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    <option value="" className="bg-background text-foreground">Tanpa Pemegang (Di Simpan di Gudang/Umum)</option>
-                    {filteredHolders.map(h => (
-                      <option key={h.id} value={h.id} className="bg-background text-foreground">{h.nama} ({h.jabatan})</option>
-                    ))}
-                  </select>
-                  {!watchDistributionId && (
-                    <p className="text-[10px] text-amber-600 dark:text-amber-500 font-medium">
-                      * Pilih bidang kerja terlebih dahulu untuk melihat daftar pemegang barang.
-                    </p>
-                  )}
+                  <textarea
+                    placeholder="Contoh: Didanai oleh dana APBD 2026, Penempatan di ruang Aula utama."
+                    rows={4}
+                    className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    {...register("catatan")}
+                  />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Kondisi */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                    Kondisi Barang
-                  </label>
-                  <select
-                    {...register("kondisi")}
-                    disabled={disableFields}
-                    className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    <option value={Kondisi.NORMAL} className="bg-background text-foreground">Normal (Baik)</option>
-                    <option value={Kondisi.RUSAK_RINGAN} className="bg-background text-foreground">Rusak Ringan</option>
-                    <option value={Kondisi.RUSAK_BERAT} className="bg-background text-foreground">Rusak Berat</option>
-                    <option value={Kondisi.DALAM_PERBAIKAN} className="bg-background text-foreground">Dalam Perbaikan</option>
-                    <option value={Kondisi.DIPINJAM} className="bg-background text-foreground">Dipinjam</option>
-                    <option value={Kondisi.HILANG} className="bg-background text-foreground">Hilang</option>
-                  </select>
-                  {errors.kondisi && <p className="text-xs text-rose-500 mt-1">{errors.kondisi.message}</p>}
-                </div>
-              </div>
-
-              {/* Catatan */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                  Catatan Tambahan
-                </label>
-                <textarea
-                  placeholder="Contoh: Didanai oleh dana APBD 2026, Penempatan di ruang Aula utama."
-                  rows={4}
-                  className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  {...register("catatan")}
-                />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
@@ -1139,9 +1140,8 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                       return (
                         <div
                           key={photo.url}
-                          className={`relative group rounded-lg overflow-hidden border h-28 bg-zinc-100 ${
-                            isMain ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-zinc-200"
-                          }`}
+                          className={`relative group rounded-lg overflow-hidden border h-28 bg-zinc-100 ${isMain ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-zinc-200"
+                            }`}
                         >
                           <img
                             src={photo.url}
@@ -1154,9 +1154,8 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                               type="button"
                               onClick={() => handleSetMainPhoto(photo.url)}
                               title={isMain ? "Foto Utama" : "Jadikan Foto Utama"}
-                              className={`p-1.5 rounded-full cursor-pointer transition-colors ${
-                                isMain ? "bg-emerald-500 text-white" : "bg-white text-zinc-800 hover:bg-emerald-50 hover:text-emerald-600"
-                              }`}
+                              className={`p-1.5 rounded-full cursor-pointer transition-colors ${isMain ? "bg-emerald-500 text-white" : "bg-white text-zinc-800 hover:bg-emerald-50 hover:text-emerald-600"
+                                }`}
                             >
                               <Star className="h-4 w-4 fill-current" />
                             </button>

@@ -5,8 +5,8 @@ import { UserClient } from "./UserClient";
 import { Role } from "@prisma/client";
 
 export const metadata = {
-  title: "Kelola Pengguna - SIM Inventaris Aset OPD",
-  description: "Daftar pegawai OPD yang memiliki kredensial akses SIM Inventaris.",
+  title: "Kelola Pengguna - SIM Inventaris Aset SKPD",
+  description: "Daftar pegawai SKPD yang memiliki kredensial akses SIM Inventaris.",
 };
 
 export default async function UsersPage() {

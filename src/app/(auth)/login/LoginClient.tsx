@@ -89,7 +89,7 @@ export function LoginClient() {
             <span>Versi Enterprise 2026</span>
           </div>
           <h2 className="text-4xl font-extrabold tracking-tight leading-tight text-zinc-50">
-            Kelola Aset OPD Lebih Cerdas &amp; Akurat.
+            Kelola Aset SKPD Lebih Cerdas &amp; Akurat.
           </h2>
           <p className="text-zinc-400 text-sm leading-relaxed">
             Sistem terintegrasi untuk penatausahaan, mutasi, pelaporan, dan rekonsiliasi kondisi fisik barang milik daerah secara real-time.

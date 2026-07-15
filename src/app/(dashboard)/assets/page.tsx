@@ -7,7 +7,7 @@ import { AssetListClient } from "./AssetListClient";
 import { Role } from "@prisma/client";
 
 export const metadata = {
-  title: "Data Aset - SIM Inventaris Aset OPD",
+  title: "Data Aset - SIM Inventaris Aset SKPD",
   description: "Kelola daftar inventaris aset Pemerintah Daerah Kabupaten Bandung.",
 };
 

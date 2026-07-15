@@ -9,7 +9,7 @@ import { MutasiClient } from "./MutasiClient";
 import { Role } from "@prisma/client";
 
 export const metadata = {
-  title: "Mutasi Aset - SIM Inventaris Aset OPD",
+  title: "Mutasi Aset - SIM Inventaris Aset SKPD",
   description: "Kelola mutasi penempatan bidang kerja, pemegang barang, dan kondisi aset.",
 };
 

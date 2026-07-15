@@ -57,7 +57,7 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
         
         <div className="hidden sm:flex flex-col">
           <span className="text-xs text-zinc-800 font-semibold">Sistem Informasi Inventarisasi</span>
-          <span className="font-semibold text-sm text-zinc-900">{user.opdName || "OPD Kabupaten Bandung"}</span>
+          <span className="font-semibold text-sm text-zinc-900">{user.opdName || "SKPD Kabupaten Bandung"}</span>
         </div>
       </div>
 

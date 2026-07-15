@@ -149,7 +149,7 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
           <div className="space-y-2">
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm">Bidang & Unit Kerja</h1>
             <p className="text-zinc-600 dark:text-zinc-400 font-medium">
-              Kelola struktur bidang penempatan inventaris aset OPD.
+              Kelola struktur bidang penempatan inventaris aset SKPD.
             </p>
           </div>
           {userRole !== Role.MANAGER && (
@@ -232,7 +232,7 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
       <Dialog isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)}>
         <DialogHeader>
           <DialogTitle>Tambah Bidang Kerja</DialogTitle>
-          <DialogDescription>Masukkan nama bidang dan kode angka baru untuk OPD.</DialogDescription>
+          <DialogDescription>Masukkan nama bidang dan kode angka baru untuk SKPD.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onCreateSubmit)} className="space-y-4 pt-2">
           {error && (

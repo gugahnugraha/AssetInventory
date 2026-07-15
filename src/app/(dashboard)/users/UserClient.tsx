@@ -226,7 +226,7 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
           <div className="space-y-2">
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm">Kelola Pengguna</h1>
             <p className="text-zinc-600 dark:text-zinc-400 font-medium">
-              Daftar akun pegawai OPD yang memiliki akses ke sistem inventaris.
+              Daftar akun pegawai SKPD yang memiliki akses ke sistem inventaris.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -328,7 +328,7 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
       <Dialog isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)}>
         <DialogHeader>
           <DialogTitle>Tambah Pengguna Baru</DialogTitle>
-          <DialogDescription>Mendaftarkan akun operator atau manager baru untuk OPD ini.</DialogDescription>
+          <DialogDescription>Mendaftarkan akun operator atau manager baru untuk SKPD ini.</DialogDescription>
         </DialogHeader>
         <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4 pt-2">
           {error && (

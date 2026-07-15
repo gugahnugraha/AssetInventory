@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Masuk - SIM Inventaris Aset OPD",
+  title: "Masuk - SIM Inventaris Aset SKPD",
   description: "Silakan masuk dengan kredensial Anda untuk mengelola inventaris aset.",
 };
 

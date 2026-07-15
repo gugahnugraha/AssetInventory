@@ -105,7 +105,7 @@ export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClient
             <CardHeader className="border-b">
               <CardTitle className="flex items-center gap-2 text-zinc-900 dark:text-zinc-50">
                 <Building2 className="h-5 w-5 text-emerald-600" />
-                Pengaturan Instansi OPD
+                Pengaturan Instansi SKPD
               </CardTitle>
               <CardDescription>
                 Sesuaikan nama Dinas/Badan/Kantor penanggung jawab aplikasi inventaris ini.
@@ -129,7 +129,7 @@ export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClient
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-                    Nama Lengkap Instansi (OPD)
+                    Nama Lengkap Instansi (SKPD)
                   </label>
                   <Input 
                     disabled={!isAdmin} 
@@ -153,7 +153,7 @@ export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClient
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">
-                    Kode Numerik Instansi (OPD)
+                    Kode Numerik Instansi (SKPD)
                   </label>
                   <Input 
                     placeholder="Contoh: 21.02.01.01"

@@ -6,7 +6,7 @@ import { getAllKibs } from "@/services/kib";
 import { KategoriClient } from "./KategoriClient";
 
 export const metadata = {
-  title: "Master Kategori - SIM Inventaris Aset OPD",
+  title: "Master Kategori - SIM Inventaris Aset SKPD",
   description: "Kelola master kategori aset dan definisi atribut dinamis.",
 };
 

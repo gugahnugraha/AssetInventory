@@ -6,7 +6,7 @@ import { HolderClient } from "./HolderClient";
 import { Role } from "@prisma/client";
 
 export const metadata = {
-  title: "Pemegang Barang - SIM Inventaris Aset OPD",
+  title: "Pemegang Barang - SIM Inventaris Aset SKPD",
   description: "Kelola data aparatur penanggung jawab pemegang barang inventaris.",
 };
 

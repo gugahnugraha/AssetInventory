@@ -5,7 +5,7 @@ import { ProfileClient } from "./ProfileClient";
 import { Role } from "@prisma/client";
 
 export const metadata = {
-  title: "Profil Saya - SIM Inventaris Aset OPD",
+  title: "Profil Saya - SIM Inventaris Aset SKPD",
   description: "Kelola profil pribadi Anda dan ubah password login.",
 };
 
@@ -17,7 +17,7 @@ export default async function ProfilePage() {
   }
 
   try {
-    // Fetch user and OPD details
+    // Fetch user and SKPD details
     const userData = await prisma.user.findUnique({
       where: { id: session.user.id },
       include: { opd: true },

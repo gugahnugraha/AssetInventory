@@ -7,7 +7,7 @@ import { AssetDetailClient } from "./AssetDetailClient";
 import { Role } from "@prisma/client";
 
 export const metadata = {
-  title: "Detail Aset - SIM Inventaris Aset OPD",
+  title: "Detail Aset - SIM Inventaris Aset SKPD",
   description: "Informasi spesifikasi lengkap dan riwayat audit perubahan barang.",
 };
 
@@ -29,7 +29,7 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
   try {
     const asset = await getAssetById(id);
 
-    // Security check: Asset must exist and belong to the user's OPD
+    // Security check: Asset must exist and belong to the user's SKPD
     if (!asset || asset.opdId !== opdId) {
       notFound();
     }

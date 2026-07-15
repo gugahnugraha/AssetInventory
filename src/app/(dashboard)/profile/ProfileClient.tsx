@@ -145,11 +145,11 @@ export function ProfileClient({ user }: ProfileClientProps) {
             <div className="w-full h-px bg-zinc-100 dark:bg-zinc-800 my-2" />
             <div className="text-left w-full space-y-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
               <div>
-                <span className="text-[10px] text-zinc-400">Instansi OPD</span>
+                <span className="text-[10px] text-zinc-400">Instansi SKPD</span>
                 <p className="text-sm font-bold text-zinc-850 dark:text-zinc-200 mt-0.5 truncate">{user.opdName}</p>
               </div>
               <div>
-                <span className="text-[10px] text-zinc-400">Kode OPD</span>
+                <span className="text-[10px] text-zinc-400">Kode SKPD</span>
                 <p className="text-sm font-mono text-zinc-850 dark:text-zinc-200 mt-0.5">{user.opdKode}</p>
               </div>
             </div>

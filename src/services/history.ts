@@ -190,7 +190,7 @@ export async function getHistoryByAssetId(assetId: string) {
 }
 
 /**
- * Get all mutation histories for an OPD
+ * Get all mutation histories for an SKPD
  */
 export async function getAllHistories(opdId: string) {
   try {

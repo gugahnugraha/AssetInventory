@@ -1,4 +1,12 @@
-"use client";
+const fs = require('fs');
+const path = require('path');
+
+const filePath = path.join(__dirname, 'src', 'app', '(dashboard)', 'dashboard', 'DashboardClient.tsx');
+let content = fs.readFileSync(filePath, 'utf-8');
+
+// I will overwrite the entire content to avoid parsing issues since the structure is completely changing.
+
+const newContent = `"use client";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -16,8 +24,7 @@ import {
   Activity,
   PieChart as PieChartIcon,
   BarChart3,
-  ListTodo,
-  History as HistoryIcon
+  ListTodo
 } from "lucide-react";
 import { 
   BarChart, 
@@ -130,7 +137,7 @@ export function DashboardClient({ stats, recentLogs, recentMutations }: Dashboar
           <div className="space-y-2">
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm">Dashboard</h1>
             <p className="text-zinc-600 dark:text-zinc-400 font-medium">
-              Ringkasan data inventaris dan aktivitas perubahan aset SKPD.
+              Ringkasan data inventaris dan aktivitas perubahan aset OPD.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -148,35 +155,35 @@ export function DashboardClient({ stats, recentLogs, recentMutations }: Dashboar
       <div className="flex border-b border-zinc-200 overflow-x-auto hide-scrollbar mb-6">
         <button
           onClick={() => setActiveTab("ringkasan")}
-          className={`flex items-center gap-2 py-3 px-5 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+          className={\`flex items-center gap-2 py-3 px-5 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap \${
             activeTab === "ringkasan"
               ? "border-emerald-600 text-emerald-800 dark:text-emerald-400"
               : "border-transparent text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-200"
-          }`}
+          }\`}
         >
           <Activity className="h-4 w-4" />
           Ringkasan Utama
         </button>
         <button
           onClick={() => setActiveTab("analitik")}
-          className={`flex items-center gap-2 py-3 px-5 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+          className={\`flex items-center gap-2 py-3 px-5 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap \${
             activeTab === "analitik"
               ? "border-emerald-600 text-emerald-800 dark:text-emerald-400"
               : "border-transparent text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-200"
-          }`}
+          }\`}
         >
           <PieChartIcon className="h-4 w-4" />
           Analitik Aset
         </button>
         <button
           onClick={() => setActiveTab("log")}
-          className={`flex items-center gap-2 py-3 px-5 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+          className={\`flex items-center gap-2 py-3 px-5 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap \${
             activeTab === "log"
               ? "border-emerald-600 text-emerald-800 dark:text-emerald-400"
               : "border-transparent text-zinc-600 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-200"
-          }`}
+          }\`}
         >
-          <HistoryIcon className="h-4 w-4" />
+          <History className="h-4 w-4" />
           Log Aktivitas
         </button>
       </div>
@@ -197,7 +204,7 @@ export function DashboardClient({ stats, recentLogs, recentMutations }: Dashboar
                 </div>
               </div>
               <div className="mt-3 flex items-center text-xs text-zinc-800 font-semibold">
-                <span>Nilai buku total inventaris SKPD</span>
+                <span>Nilai buku total inventaris OPD</span>
               </div>
             </CardContent>
           </Card>
@@ -269,13 +276,13 @@ export function DashboardClient({ stats, recentLogs, recentMutations }: Dashboar
                     <div key={asset.id} className="flex items-center justify-between p-4 hover:bg-zinc-100/60 dark:hover:bg-zinc-900/60 transition-colors">
                       <div className="flex flex-col min-w-0 pr-4">
                         <span className="font-semibold text-sm truncate text-zinc-950 dark:text-zinc-100">
-                          {asset.merkType ? `${asset.namaAset} - ${asset.merkType}` : asset.namaAset}
+                          {asset.merkType ? \`\${asset.namaAset} - \${asset.merkType}\` : asset.namaAset}
                         </span>
                         <span className="text-xs text-emerald-800 dark:text-emerald-400 font-mono font-semibold mt-0.5">
                           {asset.kodeLengkap}
                         </span>
                         <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium mt-1 truncate">
-                          Bidang: {asset.distribution.nama} • Pemegang: {asset.holder?.nama || "Gudang / Umum"}
+                          Bidang: {asset.distribution.nama} • Pemegang: {asset.holder?.nama || "Tidak ada"}
                         </span>
                       </div>
                       <Badge variant={getKondisiBadgeVariant(asset.kondisi)}>
@@ -406,7 +413,7 @@ export function DashboardClient({ stats, recentLogs, recentMutations }: Dashboar
                       <PieChart>
                         <Pie data={charts.byType} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="total">
                           {charts.byType.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            <Cell key={\`cell-\${index}\`} fill={COLORS[index % COLORS.length]} />
                           ))}
                         </Pie>
                         <Tooltip contentStyle={{ borderRadius: "8px", backgroundColor: "var(--color-card)", borderColor: "var(--color-border)", color: "var(--color-foreground)" }} />
@@ -441,7 +448,7 @@ export function DashboardClient({ stats, recentLogs, recentMutations }: Dashboar
                       <PieChart>
                         <Pie data={kibChartData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
                           {kibChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={KIB_COLORS[index % KIB_COLORS.length]} />
+                            <Cell key={\`cell-\${index}\`} fill={KIB_COLORS[index % KIB_COLORS.length]} />
                           ))}
                         </Pie>
                         <Tooltip contentStyle={{ borderRadius: "8px", backgroundColor: "var(--color-card)", borderColor: "var(--color-border)", color: "var(--color-foreground)" }} />
@@ -500,7 +507,7 @@ export function DashboardClient({ stats, recentLogs, recentMutations }: Dashboar
                   <Tooltip cursor={{ fill: "rgba(245, 158, 11, 0.05)" }} contentStyle={{ borderRadius: "8px", backgroundColor: "var(--color-card)", borderColor: "var(--color-border)", color: "var(--color-foreground)" }} />
                   <Bar dataKey="total" radius={[4, 4, 0, 0]} maxBarSize={45}>
                     {kondisiChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                      <Cell key={\`cell-\${index}\`} fill={entry.fill} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -529,7 +536,7 @@ export function DashboardClient({ stats, recentLogs, recentMutations }: Dashboar
                   return (
                     <div key={log.id} className="flex gap-4 p-4 items-start text-sm rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-950/20 hover:shadow-xs transition-all">
                       <div className="mt-0.5">
-                        <span className={`font-mono text-[10px] font-bold uppercase border px-2 py-1 rounded-md ${actionDetails.color}`}>
+                        <span className={\`font-mono text-[10px] font-bold uppercase border px-2 py-1 rounded-md \${actionDetails.color}\`}>
                           {log.action}
                         </span>
                       </div>
@@ -538,7 +545,7 @@ export function DashboardClient({ stats, recentLogs, recentMutations }: Dashboar
                           <span className="font-semibold">{log.user.nama}</span>
                           {" "}{actionDetails.label.toLowerCase()}{" "}
                           <span className="font-bold text-emerald-700 dark:text-emerald-400">{log.asset.namaAset}</span>
-                          {log.asset.merkType ? ` (${log.asset.merkType})` : ""}
+                          {log.asset.merkType ? \` (\${log.asset.merkType})\` : ""}
                         </p>
                         <p className="text-xs font-mono font-semibold text-zinc-500 mt-1">Kode Reg: {log.asset.kodeLengkap}</p>
                         <p className="text-xs text-zinc-500 mt-2 flex items-center gap-1.5 font-semibold">
@@ -558,3 +565,7 @@ export function DashboardClient({ stats, recentLogs, recentMutations }: Dashboar
     </div>
   );
 }
+`;
+
+fs.writeFileSync(filePath, newContent);
+console.log('Dashboard refactored successfully.');

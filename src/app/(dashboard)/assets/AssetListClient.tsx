@@ -252,7 +252,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         id: "holder_nama",
         accessorFn: (row) => row.holder?.nama,
         header: "Pemegang Barang",
-        cell: ({ row }) => <span className="text-sm font-medium">{row.original.holder?.nama || "-"}</span>,
+        cell: ({ row }) => <span className="text-sm font-medium">{row.original.holder?.nama || "Gudang / Umum"}</span>,
       },
       {
         id: "actions",
@@ -349,7 +349,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         "Tahun Pembelian": asset.tahunPembelian,
         "Kondisi": getKondisiLabel(asset.kondisi),
         "Bidang": asset.distribution?.nama || "-",
-        "Pemegang Barang": asset.holder?.nama || "-",
+        "Pemegang Barang": asset.holder?.nama || "Gudang / Umum",
         "Catatan": asset.catatan || "-",
       };
 

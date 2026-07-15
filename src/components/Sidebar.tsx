@@ -35,17 +35,11 @@ export function Sidebar({ user }: SidebarProps) {
     return assetSubPaths.some(path => pathname.startsWith(path));
   }, [pathname]);
 
-  const isRekonPathActive = React.useMemo(() => {
-    return pathname.startsWith("/rekonsiliasi");
-  }, [pathname]);
-
   const [assetsExpanded, setAssetsExpanded] = React.useState(isAssetPathActive);
-  const [rekonExpanded, setRekonExpanded] = React.useState(isRekonPathActive);
 
   React.useEffect(() => {
     if (isAssetPathActive) setAssetsExpanded(true);
-    if (isRekonPathActive) setRekonExpanded(true);
-  }, [pathname, isAssetPathActive, isRekonPathActive]);
+  }, [pathname, isAssetPathActive]);
 
   const links = [
     {
@@ -72,7 +66,7 @@ export function Sidebar({ user }: SidebarProps) {
           roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
         },
         {
-          label: "Distribusi Aset (Bidang)",
+          label: "Bidang & Unit Kerja",
           href: "/distribusi",
           roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
         },
@@ -95,37 +89,9 @@ export function Sidebar({ user }: SidebarProps) {
     },
     {
       label: "Rekonsiliasi Aset",
+      href: "/rekonsiliasi",
       icon: ClipboardCheck,
       roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
-      expandedState: rekonExpanded,
-      setExpanded: setRekonExpanded,
-      children: [
-        {
-          label: "Dashboard Rekonsiliasi",
-          href: "/rekonsiliasi/dashboard",
-          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
-        },
-        {
-          label: "Periode Rekonsiliasi",
-          href: "/rekonsiliasi/periode",
-          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
-        },
-        {
-          label: "Pemeriksaan Aset",
-          href: "/rekonsiliasi/pemeriksaan",
-          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
-        },
-        {
-          label: "Temuan Rekonsiliasi",
-          href: "/rekonsiliasi/temuan",
-          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
-        },
-        {
-          label: "Laporan Rekonsiliasi",
-          href: "/rekonsiliasi/laporan",
-          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
-        },
-      ],
     },
   ]
 
@@ -178,20 +144,11 @@ export function Sidebar({ user }: SidebarProps) {
                       setCollapsed(false);
                       if (link.label === "Manajemen Aset") {
                         setAssetsExpanded(true);
-                        setRekonExpanded(false);
-                      } else if (link.label === "Rekonsiliasi Aset") {
-                        setRekonExpanded(true);
-                        setAssetsExpanded(false);
                       }
                     } else {
                       if (link.label === "Manajemen Aset") {
                         const nextVal = !assetsExpanded;
                         setAssetsExpanded(nextVal);
-                        if (nextVal) setRekonExpanded(false);
-                      } else if (link.label === "Rekonsiliasi Aset") {
-                        const nextVal = !rekonExpanded;
-                        setRekonExpanded(nextVal);
-                        if (nextVal) setAssetsExpanded(false);
                       }
                     }
                   }}

@@ -5,7 +5,7 @@ import { SettingsClient } from "./SettingsClient";
 import { Role } from "@prisma/client";
 
 export const metadata = {
-  title: "Pengaturan Sistem - SIM Inventaris Aset OPD",
+  title: "Pengaturan Sistem - SIM Inventaris Aset SKPD",
   description: "Diagnostik server, status runtime instansi, dan konfigurasi database.",
 };
 

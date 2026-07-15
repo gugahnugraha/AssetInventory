@@ -106,7 +106,7 @@ export function PeriodeClient({ periods, userRole }: PeriodeClientProps) {
                 Periode Rekonsiliasi
               </h1>
               <p className="text-zinc-600 dark:text-zinc-400 font-medium">
-                Kelola periode rekonsiliasi aset inventaris OPD.
+                Kelola periode rekonsiliasi aset inventaris SKPD.
               </p>
             </div>
           </div>

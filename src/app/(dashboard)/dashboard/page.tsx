@@ -6,8 +6,8 @@ import { getRecentHistories } from "@/services/history";
 import { DashboardClient } from "./DashboardClient";
 
 export const metadata = {
-  title: "Dashboard - SIM Inventaris Aset OPD",
-  description: "Halaman dashboard analisis kondisi, jenis, dan pemegang aset OPD Kabupaten Bandung.",
+  title: "Dashboard - SIM Inventaris Aset SKPD",
+  description: "Halaman dashboard analisis kondisi, jenis, dan pemegang aset SKPD Kabupaten Bandung.",
 };
 
 export default async function DashboardPage() {
