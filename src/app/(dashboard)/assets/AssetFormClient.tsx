@@ -145,6 +145,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
   const [deletePhotoIds, setDeletePhotoIds] = React.useState<string[]>([]);
+  const [activeTab, setActiveTab] = React.useState("utama");
 
   const isEditMode = !!initialData;
   const isAdmin = userRole === "ADMINISTRATOR" || userRole === "ADMIN";
@@ -610,12 +611,49 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
         </div>
       )}
 
+            {/* Tabs Navigation */}
+      <div className="flex border-b border-zinc-200 overflow-x-auto hide-scrollbar mb-6">
+        <button
+          type="button"
+          onClick={() => setActiveTab("utama")}
+          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+            activeTab === "utama"
+              ? "border-emerald-600 text-emerald-800"
+              : "border-transparent text-zinc-800 hover:text-zinc-950"
+          }`}
+        >
+          Data Utama
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("spesifikasi")}
+          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+            activeTab === "spesifikasi"
+              ? "border-emerald-600 text-emerald-800"
+              : "border-transparent text-zinc-800 hover:text-zinc-950"
+          }`}
+        >
+          Spesifikasi & Atribut
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("penempatan")}
+          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+            activeTab === "penempatan"
+              ? "border-emerald-600 text-emerald-800"
+              : "border-transparent text-zinc-800 hover:text-zinc-950"
+          }`}
+        >
+          Penempatan & Kondisi
+        </button>
+      </div>
+
       <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form Inputs (Left/Center) */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-            <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
-              <CardTitle>Identitas Utama</CardTitle>
+                <div className="lg:col-span-2">
+          {/* TAB: UTAMA */}
+          <div className={activeTab === "utama" ? "space-y-6 block" : "hidden"}>
+            <CardTitle>Identitas Utama</CardTitle>
               <CardDescription>Pilih KIB, kategori, dan detail identitas dasar aset.</CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
@@ -737,7 +775,102 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
 
           <Card className="border-zinc-200/80 dark:border-zinc-800/80">
             <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
-              <CardTitle>Spesifikasi & Harga</CardTitle>
+            
+            <CardTitle>Kode Aset</CardTitle>
+              <CardDescription>Masukkan kode registrasi aset barang.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              {/* Asset Code Parts */}
+              <div className="space-y-2">
+                <div className="grid grid-cols-5 gap-2">
+                  <div>
+                    <Input
+                      placeholder="XX"
+                      maxLength={2}
+                      className="text-center font-mono font-bold"
+                      {...register("kode1")}
+                    />
+                    {errors.kode1 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode1.message}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="XX"
+                      maxLength={2}
+                      className="text-center font-mono font-bold"
+                      {...register("kode2")}
+                    />
+                    {errors.kode2 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode2.message}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="XX"
+                      maxLength={2}
+                      className="text-center font-mono font-bold"
+                      {...register("kode3")}
+                    />
+                    {errors.kode3 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode3.message}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="XX"
+                      maxLength={2}
+                      className="text-center font-mono font-bold"
+                      {...register("kode4")}
+                    />
+                    {errors.kode4 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode4.message}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="XXX"
+                      maxLength={3}
+                      className="text-center font-mono font-bold"
+                      {...register("kode5")}
+                    />
+                    {errors.kode5 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode5.message}</p>}
+                  </div>
+                </div>
+
+                {/* Compiled Preview */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 border text-sm mt-2">
+                  <span className="text-zinc-500 dark:text-zinc-400 font-medium">Format Kode Lengkap:</span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-base tracking-wider">
+                    {kodeLengkapPreview}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Nomor Register At Bottom */}
+          <Card className="border-emerald-200/80 dark:border-emerald-800/80 bg-emerald-50/30 dark:bg-emerald-900/10">
+            <CardHeader className="border-b border-emerald-100 dark:border-emerald-800/50 pb-4">
+            
+            <CardTitle className="text-emerald-800 dark:text-emerald-300">Nomor Register Aset</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                  Nomor Register <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  placeholder="XXXX"
+                  className="font-mono font-bold focus-visible:ring-emerald-500 focus-visible:border-emerald-500 bg-white dark:bg-zinc-950"
+                  {...register("nomorRegister")}
+                />
+                {errors.nomorRegister && <p className="text-[10px] text-rose-500 mt-1">{errors.nomorRegister.message}</p>}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Dynamic Attributes Form Section */}
+          {categoryAttributes.length > 0 && (
+            <Card className="border-zinc-200/80 dark:border-zinc-800/80">
+              <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+          </div>
+
+          {/* TAB: SPESIFIKASI */}
+          <div className={activeTab === "spesifikasi" ? "space-y-6 block" : "hidden"}>
+            <CardTitle>Spesifikasi & Harga</CardTitle>
               <CardDescription>Lengkapi data spesifikasi fisik dan perolehan.</CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
@@ -827,93 +960,8 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
 
           <Card className="border-zinc-200/80 dark:border-zinc-800/80">
             <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
-              <CardTitle>Kode Aset</CardTitle>
-              <CardDescription>Masukkan kode registrasi aset barang.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              {/* Asset Code Parts */}
-              <div className="space-y-2">
-                <div className="grid grid-cols-5 gap-2">
-                  <div>
-                    <Input
-                      placeholder="XX"
-                      maxLength={2}
-                      className="text-center font-mono font-bold"
-                      {...register("kode1")}
-                    />
-                    {errors.kode1 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode1.message}</p>}
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="XX"
-                      maxLength={2}
-                      className="text-center font-mono font-bold"
-                      {...register("kode2")}
-                    />
-                    {errors.kode2 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode2.message}</p>}
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="XX"
-                      maxLength={2}
-                      className="text-center font-mono font-bold"
-                      {...register("kode3")}
-                    />
-                    {errors.kode3 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode3.message}</p>}
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="XX"
-                      maxLength={2}
-                      className="text-center font-mono font-bold"
-                      {...register("kode4")}
-                    />
-                    {errors.kode4 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode4.message}</p>}
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="XXX"
-                      maxLength={3}
-                      className="text-center font-mono font-bold"
-                      {...register("kode5")}
-                    />
-                    {errors.kode5 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode5.message}</p>}
-                  </div>
-                </div>
-
-                {/* Compiled Preview */}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 border text-sm mt-2">
-                  <span className="text-zinc-500 dark:text-zinc-400 font-medium">Format Kode Lengkap:</span>
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-base tracking-wider">
-                    {kodeLengkapPreview}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Nomor Register At Bottom */}
-          <Card className="border-emerald-200/80 dark:border-emerald-800/80 bg-emerald-50/30 dark:bg-emerald-900/10">
-            <CardHeader className="border-b border-emerald-100 dark:border-emerald-800/50 pb-4">
-              <CardTitle className="text-emerald-800 dark:text-emerald-300">Nomor Register Aset</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                  Nomor Register <span className="text-rose-500">*</span>
-                </label>
-                <Input
-                  placeholder="XXXX"
-                  className="font-mono font-bold focus-visible:ring-emerald-500 focus-visible:border-emerald-500 bg-white dark:bg-zinc-950"
-                  {...register("nomorRegister")}
-                />
-                {errors.nomorRegister && <p className="text-[10px] text-rose-500 mt-1">{errors.nomorRegister.message}</p>}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Dynamic Attributes Form Section */}
-          {categoryAttributes.length > 0 && (
+            
+            {categoryAttributes.length > 0 && (
             <Card className="border-zinc-200/80 dark:border-zinc-800/80">
               <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
                 <CardTitle className="text-emerald-700 font-bold">Atribut Tambahan ({selectedCategory?.nama})</CardTitle>
@@ -947,7 +995,11 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
           {/* Placement & Holder & Kondisi */}
           <Card className="border-zinc-200/80 dark:border-zinc-800/80">
             <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
-              <CardTitle>Penempatan & Kondisi Aset</CardTitle>
+          </div>
+
+          {/* TAB: PENEMPATAN */}
+          <div className={activeTab === "penempatan" ? "space-y-6 block" : "hidden"}>
+            <CardTitle>Penempatan & Kondisi Aset</CardTitle>
               <CardDescription>Pilih bidang penempatan, pemegang tanggung jawab, dan kondisi fisik barang.</CardDescription>
             </CardHeader>
             {disableFields && (
@@ -1038,6 +1090,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
               </div>
             </CardContent>
           </Card>
+          </div>
         </div>
 
         {/* Image Upload Sidebar (Right) */}
