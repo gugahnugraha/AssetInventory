@@ -723,9 +723,8 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
               {isGeneratingPdf ? "Menyiapkan PDF..." : "Unduh PDF"}
             </Button>
             <Button
-              variant="outline"
               onClick={() => setIsPdfPreviewOpen(false)}
-              className="h-9 cursor-pointer border-zinc-600 text-zinc-200 hover:bg-zinc-700 hover:text-white"
+              className="h-9 cursor-pointer bg-zinc-800 hover:bg-zinc-700 text-white font-bold border border-zinc-700 transition-colors"
             >
               Tutup
             </Button>
