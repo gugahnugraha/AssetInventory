@@ -7,9 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { loginAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Shield, AlertCircle, Loader2, User, Lock, Sparkles, Database, CheckCircle2 } from "lucide-react";
+import { Shield, AlertCircle, Loader2, User, Lock, Sparkles, Database, CheckCircle2, Eye, EyeOff } from "lucide-react";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username wajib diisi"),
@@ -22,6 +22,7 @@ export function LoginClient() {
   const router = useRouter();
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
 
   const {
     register,
@@ -187,14 +188,26 @@ export function LoginClient() {
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-2.5 h-4.5 w-4.5 text-zinc-500" />
                     <Input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       autoComplete="current-password"
                       disabled={loading}
-                      className={`pl-10.5 bg-zinc-950/50 border-zinc-800 text-white focus-visible:ring-emerald-500/40 focus:border-emerald-500/50 ${errors.password ? "border-rose-500 focus-visible:ring-rose-500/40 focus:border-rose-500" : ""
+                      className={`pl-10.5 pr-10 bg-zinc-950/50 border-zinc-800 text-white focus-visible:ring-emerald-500/40 focus:border-emerald-500/50 ${errors.password ? "border-rose-500 focus-visible:ring-rose-500/40 focus:border-rose-500" : ""
                         }`}
                       {...register("password")}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={loading}
+                      className="absolute right-3.5 top-2.5 text-zinc-500 hover:text-zinc-300 focus:outline-hidden disabled:pointer-events-none"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4.5 w-4.5" />
+                      ) : (
+                        <Eye className="h-4.5 w-4.5" />
+                      )}
+                    </button>
                   </div>
                   {errors.password && (
                     <p className="text-xs text-rose-400 font-medium mt-1">{errors.password.message}</p>
