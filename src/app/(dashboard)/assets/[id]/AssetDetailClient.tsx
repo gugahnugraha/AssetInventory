@@ -29,6 +29,9 @@ import { formatDate } from "@/lib/utils";
 import { deleteAssetAction, deleteAssetPhotoAction, setPrimaryPhotoAction } from "@/actions/asset";
 import { Kondisi, Role, MutationType } from "@prisma/client";
 import { useRouter } from "next/navigation";
+import dynamic from 'next/dynamic';
+const PDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFViewer), { ssr: false, loading: () => <div className="p-8 text-center text-zinc-400 animate-pulse">Memuat Viewer PDF...</div> });
+import { AssetStickerDocument } from "@/components/pdf/AssetStickerDocument";
 
 interface AssetDetailClientProps {
   asset: any;
@@ -45,6 +48,70 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
   const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
   const [sensusYear, setSensusYear] = React.useState(new Date().getFullYear().toString());
   const [labelSize, setLabelSize] = React.useState("60x40");
+  
+  // Printing states & logic
+  const [isPrintModalOpen, setIsPrintModalOpen] = React.useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
+  const [previewQrCodes, setPreviewQrCodes] = React.useState<Record<string, string>>({});
+  const [isPreviewLoading, setIsPreviewLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isPrintModalOpen) {
+      setIsPreviewLoading(true);
+      import('qrcode').then((mod) => {
+        const QRCode = mod.default;
+        const generate = async () => {
+          const codes: Record<string, string> = {};
+          codes[asset.id] = await QRCode.toDataURL(
+            `${window.location.origin}/assets/${asset.id}`,
+            { margin: 1, width: 120 }
+          );
+          setPreviewQrCodes(codes);
+          setIsPreviewLoading(false);
+        };
+        generate();
+      });
+    }
+  }, [isPrintModalOpen, asset.id]);
+
+  const handleDownloadPdf = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      const QRCode = (await import('qrcode')).default;
+      const { pdf } = await import('@react-pdf/renderer');
+      const { AssetStickerDocument } = await import('@/components/pdf/AssetStickerDocument');
+
+      const qrCodes: Record<string, string> = {};
+      qrCodes[asset.id] = await QRCode.toDataURL(
+        `${window.location.origin}/assets/${asset.id}`,
+        { margin: 1, width: 120 }
+      );
+      
+      const logoUrl = typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : "";
+
+      const pdfBlob = await pdf(
+        <AssetStickerDocument assets={[asset]} qrCodes={qrCodes} logoUrl={logoUrl} />
+      ).toBlob();
+      
+      const blobWithMime = new Blob([pdfBlob], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blobWithMime);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Label_BMD_${asset.kodeLengkap || Date.now()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 1000);
+    } catch (err) {
+      console.error("Failed to generate PDF", err);
+      alert("Gagal menghasilkan PDF.");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   const printParts = (asset.kodeLengkap || "").split(".");
   const printNoReg = printParts.pop() || "-";
@@ -771,6 +838,56 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
       confirmLabel="Ya, Hapus Aset"
       variant="danger"
     />
+
+    {/* ===== FULL-SCREEN PDF PREVIEW OVERLAY ===== */}
+    {isPrintModalOpen && (
+      <div className="fixed inset-0 z-50 flex flex-col bg-zinc-900/95 backdrop-blur-sm animate-in fade-in duration-200">
+        {/* Toolbar */}
+        <div className="flex items-center justify-between px-6 py-3 bg-zinc-950 border-b border-zinc-800 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <Printer className="h-5 w-5 text-emerald-400" />
+            <div>
+              <p className="text-white font-bold text-sm">Pratinjau Cetak Label BMD</p>
+              <p className="text-zinc-400 text-xs">Aset: {asset.namaAset}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDownloadPdf}
+              disabled={isGeneratingPdf}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm h-9 cursor-pointer transition-all active:scale-95"
+            >
+              <Printer className="h-4 w-4" />
+              {isGeneratingPdf ? "Menyiapkan PDF..." : "Unduh PDF"}
+            </button>
+            <button
+              onClick={() => setIsPrintModalOpen(false)}
+              className="h-9 px-4 rounded-lg cursor-pointer bg-zinc-800 hover:bg-zinc-700 text-white font-bold border border-zinc-700 transition-colors text-sm active:scale-95"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+
+        {/* Live PDF Viewer */}
+        <div className="flex-1 overflow-hidden flex flex-col bg-zinc-900/50" style={{ minHeight: '65vh' }}>
+          {isPreviewLoading ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-12 space-y-4">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-zinc-600 border-t-emerald-500" />
+              <p className="text-zinc-400 text-sm animate-pulse">Menyiapkan Preview Vektor...</p>
+            </div>
+          ) : (
+            <PDFViewer width="100%" height="100%" className="border-0 bg-transparent flex-1" showToolbar={true}>
+              <AssetStickerDocument
+                assets={[asset]}
+                qrCodes={previewQrCodes}
+                logoUrl={typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : ""}
+              />
+            </PDFViewer>
+          )}
+        </div>
+      </div>
+    )}
     </>
   );
 }

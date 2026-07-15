@@ -974,7 +974,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   <CardTitle className="text-emerald-700 font-bold">Atribut Tambahan ({selectedCategory?.nama})</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {categoryAttributes.map((attr, index) => (
+                  {categoryAttributes.map((attr: any, index: number) => (
                     <div key={`${attr.id}-${index}`} className="space-y-1.5">
                       <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
                         {attr.nama} {attr.required && <span className="text-rose-500">*</span>}
