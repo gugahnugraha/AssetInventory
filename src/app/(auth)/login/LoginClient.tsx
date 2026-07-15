@@ -103,7 +103,7 @@ export function LoginClient() {
                 <span className="font-mono text-emerald-400 font-semibold">ONLINE</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-zinc-300">Uptime System</span>
+                <span className="text-sm font-semibold text-zinc-300">System Uptime:</span>
                 <span className="text-sm font-extrabold text-emerald-400">99.8%</span>
               </div>
               <div className="w-full bg-zinc-800 h-1.5 rounded-full overflow-hidden">
