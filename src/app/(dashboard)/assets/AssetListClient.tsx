@@ -14,8 +14,11 @@ import {
   ArrowUpDown,
   Filter,
   Check,
-  Upload
+  Upload,
+  Printer
 } from "lucide-react";
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { handlePrintSticker } from "./[id]/AssetDetailClient";
 import { 
   useReactTable, 
   getCoreRowModel, 
@@ -59,6 +62,11 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; code: string } | null>(null);
+  const [selectedAssetForPrint, setSelectedAssetForPrint] = React.useState<any>(null);
+  const [isPrintModalOpen, setIsPrintModalOpen] = React.useState(false);
+  const [sensusYear, setSensusYear] = React.useState(new Date().getFullYear().toString());
+  const [labelSize, setLabelSize] = React.useState("60x40");
+  const [rowSelection, setRowSelection] = React.useState({});
 
   const getKondisiLabel = (kondisi: Kondisi) => {
     switch (kondisi) {
@@ -182,6 +190,26 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const columns = React.useMemo<ColumnDef<any>[]>(
     () => [
       {
+        id: "select",
+        header: ({ table }) => (
+          <input
+            type="checkbox"
+            checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+            onChange={table.getToggleAllPageRowsSelectedHandler()}
+            className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 bg-background text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+          />
+        ),
+        cell: ({ row }) => (
+          <input
+            type="checkbox"
+            checked={row.getIsSelected()}
+            disabled={!row.getCanSelect()}
+            onChange={row.getToggleSelectedHandler()}
+            className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 bg-background text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+          />
+        ),
+      },
+      {
         id: "index",
         header: "No.",
         cell: ({ row }) => (
@@ -261,6 +289,18 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
           const asset = row.original;
           return (
             <div className="flex justify-end gap-2">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => {
+                  setSelectedAssetForPrint(asset);
+                  setIsPrintModalOpen(true);
+                }}
+                title="Cetak Label" 
+                className="h-8 w-8 hover:bg-sky-50 dark:hover:bg-sky-950/20 text-sky-600 dark:text-sky-400"
+              >
+                <Printer className="h-4 w-4" />
+              </Button>
               <Link href={`/assets/${asset.id}`} prefetch={false} title="Detail Aset">
                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">
                   <Eye className="h-4 w-4" />
@@ -299,7 +339,9 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       sorting,
       globalFilter,
       columnVisibility,
+      rowSelection,
     },
+    onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
@@ -377,6 +419,219 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
     XLSX.writeFile(workbook, `Aset_Inventaris_DISKOMINFO_${Date.now()}.xlsx`);
   };
 
+  const handleBulkPrint = async () => {
+    const selectedRows = table.getSelectedRowModel().rows;
+    const selectedAssets = selectedRows.map(row => row.original);
+    if (selectedAssets.length === 0) return;
+
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      const QRCode = (await import('qrcode')).default;
+
+      const container = document.createElement("div");
+      container.style.position = "absolute";
+      container.style.left = "-9999px";
+      container.style.top = "-9999px";
+      document.body.appendChild(container);
+
+      const stickersPerPage = 12;
+      let pagesHtml = "";
+
+      for (let i = 0; i < selectedAssets.length; i += stickersPerPage) {
+        const pageAssets = selectedAssets.slice(i, i + stickersPerPage);
+        pagesHtml += `<div class="a4-page">`;
+        for (const asset of pageAssets) {
+          const qrDataUrl = await QRCode.toDataURL(
+            `${window.location.origin}/assets/${asset.id}`, 
+            { margin: 1, width: 150 }
+          );
+          
+          const parts = (asset.kodeLengkap || "").split(".");
+          const noReg = parts.pop() || "-";
+          const classCode = parts.join(".") || "-";
+          
+          const opdKode = asset.opd?.kodeNumeric || "-";
+          const opdNama = asset.opd?.kode || "-";
+          const namaAset = asset.namaAset || "-";
+          const tahunBeli = asset.tahunPembelian || "-";
+          const logoUrl = `${window.location.origin}/uploads/logo.png`;
+
+          pagesHtml += `
+            <div class="sticker">
+              <div class="sticker-header">PEMERINTAH KABUPATEN BANDUNG</div>
+              <div class="sticker-body">
+                <div class="logo-box">
+                  <img src="${logoUrl}" alt="Logo" />
+                </div>
+                <div class="details-box">
+                  <table>
+                    <colgroup>
+                      <col style="width: 14mm;" />
+                      <col style="width: 2mm;" />
+                      <col />
+                    </colgroup>
+                    <tbody>
+                      <tr>
+                        <td>KODE ASET</td>
+                        <td style="text-align:center;">:</td>
+                        <td style="white-space:normal; word-wrap:break-word;">${classCode}</td>
+                      </tr>
+                      <tr>
+                        <td>NAMA ASET</td>
+                        <td style="text-align:center;">:</td>
+                        <td style="white-space:normal; word-wrap:break-word;">${namaAset}</td>
+                      </tr>
+                      <tr>
+                        <td>TAHUN</td>
+                        <td style="text-align:center;">:</td>
+                        <td>${tahunBeli}</td>
+                      </tr>
+                      <tr>
+                        <td>KODE SKPD</td>
+                        <td style="text-align:center;">:</td>
+                        <td style="white-space:normal; word-wrap:break-word;">${opdKode}</td>
+                      </tr>
+                      <tr>
+                        <td>NAMA SKPD</td>
+                        <td style="text-align:center;">:</td>
+                        <td style="white-space:normal; word-wrap:break-word;">${opdNama}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="qr-box">
+                  <div class="reg-text">REG: <strong>${noReg}</strong></div>
+                  <img class="qr-code" src="${qrDataUrl}" alt="QR" />
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        pagesHtml += `</div>`;
+      }
+
+      container.innerHTML = `
+        <style>
+          .pdf-wrapper {
+            background-color: #fff;
+            color: #000;
+            font-family: Arial, sans-serif;
+          }
+          .a4-page {
+            width: 210mm;
+            height: 297mm;
+            box-sizing: border-box;
+            padding: 12mm 8mm;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            justify-items: center;
+            align-items: center;
+            background-color: #fff;
+            overflow: hidden;
+            page-break-after: always;
+          }
+          .a4-page:last-child {
+            page-break-after: avoid;
+          }
+          .sticker {
+            border: 1px solid #000;
+            box-sizing: border-box;
+            padding: 1.5mm 2.5mm;
+            display: flex;
+            flex-direction: column;
+            height: 42mm;
+            width: 92mm;
+            overflow: hidden;
+          }
+          .sticker-header {
+            font-weight: bold;
+            font-size: 6.5pt;
+            text-align: center;
+            text-decoration: underline;
+            margin-bottom: 1.5mm;
+            text-transform: uppercase;
+            letter-spacing: 0.1px;
+          }
+          .sticker-body {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            gap: 2mm;
+          }
+          .logo-box {
+            width: 24mm;
+            height: 28mm;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+          }
+          .logo-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+          }
+          .details-box {
+            flex: 1;
+            font-size: 4.2pt;
+            font-weight: bold;
+            line-height: 1.1;
+          }
+          .details-box table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+          }
+          .details-box td {
+            padding: 0.5px 0;
+            vertical-align: top;
+          }
+          .qr-box {
+            width: 15mm;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-left: auto;
+            flex-shrink: 0;
+          }
+          .reg-text {
+            font-size: 5.5pt;
+            margin-bottom: 0.5mm;
+            text-align: center;
+            font-weight: bold;
+          }
+          .qr-code {
+            width: 12mm;
+            height: 12mm;
+            object-fit: contain;
+          }
+        </style>
+        <div id="pdf-content" class="pdf-wrapper">
+          ${pagesHtml}
+        </div>
+      `;
+
+      const element = container.querySelector("#pdf-content");
+      
+      const opt = {
+        margin: 0,
+        filename: `Label_Sensus_Massal_${Date.now()}.pdf`,
+        image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: { scale: 4, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      await html2pdf().set(opt).from(element).save();
+      
+      document.body.removeChild(container);
+    } catch (err) {
+      console.error("Failed to generate PDF", err);
+      alert("Gagal menghasilkan PDF.");
+    }
+  };
+
   return (
     <>
     <div className="space-y-6 pt-0 pb-8 -mt-6">
@@ -390,6 +645,15 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3 pt-2">
+            {Object.keys(rowSelection).length > 0 && (
+              <Button 
+                onClick={handleBulkPrint} 
+                className="flex items-center gap-2 bg-sky-650 hover:bg-sky-500 text-white cursor-pointer shadow-sm font-bold border-0 transition-all animate-in fade-in zoom-in duration-200"
+              >
+                <Printer className="h-4 w-4" />
+                Cetak Label Terpilih ({Object.keys(rowSelection).length})
+              </Button>
+            )}
             <Button onClick={exportToExcel} variant="outline" className="flex items-center gap-2 cursor-pointer shadow-sm">
               <Download className="h-4 w-4" />
               Ekspor Excel
@@ -584,6 +848,114 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         router.refresh();
       }}
     />
+
+    {selectedAssetForPrint && (() => {
+      const parts = (selectedAssetForPrint.kodeLengkap || "").split(".");
+      const noReg = parts.pop() || "-";
+      const classCode = parts.join(".") || "-";
+      const logoUrl = typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : "";
+
+      return (
+        <Dialog isOpen={isPrintModalOpen} onClose={() => setIsPrintModalOpen(false)} className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
+              <Printer className="h-5 w-5" /> Pratinjau Label Stiker BMD
+            </DialogTitle>
+            <DialogDescription>
+              Pratinjau label stiker Sensus BMD Kabupaten Bandung.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2 text-zinc-900">
+            {/* Mockup Stiker Preview Box */}
+            <div className="flex justify-center p-6 bg-zinc-105 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-inner">
+              <div className="w-[92mm] h-[42mm] scale-90 origin-center bg-white border border-zinc-950 p-[1.5mm_2.5mm] flex flex-col text-zinc-950 select-none shadow-md">
+                <div className="text-[6.5pt] font-black text-center underline uppercase mb-[1.5mm]">
+                  PEMERINTAH KABUPATEN BANDUNG
+                </div>
+                <div className="flex flex-1 items-center gap-[2mm]">
+                  {/* Left logo box */}
+                  <div className="w-[24mm] h-[28mm] flex-shrink-0 flex justify-center items-center">
+                    <img 
+                      src={logoUrl} 
+                      alt="Logo" 
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  </div>
+                  {/* Middle details table */}
+                  <div className="flex-1 text-[4.2pt] font-bold leading-[1.1] text-left">
+                    <table className="w-full border-collapse table-fixed">
+                      <colgroup>
+                        <col className="w-[14mm]" />
+                        <col className="w-[2mm]" />
+                        <col />
+                      </colgroup>
+                      <tbody>
+                        <tr>
+                          <td className="py-[0.5px] align-top">KODE ASET</td>
+                          <td className="py-[0.5px] align-top text-center">:</td>
+                          <td className="py-[0.5px] align-top break-words whitespace-normal">{classCode}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-[0.5px] align-top">NAMA ASET</td>
+                          <td className="py-[0.5px] align-top text-center">:</td>
+                          <td className="py-[0.5px] align-top break-words whitespace-normal">{selectedAssetForPrint.namaAset || "-"}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-[0.5px] align-top">TAHUN</td>
+                          <td className="py-[0.5px] align-top text-center">:</td>
+                          <td className="py-[0.5px] align-top">{selectedAssetForPrint.tahunPembelian || "-"}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-[0.5px] align-top">KODE SKPD</td>
+                          <td className="py-[0.5px] align-top text-center">:</td>
+                          <td className="py-[0.5px] align-top break-words whitespace-normal">{selectedAssetForPrint.opd?.kodeNumeric || "-"}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-[0.5px] align-top">NAMA SKPD</td>
+                          <td className="py-[0.5px] align-top text-center">:</td>
+                          <td className="py-[0.5px] align-top break-words whitespace-normal">{selectedAssetForPrint.opd?.kode || "-"}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Right QR box */}
+                  <div className="w-[15mm] flex-shrink-0 flex flex-col items-center justify-center ml-auto">
+                    <div className="text-[5.5pt] font-black mb-[0.5mm] text-center">
+                      REG: {noReg}
+                    </div>
+                    <div className="w-[12mm] h-[12mm] bg-zinc-50 border border-zinc-200 flex items-center justify-center p-0.5">
+                      <img 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(
+                          typeof window !== "undefined" ? `${window.location.origin}/assets/${selectedAssetForPrint.id}` : ""
+                        )}`} 
+                        alt="QR" 
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setIsPrintModalOpen(false)} className="h-9 cursor-pointer">
+              Tutup
+            </Button>
+            <Button 
+              onClick={() => {
+                handlePrintSticker(selectedAssetForPrint);
+                setIsPrintModalOpen(false);
+              }} 
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-9 cursor-pointer"
+            >
+              Cetak Sekarang
+            </Button>
+          </DialogFooter>
+        </Dialog>
+      );
+    })()}
     </>
   );
 }

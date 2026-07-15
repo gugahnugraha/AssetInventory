@@ -34,9 +34,13 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
       notFound();
     }
 
-    // Serialize database models (convert Date objects to JSON-friendly string ISO dates)
     const serializedAsset = {
       ...asset,
+      opd: asset.opd ? {
+        ...asset.opd,
+        createdAt: asset.opd.createdAt.toISOString(),
+        updatedAt: asset.opd.updatedAt.toISOString(),
+      } : null,
       createdAt: asset.createdAt.toISOString(),
       updatedAt: asset.updatedAt.toISOString(),
       category: {

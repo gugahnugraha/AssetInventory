@@ -72,6 +72,7 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
     return await prisma.asset.findMany({
       where,
       include: {
+        opd: true,
         category: {
           include: {
             kib: true
@@ -102,6 +103,7 @@ export async function getAssetById(id: string) {
     const asset = await prisma.asset.findUnique({
       where: { id },
       include: {
+        opd: true,
         category: {
           include: {
             kib: true
