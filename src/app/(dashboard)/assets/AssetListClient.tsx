@@ -67,6 +67,9 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const [sensusYear, setSensusYear] = React.useState(new Date().getFullYear().toString());
   const [labelSize, setLabelSize] = React.useState("60x40");
   const [rowSelection, setRowSelection] = React.useState({});
+  const [isPdfPreviewOpen, setIsPdfPreviewOpen] = React.useState(false);
+  const [previewAssets, setPreviewAssets] = React.useState<any[]>([]);
+  const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
 
   const getKondisiLabel = (kondisi: Kondisi) => {
     switch (kondisi) {
@@ -419,11 +422,17 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
     XLSX.writeFile(workbook, `Aset_Inventaris_DISKOMINFO_${Date.now()}.xlsx`);
   };
 
-  const handleBulkPrint = async () => {
+  const handleBulkPrint = () => {
     const selectedRows = table.getSelectedRowModel().rows;
     const selectedAssets = selectedRows.map(row => row.original);
     if (selectedAssets.length === 0) return;
+    setPreviewAssets(selectedAssets);
+    setIsPdfPreviewOpen(true);
+  };
 
+  const handleDownloadPdf = async () => {
+    if (previewAssets.length === 0) return;
+    setIsGeneratingPdf(true);
     try {
       const html2pdf = (await import('html2pdf.js')).default;
       const QRCode = (await import('qrcode')).default;
@@ -437,19 +446,17 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       const stickersPerPage = 12;
       let pagesHtml = "";
 
-      for (let i = 0; i < selectedAssets.length; i += stickersPerPage) {
-        const pageAssets = selectedAssets.slice(i, i + stickersPerPage);
+      for (let i = 0; i < previewAssets.length; i += stickersPerPage) {
+        const pageAssets = previewAssets.slice(i, i + stickersPerPage);
         pagesHtml += `<div class="a4-page">`;
         for (const asset of pageAssets) {
           const qrDataUrl = await QRCode.toDataURL(
-            `${window.location.origin}/assets/${asset.id}`, 
-            { margin: 1, width: 150 }
+            `${window.location.origin}/assets/${asset.id}`,
+            { margin: 1, width: 120 }
           );
-          
           const parts = (asset.kodeLengkap || "").split(".");
           const noReg = parts.pop() || "-";
           const classCode = parts.join(".") || "-";
-          
           const opdKode = asset.opd?.kodeNumeric || "-";
           const opdNama = asset.opd?.kode || "-";
           const namaAset = asset.namaAset || "-";
@@ -458,50 +465,24 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
 
           pagesHtml += `
             <div class="sticker">
-              <div class="sticker-header">PEMERINTAH KABUPATEN BANDUNG</div>
-              <div class="sticker-body">
-                <div class="logo-box">
-                  <img src="${logoUrl}" alt="Logo" />
-                </div>
-                <div class="details-box">
+              <div class="sh">PEMERINTAH KABUPATEN BANDUNG</div>
+              <div class="sb">
+                <div class="lb"><img src="${logoUrl}" alt="L" /></div>
+                <div class="db">
                   <table>
-                    <colgroup>
-                      <col style="width: 14mm;" />
-                      <col style="width: 2mm;" />
-                      <col />
-                    </colgroup>
+                    <colgroup><col style="width:13mm"/><col style="width:2.5mm"/><col/></colgroup>
                     <tbody>
-                      <tr>
-                        <td>KODE ASET</td>
-                        <td style="text-align:center;">:</td>
-                        <td style="white-space:normal; word-wrap:break-word;">${classCode}</td>
-                      </tr>
-                      <tr>
-                        <td>NAMA ASET</td>
-                        <td style="text-align:center;">:</td>
-                        <td style="white-space:normal; word-wrap:break-word;">${namaAset}</td>
-                      </tr>
-                      <tr>
-                        <td>TAHUN</td>
-                        <td style="text-align:center;">:</td>
-                        <td>${tahunBeli}</td>
-                      </tr>
-                      <tr>
-                        <td>KODE SKPD</td>
-                        <td style="text-align:center;">:</td>
-                        <td style="white-space:normal; word-wrap:break-word;">${opdKode}</td>
-                      </tr>
-                      <tr>
-                        <td>NAMA SKPD</td>
-                        <td style="text-align:center;">:</td>
-                        <td style="white-space:normal; word-wrap:break-word;">${opdNama}</td>
-                      </tr>
+                      <tr><td>KODE ASET</td><td>:</td><td>${classCode}</td></tr>
+                      <tr><td>NAMA ASET</td><td>:</td><td>${namaAset}</td></tr>
+                      <tr><td>TAHUN</td><td>:</td><td>${tahunBeli}</td></tr>
+                      <tr><td>KODE SKPD</td><td>:</td><td>${opdKode}</td></tr>
+                      <tr><td>NAMA SKPD</td><td>:</td><td>${opdNama}</td></tr>
                     </tbody>
                   </table>
                 </div>
-                <div class="qr-box">
-                  <div class="reg-text">REG: <strong>${noReg}</strong></div>
-                  <img class="qr-code" src="${qrDataUrl}" alt="QR" />
+                <div class="qb">
+                  <div class="rt">REG<br/><strong>${noReg}</strong></div>
+                  <img class="qr" src="${qrDataUrl}" alt="QR" />
                 </div>
               </div>
             </div>
@@ -512,123 +493,65 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
 
       container.innerHTML = `
         <style>
-          .pdf-wrapper {
-            background-color: #fff;
-            color: #000;
-            font-family: Arial, sans-serif;
-          }
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          body { font-family: Arial, Helvetica, sans-serif; background: #fff; color: #000; }
           .a4-page {
-            width: 210mm;
-            height: 297mm;
-            box-sizing: border-box;
-            padding: 12mm 8mm;
+            width: 210mm; height: 297mm;
+            padding: 8mm 6mm;
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             grid-template-rows: repeat(6, 1fr);
+            gap: 1.5mm;
             justify-items: center;
             align-items: center;
-            background-color: #fff;
-            overflow: hidden;
             page-break-after: always;
-          }
-          .a4-page:last-child {
-            page-break-after: avoid;
-          }
-          .sticker {
-            border: 1px solid #000;
-            box-sizing: border-box;
-            padding: 1.5mm 2.5mm;
-            display: flex;
-            flex-direction: column;
-            height: 42mm;
-            width: 92mm;
             overflow: hidden;
           }
-          .sticker-header {
-            font-weight: bold;
-            font-size: 6.5pt;
-            text-align: center;
-            text-decoration: underline;
-            margin-bottom: 1.5mm;
-            text-transform: uppercase;
-            letter-spacing: 0.1px;
+          .a4-page:last-child { page-break-after: avoid; }
+          .sticker {
+            border: 0.5px solid #333;
+            padding: 1mm 1.5mm;
+            display: flex; flex-direction: column;
+            height: 42mm; width: 92mm;
+            overflow: hidden;
           }
-          .sticker-body {
-            display: flex;
-            flex: 1;
-            align-items: center;
-            gap: 2mm;
+          .sh {
+            font-weight: 900; font-size: 5.5pt;
+            text-align: center; text-decoration: underline;
+            text-transform: uppercase; margin-bottom: 0.8mm;
           }
-          .logo-box {
-            width: 24mm;
-            height: 28mm;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-shrink: 0;
-          }
-          .logo-box img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-          }
-          .details-box {
-            flex: 1;
-            font-size: 4.2pt;
-            font-weight: bold;
-            line-height: 1.1;
-          }
-          .details-box table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-          }
-          .details-box td {
-            padding: 0.5px 0;
-            vertical-align: top;
-          }
-          .qr-box {
-            width: 15mm;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            margin-left: auto;
-            flex-shrink: 0;
-          }
-          .reg-text {
-            font-size: 5.5pt;
-            margin-bottom: 0.5mm;
-            text-align: center;
-            font-weight: bold;
-          }
-          .qr-code {
-            width: 12mm;
-            height: 12mm;
-            object-fit: contain;
-          }
+          .sb { display: flex; flex: 1; align-items: stretch; gap: 1.5mm; }
+          .lb { width: 20mm; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+          .lb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+          .db { flex: 1; font-size: 5.5pt; font-weight: 700; line-height: 1.35; display: flex; align-items: center; }
+          .db table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+          .db td { padding: 0; vertical-align: middle; overflow: hidden; }
+          .db td:nth-child(2) { width: 3mm; text-align: center; }
+          .db td:first-child { width: 13mm; white-space: nowrap; }
+          .qb { width: 14mm; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+          .rt { font-size: 5pt; font-weight: 900; text-align: center; margin-bottom: 0.5mm; line-height: 1.2; }
+          .qr { width: 13mm; height: 13mm; object-fit: contain; }
         </style>
-        <div id="pdf-content" class="pdf-wrapper">
+        <div id="pdf-root">
           ${pagesHtml}
         </div>
       `;
 
-      const element = container.querySelector("#pdf-content");
-      
+      const element = container.querySelector("#pdf-root");
       const opt = {
         margin: 0,
-        filename: `Label_Sensus_Massal_${Date.now()}.pdf`,
+        filename: `Label_BMD_${Date.now()}.pdf`,
         image: { type: 'jpeg', quality: 1.0 },
-        html2canvas: { scale: 4, useCORS: true },
+        html2canvas: { scale: 3, useCORS: true, logging: false },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
-
       await html2pdf().set(opt).from(element).save();
-      
       document.body.removeChild(container);
     } catch (err) {
       console.error("Failed to generate PDF", err);
       alert("Gagal menghasilkan PDF.");
+    } finally {
+      setIsGeneratingPdf(false);
     }
   };
 
