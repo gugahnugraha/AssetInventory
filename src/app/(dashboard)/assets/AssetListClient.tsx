@@ -62,6 +62,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const [selectedKib, setSelectedKib] = React.useState<string>("ALL");
   const [selectedKategori, setSelectedKategori] = React.useState<string>("ALL");
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  // Hide minor columns on small screens by default — user can still scroll horizontally
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; code: string } | null>(null);
   const [sensusYear, setSensusYear] = React.useState(new Date().getFullYear().toString());
@@ -72,6 +73,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
   const [previewQrCodes, setPreviewQrCodes] = React.useState<Record<string, string>>({});
   const [isPreviewLoading, setIsPreviewLoading] = React.useState(false);
+  const [isPrintWarningOpen, setIsPrintWarningOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (isPdfPreviewOpen && previewAssets.length > 0) {
@@ -314,16 +316,16 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         cell: ({ row }) => {
           const asset = row.original;
           return (
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-1">
               <Link href={`/assets/${asset.id}`} prefetch={false} title="Detail Aset">
-                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">
+                <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 active:scale-90 transition-transform">
                   <Eye className="h-4 w-4" />
                 </Button>
               </Link>
               {userRole !== Role.MANAGER && (
                 <>
                   <Link href={`/assets/${asset.id}/edit`} prefetch={false} title="Edit Aset">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-amber-50 dark:hover:bg-amber-950/20 text-amber-600 dark:text-amber-400">
+                    <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-amber-50 dark:hover:bg-amber-950/20 text-amber-600 dark:text-amber-400 active:scale-90 transition-transform">
                       <Edit3 className="h-4 w-4" />
                     </Button>
                   </Link>
@@ -332,7 +334,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
                     size="icon"
                     onClick={() => handleDelete(asset.id, asset.kodeLengkap)}
                     title="Hapus Aset"
-                    className="h-8 w-8 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 dark:text-rose-400"
+                    className="h-9 w-9 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 dark:text-rose-400 active:scale-90 transition-transform"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -354,6 +356,15 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       globalFilter,
       columnVisibility,
       rowSelection,
+    },
+    initialState: {
+      pagination: {
+        pageSize: 50,
+      },
+      columnVisibility: {
+        merkType: false,
+        tahunPembelian: false,
+      },
     },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -486,52 +497,21 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
 
   return (
     <>
-    <div className="space-y-6 pt-0 pb-8 -mt-6">
+    <div className="space-y-4 pt-0 pb-8">
       {/* Hero Header Banner */}
-      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 p-6 rounded-b-3xl shadow-sm -mx-6 sm:-mx-8 px-6 sm:px-12 mb-8 relative">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-          <div className="space-y-2">
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm">Data Aset</h1>
-            <p className="text-zinc-600 dark:text-zinc-400 font-medium">
-              Kelola, cari, saring, dan ekspor daftar aset inventaris.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            {Object.keys(rowSelection).length > 0 && (
-              <Button 
-                onClick={handleBulkPrint} 
-                className="flex items-center gap-2 bg-sky-650 hover:bg-sky-500 text-white cursor-pointer shadow-sm font-bold border-0 transition-all animate-in fade-in zoom-in duration-200"
-              >
-                <Printer className="h-4 w-4" />
-                Cetak Label Terpilih ({Object.keys(rowSelection).length})
-              </Button>
-            )}
-            <Button onClick={exportToExcel} variant="outline" className="flex items-center gap-2 cursor-pointer shadow-sm">
-              <Download className="h-4 w-4" />
-              Ekspor Excel
-            </Button>
-            {userRole !== Role.MANAGER && (
-              <>
-                <Button onClick={() => setIsImportOpen(true)} variant="outline" className="flex items-center gap-2 border-emerald-600/30 hover:border-emerald-650 hover:bg-emerald-50 text-emerald-700 dark:text-emerald-400 cursor-pointer shadow-sm">
-                  <Upload className="h-4 w-4" />
-                  Import Excel
-                </Button>
-                <Link href="/assets/tambah" prefetch={false}>
-                  <Button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-sm font-bold border-0 transition-all">
-                    <Plus className="h-4 w-4" />
-                    Tambah Aset
-                  </Button>
-                </Link>
-              </>
-            )}
-          </div>
+      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 px-4 sm:px-6 py-5 rounded-2xl shadow-sm mb-2">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">Data Aset</h1>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium">
+            Kelola, cari, saring, dan ekspor daftar aset inventaris.
+          </p>
         </div>
       </div>
 
       {/* Filters card */}
       <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-        <CardContent className="p-4 sm:p-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <CardContent className="p-3 sm:p-4 space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {/* Input Search */}
             <div className="relative lg:col-span-2">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
@@ -591,95 +571,161 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         </CardContent>
       </Card>
 
+      {/* Action Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+        {/* Left: Cetak Label — always enabled */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              if (Object.keys(rowSelection).length === 0) {
+                setIsPrintWarningOpen(true);
+              } else {
+                handleBulkPrint();
+              }
+            }}
+            className="group inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-sky-500 text-sky-600 dark:text-sky-400 dark:border-sky-500 bg-transparent hover:bg-sky-50 dark:hover:bg-sky-950/30 active:scale-95 font-semibold text-sm transition-all duration-150 shadow-sm cursor-pointer"
+          >
+            <Printer className="h-4 w-4 transition-transform group-hover:scale-110" />
+            Cetak Label
+            {Object.keys(rowSelection).length > 0 && (
+              <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300 text-xs font-bold animate-in fade-in zoom-in duration-150">
+                {Object.keys(rowSelection).length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Right: Export, Import, Tambah */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2">
+          <button
+            onClick={exportToExcel}
+            className="group inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 bg-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-500 active:scale-95 font-semibold text-sm transition-all duration-150 shadow-sm cursor-pointer"
+          >
+            <Download className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
+            Export
+          </button>
+          {userRole === Role.ADMINISTRATOR && (
+            <button
+              onClick={() => setIsImportOpen(true)}
+              className="group inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-emerald-400 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-transparent hover:bg-emerald-50 dark:hover:bg-emerald-950/30 hover:border-emerald-500 active:scale-95 font-semibold text-sm transition-all duration-150 shadow-sm cursor-pointer"
+            >
+              <Upload className="h-4 w-4 transition-transform group-hover:-translate-y-0.5" />
+              Import
+            </button>
+          )}
+          {userRole !== Role.MANAGER && (
+            <Link href="/assets/tambah" prefetch={false}>
+              <button className="group inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-emerald-600 dark:border-emerald-500 text-emerald-700 dark:text-emerald-400 bg-transparent hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white hover:border-emerald-600 active:scale-95 font-semibold text-sm transition-all duration-150 shadow-sm cursor-pointer">
+                <Plus className="h-4 w-4 transition-transform group-hover:rotate-90 duration-200" />
+                Tambah Aset
+              </button>
+            </Link>
+          )}
+        </div>
+      </div>
+
       {/* Table block */}
-      <Card className="border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden">
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-zinc-50 dark:bg-zinc-900/60 sticky top-0">
-                {table.getHeaderGroups().map(headerGroup => (
-                  <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                    {headerGroup.headers.map(header => {
-                      const isActions = header.column.id === "actions";
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden shadow-sm">
+        {/* Table wrapper */}
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map(headerGroup => (
+                <TableRow key={headerGroup.id} className="hover:bg-transparent border-b border-zinc-200 dark:border-zinc-700">
+                  {headerGroup.headers.map(header => {
+                    const isActions = header.column.id === "actions";
+                    return (
+                      <TableHead
+                        key={header.id}
+                        className={cn(
+                          "font-semibold text-zinc-100 dark:text-zinc-100 whitespace-nowrap py-3 bg-zinc-800 dark:bg-zinc-900",
+                          isActions && "sticky right-0 bg-zinc-800 dark:bg-zinc-900 border-l border-zinc-700 dark:border-zinc-700 shadow-[-6px_0_12px_rgba(0,0,0,0.15)] z-10 text-right"
+                        )}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="text-center py-16 text-zinc-400 dark:text-zinc-500">
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-3xl">📭</span>
+                      <span className="text-sm font-medium">Tidak ada data aset yang cocok.</span>
+                      <span className="text-xs text-zinc-400">Coba ubah filter atau kata kunci pencarian.</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                table.getRowModel().rows.map((row, idx) => (
+                  <TableRow
+                    key={row.id}
+                    className={cn(
+                      "border-b border-zinc-100 dark:border-zinc-800 transition-colors duration-100",
+                      idx % 2 === 0
+                        ? "bg-white dark:bg-zinc-950"
+                        : "bg-zinc-50/60 dark:bg-zinc-900/40",
+                      "hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20"
+                    )}
+                  >
+                    {row.getVisibleCells().map(cell => {
+                      const isActions = cell.column.id === "actions";
                       return (
-                        <TableHead
-                          key={header.id}
+                        <TableCell
+                          key={cell.id}
                           className={cn(
-                            "font-semibold text-zinc-700 dark:text-zinc-300 whitespace-nowrap",
-                            isActions && "sticky right-0 bg-zinc-50 dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 shadow-[-6px_0_12px_rgba(0,0,0,0.03)] z-10"
+                            "whitespace-nowrap py-2.5",
+                            isActions && cn(
+                              "sticky right-0 border-l border-zinc-100 dark:border-zinc-800 shadow-[-6px_0_12px_rgba(0,0,0,0.04)]",
+                              idx % 2 === 0
+                                ? "bg-white dark:bg-zinc-950"
+                                : "bg-zinc-50 dark:bg-zinc-900/60"
+                            )
                           )}
                         >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
                       );
                     })}
                   </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="text-center py-12 text-zinc-500">
-                      Tidak ada data aset yang cocok dengan filter atau pencarian Anda.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  table.getRowModel().rows.map(row => (
-                    <TableRow key={row.id}>
-                      {row.getVisibleCells().map(cell => {
-                        const isActions = cell.column.id === "actions";
-                        return (
-                          <TableCell
-                            key={cell.id}
-                            className={cn(
-                              "whitespace-nowrap",
-                              isActions && "sticky right-0 bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-zinc-800 shadow-[-6px_0_12px_rgba(0,0,0,0.03)]"
-                            )}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between p-4 border-t gap-2 flex-wrap">
-            <div className="text-xs text-zinc-500">
-              Menampilkan {table.getRowModel().rows.length} dari {filteredData.length} data aset
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-                className="cursor-pointer"
-              >
-                Sebelumnya
-              </Button>
-              <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                Halaman {table.getState().pagination.pageIndex + 1} dari {table.getPageCount() || 1}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-                className="cursor-pointer"
-              >
-                Selanjutnya
-              </Button>
-            </div>
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-200 dark:border-zinc-700 bg-zinc-50/80 dark:bg-zinc-900/60 gap-2 flex-wrap">
+          <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+            Menampilkan <span className="font-bold text-zinc-700 dark:text-zinc-200">{table.getRowModel().rows.length}</span> dari <span className="font-bold text-zinc-700 dark:text-zinc-200">{filteredData.length}</span> aset
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-300 bg-transparent hover:bg-white dark:hover:bg-zinc-800 hover:border-zinc-400 active:scale-95 font-semibold text-xs transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              ← Sebelumnya
+            </button>
+            <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-zinc-800 dark:bg-zinc-700 text-white text-xs font-bold">
+              {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
+            </span>
+            <button
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-300 bg-transparent hover:bg-white dark:hover:bg-zinc-800 hover:border-zinc-400 active:scale-95 font-semibold text-xs transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Selanjutnya →
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <ConfirmDialog
@@ -700,6 +746,33 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         router.refresh();
       }}
     />
+
+    {/* ===== WARNING: No Asset Selected for Print ===== */}
+    {isPrintWarningOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-150">
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-200 dark:border-zinc-800 w-full max-w-sm p-6 flex flex-col items-center gap-4 animate-in zoom-in-95 duration-150">
+          {/* Icon */}
+          <div className="flex items-center justify-center h-14 w-14 rounded-full bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800">
+            <Printer className="h-7 w-7 text-amber-500" />
+          </div>
+          {/* Text */}
+          <div className="text-center space-y-1.5">
+            <h3 className="font-bold text-zinc-900 dark:text-zinc-50 text-base">Belum Ada Aset Dipilih</h3>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+              Centang minimal <span className="font-semibold text-zinc-700 dark:text-zinc-200">1 aset</span> pada tabel terlebih dahulu sebelum mencetak label.
+            </p>
+          </div>
+          {/* Action */}
+          <button
+            onClick={() => setIsPrintWarningOpen(false)}
+            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 bg-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800 font-semibold text-sm transition-all duration-150 cursor-pointer"
+          >
+            <Check className="h-4 w-4" />
+            Mengerti
+          </button>
+        </div>
+      </div>
+    )}
 
     {/* ===== FULL-SCREEN PDF PREVIEW OVERLAY ===== */}
     {isPdfPreviewOpen && (

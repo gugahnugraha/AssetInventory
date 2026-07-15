@@ -50,7 +50,8 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
       <div className="flex items-center gap-4">
         <button
           onClick={onMobileMenuToggle}
-          className="p-2 -ml-2 rounded-lg md:hidden hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer"
+          className="p-2 -ml-2 rounded-lg md:hidden hover:bg-slate-100 dark:hover:bg-zinc-800 active:bg-slate-200 dark:active:bg-zinc-700 active:scale-95 text-slate-700 dark:text-zinc-300 transition-all cursor-pointer"
+          aria-label="Buka menu navigasi"
         >
           <Menu className="h-5 w-5" />
         </button>
@@ -66,7 +67,8 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
         <div className="relative">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-3 p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer select-none border border-transparent hover:border-slate-200 dark:hover:border-zinc-700"
+            className="flex items-center gap-2 sm:gap-3 p-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-zinc-800 active:bg-slate-100 dark:active:bg-zinc-700 active:scale-95 transition-all cursor-pointer select-none border border-transparent hover:border-slate-200 dark:hover:border-zinc-700"
+            aria-label="Menu pengguna"
           >
             <div className="flex flex-col items-end hidden md:flex">
               <span className="text-sm font-semibold text-zinc-950 leading-none">{user.nama}</span>
@@ -78,8 +80,8 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
                 {getRoleLabel(user.role)}
               </Badge>
 
-              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-bold border-2 border-emerald-200 dark:border-emerald-800/50">
-                <User className="h-4 w-4" />
+              <div className="flex items-center justify-center w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-bold border-2 border-emerald-200 dark:border-emerald-800/50 text-sm shrink-0">
+                {user.nama ? user.nama.charAt(0).toUpperCase() : <User className="h-4 w-4" />}
               </div>
               
               <ChevronDown className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 hidden sm:block" />
@@ -94,7 +96,7 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
           )}
 
           {dropdownOpen && (
-            <div className="absolute right-0 top-14 mt-1.5 w-56 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 shadow-xl animate-in fade-in-0 slide-in-from-top-2 duration-150 z-30 p-1.5">
+            <div className="absolute right-0 top-14 mt-1.5 w-56 max-w-[calc(100vw-1.5rem)] rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-800 dark:text-zinc-100 shadow-xl animate-in fade-in-0 slide-in-from-top-2 duration-150 z-30 p-1.5">
               <div className="px-3 py-2 border-b border-slate-100 dark:border-zinc-800 mb-1.5">
                 <p className="text-[10px] font-semibold text-emerald-800 uppercase tracking-wider leading-none">
                   {getRoleLabel(user.role)}
