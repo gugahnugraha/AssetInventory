@@ -15,10 +15,10 @@ import {
   Filter,
   Check,
   Upload,
-  Printer
+  Printer,
+  X
 } from "lucide-react";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { handlePrintSticker } from "./[id]/AssetDetailClient";
 import { 
   useReactTable, 
   getCoreRowModel, 
@@ -41,7 +41,9 @@ import { Kondisi, Role } from "@prisma/client";
 import * as XLSX from "xlsx";
 import { cn, formatRupiah } from "@/lib/utils";
 import { ImportDialog } from "@/components/ImportDialog";
-
+import dynamic from 'next/dynamic';
+const PDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFViewer), { ssr: false, loading: () => <div className="p-8 text-center text-zinc-400 animate-pulse">Memuat Viewer PDF...</div> });
+import { AssetStickerDocument } from "@/components/pdf/AssetStickerDocument";
 interface AssetListClientProps {
   initialAssets: any[];
   distributions: any[];
@@ -62,14 +64,35 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; code: string } | null>(null);
-  const [selectedAssetForPrint, setSelectedAssetForPrint] = React.useState<any>(null);
-  const [isPrintModalOpen, setIsPrintModalOpen] = React.useState(false);
   const [sensusYear, setSensusYear] = React.useState(new Date().getFullYear().toString());
   const [labelSize, setLabelSize] = React.useState("60x40");
   const [rowSelection, setRowSelection] = React.useState({});
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = React.useState(false);
   const [previewAssets, setPreviewAssets] = React.useState<any[]>([]);
   const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
+  const [previewQrCodes, setPreviewQrCodes] = React.useState<Record<string, string>>({});
+  const [isPreviewLoading, setIsPreviewLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isPdfPreviewOpen && previewAssets.length > 0) {
+      setIsPreviewLoading(true);
+      import('qrcode').then((mod) => {
+        const QRCode = mod.default;
+        const generate = async () => {
+          const codes: Record<string, string> = {};
+          for (const asset of previewAssets) {
+            codes[asset.id] = await QRCode.toDataURL(
+              `${window.location.origin}/assets/${asset.id}`,
+              { margin: 1, width: 120 }
+            );
+          }
+          setPreviewQrCodes(codes);
+          setIsPreviewLoading(false);
+        };
+        generate();
+      });
+    }
+  }, [isPdfPreviewOpen, previewAssets]);
 
   const getKondisiLabel = (kondisi: Kondisi) => {
     switch (kondisi) {
@@ -292,18 +315,6 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
           const asset = row.original;
           return (
             <div className="flex justify-end gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => {
-                  setSelectedAssetForPrint(asset);
-                  setIsPrintModalOpen(true);
-                }}
-                title="Cetak Label" 
-                className="h-8 w-8 hover:bg-sky-50 dark:hover:bg-sky-950/20 text-sky-600 dark:text-sky-400"
-              >
-                <Printer className="h-4 w-4" />
-              </Button>
               <Link href={`/assets/${asset.id}`} prefetch={false} title="Detail Aset">
                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">
                   <Eye className="h-4 w-4" />
@@ -434,119 +445,36 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
     if (previewAssets.length === 0) return;
     setIsGeneratingPdf(true);
     try {
-      const html2pdf = (await import('html2pdf.js')).default;
       const QRCode = (await import('qrcode')).default;
+      const { pdf } = await import('@react-pdf/renderer');
+      const { AssetStickerDocument } = await import('@/components/pdf/AssetStickerDocument');
 
-      const container = document.createElement("div");
-      container.style.position = "absolute";
-      container.style.left = "-9999px";
-      container.style.top = "-9999px";
-      document.body.appendChild(container);
-
-      const stickersPerPage = 12;
-      let pagesHtml = "";
-
-      for (let i = 0; i < previewAssets.length; i += stickersPerPage) {
-        const pageAssets = previewAssets.slice(i, i + stickersPerPage);
-        pagesHtml += `<div class="a4-page">`;
-        for (const asset of pageAssets) {
-          const qrDataUrl = await QRCode.toDataURL(
-            `${window.location.origin}/assets/${asset.id}`,
-            { margin: 1, width: 120 }
-          );
-          const parts = (asset.kodeLengkap || "").split(".");
-          const noReg = parts.pop() || "-";
-          const classCode = parts.join(".") || "-";
-          const opdKode = asset.opd?.kodeNumeric || "-";
-          const opdNama = asset.opd?.kode || "-";
-          const namaAset = asset.namaAset || "-";
-          const tahunBeli = asset.tahunPembelian || "-";
-          const logoUrl = `${window.location.origin}/uploads/logo.png`;
-
-          pagesHtml += `
-            <div class="sticker">
-              <div class="sh">PEMERINTAH KABUPATEN BANDUNG</div>
-              <div class="sb">
-                <div class="lb"><img src="${logoUrl}" alt="L" /></div>
-                <div class="db">
-                  <table>
-                    <colgroup><col style="width:13mm"/><col style="width:2.5mm"/><col/></colgroup>
-                    <tbody>
-                      <tr><td>KODE ASET</td><td>:</td><td>${classCode}</td></tr>
-                      <tr><td>NAMA ASET</td><td>:</td><td>${namaAset}</td></tr>
-                      <tr><td>TAHUN</td><td>:</td><td>${tahunBeli}</td></tr>
-                      <tr><td>KODE SKPD</td><td>:</td><td>${opdKode}</td></tr>
-                      <tr><td>NAMA SKPD</td><td>:</td><td>${opdNama}</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="qb">
-                  <div class="rt">REG<br/><strong>${noReg}</strong></div>
-                  <img class="qr" src="${qrDataUrl}" alt="QR" />
-                </div>
-              </div>
-            </div>
-          `;
-        }
-        pagesHtml += `</div>`;
+      const qrCodes: Record<string, string> = {};
+      for (const asset of previewAssets) {
+        qrCodes[asset.id] = await QRCode.toDataURL(
+          `${window.location.origin}/assets/${asset.id}`,
+          { margin: 1, width: 120 }
+        );
       }
+      
+      const logoUrl = typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : "";
 
-      container.innerHTML = `
-        <style>
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: Arial, Helvetica, sans-serif; background: #fff; color: #000; }
-          .a4-page {
-            width: 210mm; height: 297mm;
-            padding: 8mm 6mm;
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: repeat(6, 1fr);
-            gap: 1.5mm;
-            justify-items: center;
-            align-items: center;
-            page-break-after: always;
-            overflow: hidden;
-          }
-          .a4-page:last-child { page-break-after: avoid; }
-          .sticker {
-            border: 0.5px solid #333;
-            padding: 1mm 1.5mm;
-            display: flex; flex-direction: column;
-            height: 42mm; width: 92mm;
-            overflow: hidden;
-          }
-          .sh {
-            font-weight: 900; font-size: 5.5pt;
-            text-align: center; text-decoration: underline;
-            text-transform: uppercase; margin-bottom: 0.8mm;
-          }
-          .sb { display: flex; flex: 1; align-items: stretch; gap: 1.5mm; }
-          .lb { width: 20mm; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-          .lb img { max-width: 100%; max-height: 100%; object-fit: contain; }
-          .db { flex: 1; font-size: 5.5pt; font-weight: 700; line-height: 1.35; display: flex; align-items: center; }
-          .db table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-          .db td { padding: 0; vertical-align: middle; overflow: hidden; }
-          .db td:nth-child(2) { width: 3mm; text-align: center; }
-          .db td:first-child { width: 13mm; white-space: nowrap; }
-          .qb { width: 14mm; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-          .rt { font-size: 5pt; font-weight: 900; text-align: center; margin-bottom: 0.5mm; line-height: 1.2; }
-          .qr { width: 13mm; height: 13mm; object-fit: contain; }
-        </style>
-        <div id="pdf-root">
-          ${pagesHtml}
-        </div>
-      `;
-
-      const element = container.querySelector("#pdf-root");
-      const opt = {
-        margin: 0,
-        filename: `Label_BMD_${Date.now()}.pdf`,
-        image: { type: 'jpeg', quality: 1.0 },
-        html2canvas: { scale: 3, useCORS: true, logging: false },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-      await html2pdf().set(opt).from(element).save();
-      document.body.removeChild(container);
+      const pdfBlob = await pdf(
+        <AssetStickerDocument assets={previewAssets} qrCodes={qrCodes} logoUrl={logoUrl} />
+      ).toBlob();
+      
+      const blobWithMime = new Blob([pdfBlob], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blobWithMime);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Label_BMD_${Date.now()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 1000);
     } catch (err) {
       console.error("Failed to generate PDF", err);
       alert("Gagal menghasilkan PDF.");
@@ -554,6 +482,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       setIsGeneratingPdf(false);
     }
   };
+
 
   return (
     <>
@@ -772,113 +701,56 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       }}
     />
 
-    {selectedAssetForPrint && (() => {
-      const parts = (selectedAssetForPrint.kodeLengkap || "").split(".");
-      const noReg = parts.pop() || "-";
-      const classCode = parts.join(".") || "-";
-      const logoUrl = typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : "";
-
-      return (
-        <Dialog isOpen={isPrintModalOpen} onClose={() => setIsPrintModalOpen(false)} className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-emerald-800 dark:text-emerald-400 flex items-center gap-2">
-              <Printer className="h-5 w-5" /> Pratinjau Label Stiker BMD
-            </DialogTitle>
-            <DialogDescription>
-              Pratinjau label stiker Sensus BMD Kabupaten Bandung.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2 text-zinc-900">
-            {/* Mockup Stiker Preview Box */}
-            <div className="flex justify-center p-6 bg-zinc-105 dark:bg-zinc-950 rounded-lg border border-zinc-200 dark:border-zinc-800 shadow-inner">
-              <div className="w-[92mm] h-[42mm] scale-90 origin-center bg-white border border-zinc-950 p-[1.5mm_2.5mm] flex flex-col text-zinc-950 select-none shadow-md">
-                <div className="text-[6.5pt] font-black text-center underline uppercase mb-[1.5mm]">
-                  PEMERINTAH KABUPATEN BANDUNG
-                </div>
-                <div className="flex flex-1 items-center gap-[2mm]">
-                  {/* Left logo box */}
-                  <div className="w-[24mm] h-[28mm] flex-shrink-0 flex justify-center items-center">
-                    <img 
-                      src={logoUrl} 
-                      alt="Logo" 
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  </div>
-                  {/* Middle details table */}
-                  <div className="flex-1 text-[4.2pt] font-bold leading-[1.1] text-left">
-                    <table className="w-full border-collapse table-fixed">
-                      <colgroup>
-                        <col className="w-[14mm]" />
-                        <col className="w-[2mm]" />
-                        <col />
-                      </colgroup>
-                      <tbody>
-                        <tr>
-                          <td className="py-[0.5px] align-top">KODE ASET</td>
-                          <td className="py-[0.5px] align-top text-center">:</td>
-                          <td className="py-[0.5px] align-top break-words whitespace-normal">{classCode}</td>
-                        </tr>
-                        <tr>
-                          <td className="py-[0.5px] align-top">NAMA ASET</td>
-                          <td className="py-[0.5px] align-top text-center">:</td>
-                          <td className="py-[0.5px] align-top break-words whitespace-normal">{selectedAssetForPrint.namaAset || "-"}</td>
-                        </tr>
-                        <tr>
-                          <td className="py-[0.5px] align-top">TAHUN</td>
-                          <td className="py-[0.5px] align-top text-center">:</td>
-                          <td className="py-[0.5px] align-top">{selectedAssetForPrint.tahunPembelian || "-"}</td>
-                        </tr>
-                        <tr>
-                          <td className="py-[0.5px] align-top">KODE SKPD</td>
-                          <td className="py-[0.5px] align-top text-center">:</td>
-                          <td className="py-[0.5px] align-top break-words whitespace-normal">{selectedAssetForPrint.opd?.kodeNumeric || "-"}</td>
-                        </tr>
-                        <tr>
-                          <td className="py-[0.5px] align-top">NAMA SKPD</td>
-                          <td className="py-[0.5px] align-top text-center">:</td>
-                          <td className="py-[0.5px] align-top break-words whitespace-normal">{selectedAssetForPrint.opd?.kode || "-"}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  {/* Right QR box */}
-                  <div className="w-[15mm] flex-shrink-0 flex flex-col items-center justify-center ml-auto">
-                    <div className="text-[5.5pt] font-black mb-[0.5mm] text-center">
-                      REG: {noReg}
-                    </div>
-                    <div className="w-[12mm] h-[12mm] bg-zinc-50 border border-zinc-200 flex items-center justify-center p-0.5">
-                      <img 
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(
-                          typeof window !== "undefined" ? `${window.location.origin}/assets/${selectedAssetForPrint.id}` : ""
-                        )}`} 
-                        alt="QR" 
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
+    {/* ===== FULL-SCREEN PDF PREVIEW OVERLAY ===== */}
+    {isPdfPreviewOpen && (
+      <div className="fixed inset-0 z-50 flex flex-col bg-zinc-900/95 backdrop-blur-sm">
+        {/* Toolbar */}
+        <div className="flex items-center justify-between px-6 py-3 bg-zinc-950 border-b border-zinc-800 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <Printer className="h-5 w-5 text-emerald-400" />
+            <div>
+              <p className="text-white font-bold text-sm">Pratinjau Cetak Label BMD</p>
+              <p className="text-zinc-400 text-xs">{previewAssets.length} aset · {Math.ceil(previewAssets.length / 14)} halaman A4</p>
             </div>
           </div>
-
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setIsPrintModalOpen(false)} className="h-9 cursor-pointer">
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleDownloadPdf}
+              disabled={isGeneratingPdf}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-9 cursor-pointer flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              {isGeneratingPdf ? "Menyiapkan PDF..." : "Unduh PDF"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsPdfPreviewOpen(false)}
+              className="h-9 cursor-pointer border-zinc-600 text-zinc-200 hover:bg-zinc-700 hover:text-white"
+            >
               Tutup
             </Button>
-            <Button 
-              onClick={() => {
-                handlePrintSticker(selectedAssetForPrint);
-                setIsPrintModalOpen(false);
-              }} 
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-9 cursor-pointer"
-            >
-              Cetak Sekarang
-            </Button>
-          </DialogFooter>
-        </Dialog>
-      );
-    })()}
+          </div>
+        </div>
+
+        {/* Live PDF Viewer */}
+        <div className="flex-1 overflow-hidden flex flex-col bg-zinc-900/50" style={{ minHeight: '65vh' }}>
+          {isPreviewLoading ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-12 space-y-4">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-zinc-600 border-t-emerald-500" />
+              <p className="text-zinc-400 text-sm animate-pulse">Menyiapkan Preview Vektor...</p>
+            </div>
+          ) : (
+            <PDFViewer width="100%" height="100%" className="border-0 bg-transparent flex-1" showToolbar={true}>
+              <AssetStickerDocument
+                assets={previewAssets}
+                qrCodes={previewQrCodes}
+                logoUrl={typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : ""}
+              />
+            </PDFViewer>
+          )}
+        </div>
+      </div>
+    )}
     </>
   );
 }
