@@ -243,14 +243,14 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         },
       },
       {
-        accessorKey: "distribution.nama",
-        id: "bidang",
+        id: "bidang_nama",
+        accessorFn: (row) => row.distribution?.nama,
         header: "Bidang / Unit",
         cell: ({ row }) => <span className="text-sm">{row.original.distribution?.nama || "-"}</span>,
       },
       {
-        accessorKey: "holder.nama",
-        id: "pemegang",
+        id: "holder_nama",
+        accessorFn: (row) => row.holder?.nama,
         header: "Pemegang Barang",
         cell: ({ row }) => <span className="text-sm font-medium">{row.original.holder?.nama || "-"}</span>,
       },
@@ -379,34 +379,36 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
 
   return (
     <>
-    <div className="space-y-6 pt-2 pb-8">
-      {/* Title block */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">Data Aset</h1>
-          <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-            Kelola, cari, saring, dan ekspor daftar aset inventaris.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={exportToExcel} variant="outline" className="flex items-center gap-2 cursor-pointer">
-            <Download className="h-4 w-4" />
-            Ekspor Excel
-          </Button>
-          {userRole !== Role.MANAGER && (
-            <>
-              <Button onClick={() => setIsImportOpen(true)} variant="outline" className="flex items-center gap-2 border-emerald-600/30 hover:border-emerald-650 hover:bg-emerald-50/5 text-emerald-700 dark:text-emerald-400 cursor-pointer">
-                <Upload className="h-4 w-4" />
-                Import Excel
-              </Button>
-              <Link href="/assets/tambah" prefetch={false}>
-                <Button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-xs">
-                  <Plus className="h-4 w-4" />
-                  Tambah Aset
+    <div className="space-y-6 pt-0 pb-8 -mt-6">
+      {/* Hero Header Banner */}
+      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 p-6 rounded-b-3xl shadow-sm -mx-6 sm:-mx-8 px-6 sm:px-12 mb-8 relative">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm">Data Aset</h1>
+            <p className="text-zinc-600 dark:text-zinc-400 font-medium">
+              Kelola, cari, saring, dan ekspor daftar aset inventaris.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <Button onClick={exportToExcel} variant="outline" className="flex items-center gap-2 cursor-pointer shadow-sm">
+              <Download className="h-4 w-4" />
+              Ekspor Excel
+            </Button>
+            {userRole !== Role.MANAGER && (
+              <>
+                <Button onClick={() => setIsImportOpen(true)} variant="outline" className="flex items-center gap-2 border-emerald-600/30 hover:border-emerald-650 hover:bg-emerald-50 text-emerald-700 dark:text-emerald-400 cursor-pointer shadow-sm">
+                  <Upload className="h-4 w-4" />
+                  Import Excel
                 </Button>
-              </Link>
-            </>
-          )}
+                <Link href="/assets/tambah" prefetch={false}>
+                  <Button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-sm font-bold border-0 transition-all">
+                    <Plus className="h-4 w-4" />
+                    Tambah Aset
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

@@ -66,27 +66,33 @@ export function DashboardRekonClient({
   userRole,
 }: DashboardRekonClientProps) {
   return (
-    <div className="space-y-6 pt-2 pb-8">
-      {/* Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-950 flex items-center gap-2">
-            <ClipboardCheck className="h-7 w-7 text-emerald-600" />
-            Dashboard Rekonsiliasi
-          </h1>
-          <p className="text-zinc-500 mt-1">
-            Ringkasan pemeriksaan aset dan temuan rekonsiliasi{activePeriod ? ` — ${activePeriod.nama}` : ""}.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {userRole === Role.ADMINISTRATOR && (
-            <Link href="/rekonsiliasi/periode">
-              <Button className="bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer gap-2">
-                <Plus className="h-4 w-4" />
-                Kelola Periode
-              </Button>
-            </Link>
-          )}
+    <div className="space-y-6 pt-0 pb-8 -mt-6">
+      {/* Hero Header Banner */}
+      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 p-6 rounded-b-3xl shadow-sm -mx-6 sm:-mx-8 px-6 sm:px-12 mb-8 relative">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+          <div className="space-y-2 flex items-center gap-4">
+            <div className="bg-emerald-50 dark:bg-emerald-900/30 p-3 rounded-full border border-emerald-100 dark:border-emerald-800 hidden sm:block">
+              <ClipboardCheck className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm flex items-center gap-2">
+                Dashboard Rekonsiliasi
+              </h1>
+              <p className="text-zinc-600 dark:text-zinc-400 font-medium">
+                Ringkasan pemeriksaan aset dan temuan rekonsiliasi{activePeriod ? ` — ${activePeriod.nama}` : ""}.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            {userRole === Role.ADMINISTRATOR && (
+              <Link href="/rekonsiliasi/periode">
+                <Button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-sm font-bold border-0 transition-all">
+                  <Plus className="h-4 w-4" />
+                  Kelola Periode
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 

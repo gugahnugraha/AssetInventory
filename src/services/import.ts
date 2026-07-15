@@ -1,5 +1,6 @@
 import prisma from "./db";
-import { Kondisi, Role } from "@prisma/client";
+import { Kondisi, Role, Prisma } from "@prisma/client";
+import { randomUUID } from "crypto";
 
 export interface ExcelAssetRow {
   "Kode Aset"?: string | number;
@@ -21,6 +22,8 @@ export interface ExcelAssetRow {
   "Harga"?: string | number;
   "Catatan"?: string;
   "KIB"?: string;
+  "Kategori"?: string;
+  "Bidang Distribusi"?: string;
 }
 
 export interface ImportResult {
@@ -140,6 +143,11 @@ export async function importAssetsBatch(
     errors: [],
   };
 
+  // We will prepare arrays for bulk inserts
+  const assetsToInsert: Prisma.AssetCreateManyInput[] = [];
+  const attributesToInsert: Prisma.AssetAttributeCreateManyInput[] = [];
+  const auditLogsToInsert: Prisma.AuditLogCreateManyInput[] = [];
+
   // Run the ENTIRE import batch inside a single Prisma transaction with custom timeouts!
   await prisma.$transaction(async (tx) => {
     // 1. Preload master data: KIBs, Categories and their Attributes, and existing asset codes
@@ -151,7 +159,12 @@ export async function importAssetsBatch(
       select: { kodeLengkap: true },
     });
 
-    const existingCodes = new Set(existingAssets.map((a) => a.kodeLengkap));
+    const initialExistingCodes = new Set(existingAssets.map((a) => a.kodeLengkap));
+    const existingCodes = new Set(initialExistingCodes);
+    
+    const distributions = await tx.distribution.findMany({
+      where: { opdId }
+    });
     
     // In-memory cache to save newly created categories during this transaction
     const categoryCache = new Map<string, any>();
@@ -159,7 +172,7 @@ export async function importAssetsBatch(
       categoryCache.set(`${cat.kibId}_${cat.nama.toLowerCase()}`, cat);
     }
 
-    // 2. Loop through each Excel row
+    // First Pass: Resolve categories and prepare bulk insert data
     for (let index = 0; index < rows.length; index++) {
       const row = rows[index];
       const rowNum = index + 1;
@@ -238,12 +251,20 @@ export async function importAssetsBatch(
       const k3Str = String(kode3).padStart(2, "0");
       const k4Str = String(kode4).padStart(2, "0");
       const k5Str = String(kode5).padStart(3, "0");
-      const registerStr = String(nomorRegister).padStart(4, "0");
-      const kodeLengkap = `1.3.${k1Str}.${k2Str}.${k3Str}.${k4Str}.${k5Str}.${registerStr}`;
+      
+      const baseKode = `1.3.${k1Str}.${k2Str}.${k3Str}.${k4Str}.${k5Str}`;
+      let registerStr = String(nomorRegister).padStart(4, "0");
+      let kodeLengkap = `${baseKode}.${registerStr}`;
 
-      // Check for duplicates
+      // Auto-fix duplicates: If duplicate exists, find the next available register number
       if (existingCodes.has(kodeLengkap)) {
-        throw new Error(`Baris ${rowNum}: Kode Lengkap "${kodeLengkap}" sudah ada di database (Duplikat).`);
+        let nextReg = nomorRegister + 1;
+        while (existingCodes.has(`${baseKode}.${String(nextReg).padStart(4, "0")}`)) {
+          nextReg++;
+        }
+        nomorRegister = nextReg;
+        registerStr = String(nomorRegister).padStart(4, "0");
+        kodeLengkap = `${baseKode}.${registerStr}`;
       }
 
       // Parse optional attributes
@@ -254,7 +275,11 @@ export async function importAssetsBatch(
 
       // Determine category name
       let targetCategoryName = "Lainnya";
-      if (kib.kode === "B") {
+      const kategoriInput = cleanString(row["Kategori"]);
+      
+      if (kategoriInput) {
+        targetCategoryName = kategoriInput;
+      } else if (kib.kode === "B") {
         targetCategoryName = getCategoryNameForKibB(namaAset, hasVehicleInfo);
       } else {
         targetCategoryName = kib.nama;
@@ -321,29 +346,45 @@ export async function importAssetsBatch(
         tahunPembelian = parseInt(String(rawTahun).replace(/\D/g, ""), 10) || tahunPembelian;
       }
 
-      // Create Asset
-      const asset = await tx.asset.create({
-        data: {
-          kode1,
-          kode2,
-          kode3,
-          kode4,
-          kode5,
-          nomorRegister,
-          kodeLengkap,
-          categoryId: category.id,
-          namaAset,
-          merkType,
-          material,
-          caraPerolehan,
-          spesifikasi,
-          harga,
-          tahunPembelian,
-          distributionId: defaultDistributionId,
-          kondisi: Kondisi.NORMAL,
-          catatan,
-          opdId,
-        },
+      // Bidang Distribusi
+      let rowDistributionId = defaultDistributionId;
+      const bidangInput = cleanString(row["Bidang Distribusi"]);
+      if (bidangInput) {
+        const match = distributions.find(d => d.nama.toLowerCase() === bidangInput.toLowerCase());
+        if (match) {
+          rowDistributionId = match.id;
+        }
+      } else {
+        const matchSekretariat = distributions.find(d => d.nama.toLowerCase() === "sekretariat");
+        if (matchSekretariat) {
+          rowDistributionId = matchSekretariat.id;
+        }
+      }
+
+      // Pregenerate Asset ID
+      const assetId = randomUUID();
+
+      assetsToInsert.push({
+        id: assetId,
+        kode1,
+        kode2,
+        kode3,
+        kode4,
+        kode5,
+        nomorRegister,
+        kodeLengkap,
+        categoryId: category.id,
+        namaAset,
+        merkType,
+        material,
+        caraPerolehan,
+        spesifikasi,
+        harga,
+        tahunPembelian,
+        distributionId: rowDistributionId,
+        kondisi: Kondisi.NORMAL,
+        catatan,
+        opdId,
       });
 
       // Insert Vehicle Attributes if it is a vehicle
@@ -356,39 +397,67 @@ export async function importAssetsBatch(
         for (const [name, val] of attrMap.entries()) {
           const catAttr = category.attributes.find((a: any) => a.nama === name);
           if (catAttr) {
-            await tx.assetAttribute.create({
-              data: {
-                assetId: asset.id,
-                categoryAttributeId: catAttr.id,
-                value: val,
-              },
+            attributesToInsert.push({
+              id: randomUUID(),
+              assetId,
+              categoryAttributeId: catAttr.id,
+              value: val,
             });
           }
         }
       }
 
       // Write Audit Log
-      await tx.auditLog.create({
-        data: {
-          userId,
-          assetId: asset.id,
-          action: "CREATE",
-          newValue: JSON.stringify({
-            namaAset,
-            kodeLengkap,
-            harga,
-            tahunPembelian,
-            kondisi: Kondisi.NORMAL,
-          }),
-        },
+      auditLogsToInsert.push({
+        id: randomUUID(),
+        userId,
+        assetId,
+        action: "CREATE",
+        newValue: JSON.stringify({
+          namaAset,
+          kodeLengkap,
+          harga,
+          tahunPembelian,
+          kondisi: Kondisi.NORMAL,
+        }),
       });
 
       existingCodes.add(kodeLengkap);
       result.successCount++;
     }
+
+    // Second Pass: Bulk Inserts
+    if (assetsToInsert.length > 0) {
+      // Chunk inserts in case there are thousands to avoid parameter limit issues in pg
+      const chunkSize = 1000;
+      for (let i = 0; i < assetsToInsert.length; i += chunkSize) {
+        await tx.asset.createMany({
+          data: assetsToInsert.slice(i, i + chunkSize),
+        });
+      }
+    }
+
+    if (attributesToInsert.length > 0) {
+      const chunkSize = 2000;
+      for (let i = 0; i < attributesToInsert.length; i += chunkSize) {
+        await tx.assetAttribute.createMany({
+          data: attributesToInsert.slice(i, i + chunkSize),
+        });
+      }
+    }
+
+    if (auditLogsToInsert.length > 0) {
+      const chunkSize = 2000;
+      for (let i = 0; i < auditLogsToInsert.length; i += chunkSize) {
+        await tx.auditLog.createMany({
+          data: auditLogsToInsert.slice(i, i + chunkSize),
+        });
+      }
+    }
+
   }, {
     maxWait: 15000,
-    timeout: 60000,
+    timeout: 120000, // 2 minutes just to be super safe
   });
 
   return result;

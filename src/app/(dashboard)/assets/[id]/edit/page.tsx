@@ -121,6 +121,7 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
         holders={serializedHolders}
         categories={serializedCategories}
         kibs={serializedKibs}
+        userRole={session.user.role}
       />
     );
   } catch (error) {

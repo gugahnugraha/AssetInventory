@@ -72,6 +72,7 @@ export default async function AddAssetPage() {
         holders={serializedHolders}
         categories={serializedCategories}
         kibs={serializedKibs}
+        userRole={session.user.role}
       />
     );
   } catch (error) {

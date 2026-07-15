@@ -476,6 +476,8 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
           spesifikasi: data.spesifikasi,
           harga: data.harga,
           tahunPembelian: data.tahunPembelian,
+          distributionId: data.distributionId,
+          holderId: data.holderId !== undefined ? data.holderId : undefined,
           kondisi: data.kondisi,
           catatan: data.catatan,
           fotoUtama: primaryKey,

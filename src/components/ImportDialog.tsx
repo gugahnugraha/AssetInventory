@@ -88,16 +88,28 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
           return;
         }
 
-        // Check if has header columns we expect (e.g. Nama Aset)
-        const firstRow = rawJson[0];
+        // Filter out empty rows (where "Nama Aset" is undefined or empty string)
+        const validRows = rawJson.filter(row => {
+          const name = row["Nama Aset"] || row["Nama"] || row["nama"];
+          return name && String(name).trim() !== "";
+        });
+
+        if (validRows.length === 0) {
+          setParseError("Berkas Excel tidak memiliki baris data yang valid (Nama Aset kosong semua).");
+          setIsParsing(false);
+          return;
+        }
+
+        // Check if has header columns we expect
+        const firstRow = validRows[0];
         if (!("Nama Aset" in firstRow) && !("Nama" in firstRow || "nama" in firstRow)) {
           setParseError("Judul kolom 'Nama Aset' tidak ditemukan. Pastikan format kolom sesuai panduan.");
           setIsParsing(false);
           return;
         }
 
-        setRows(rawJson);
-        setPreviewData(rawJson.slice(0, 5)); // show first 5 rows
+        setRows(validRows);
+        setPreviewData(validRows.slice(0, 5)); // show first 5 rows
       } catch (err: any) {
         console.error("Failed to parse excel:", err);
         setParseError("Gagal membaca berkas Excel. Pastikan berkas tidak rusak.");
@@ -114,44 +126,64 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
     reader.readAsArrayBuffer(selectedFile);
   };
 
+  const handleCloseWrapper = () => {
+    if (importSummary) {
+      onSuccess();
+    }
+    onClose();
+  };
+
   const handleImport = async () => {
     if (rows.length === 0 || !defaultDistId || isImporting) return;
     setIsImporting(true);
     setParseError(null);
     setImportSummary(null);
-    setProgress(50);
-    setProcessedCount(rows.length);
+    setProgress(0);
+    setProcessedCount(0);
 
+    const BATCH_SIZE = 50;
+    const plainRows = JSON.parse(JSON.stringify(rows));
+    const totalBatches = Math.ceil(plainRows.length / BATCH_SIZE);
+    
+    let totalSuccess = 0;
+    let totalSkipped = 0;
+    
     try {
-      const plainRows = JSON.parse(JSON.stringify(rows));
-      const res = await importAssetsBatchAction(plainRows, defaultDistId);
-      
-      if (res.error) {
-        setParseError(`Proses Import Gagal & Dibatalkan: ${res.error}`);
-        setProgress(0);
-        setProcessedCount(0);
-      } else if (res.result) {
-        setProgress(100);
-        setImportSummary({
-          successCount: res.result.successCount,
-          skippedCount: 0,
-          duplicates: [],
-          errors: [],
-        });
-        onSuccess();
+      for (let i = 0; i < totalBatches; i++) {
+        const batch = plainRows.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE);
+        const res = await importAssetsBatchAction(batch, defaultDistId);
+        
+        if (res.error) {
+          throw new Error(`Batch ${i + 1} gagal: ${res.error}`);
+        } else if (res.result) {
+          totalSuccess += res.result.successCount;
+          totalSkipped += res.result.skippedCount;
+          
+          const currentProcessed = Math.min((i + 1) * BATCH_SIZE, plainRows.length);
+          setProcessedCount(currentProcessed);
+          setProgress(Math.round((currentProcessed / plainRows.length) * 100));
+        }
       }
+      
+      setImportSummary({
+        successCount: totalSuccess,
+        skippedCount: totalSkipped,
+        duplicates: [],
+        errors: [],
+      });
+      // Do not call onSuccess() here; let them click "Close" first to reload
+      
     } catch (err: any) {
       console.error("Import execution failed:", err);
       setParseError(`Kesalahan kritis: ${err.message || err}`);
-      setProgress(0);
-      setProcessedCount(0);
+      // Do not reset progress/processedCount so they see where it failed
     } finally {
       setIsImporting(false);
     }
   };
 
   return (
-    <Dialog isOpen={isOpen} onClose={onClose} className="max-w-2xl">
+    <Dialog isOpen={isOpen} onClose={handleCloseWrapper} className="max-w-2xl">
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2 text-zinc-900 dark:text-zinc-50">
           <FileSpreadsheet className="h-6 w-6 text-emerald-600" />
@@ -229,7 +261,7 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
                   Format Judul Kolom Excel yang Didukung:
                 </p>
                 <div className="font-mono text-[10px] bg-white border p-2 rounded-md overflow-x-auto text-zinc-700">
-                  Nama Aset*, Kode Aset, NomorRegister, KIB, Merk/Type, Spesifikasi, Material, Tahun, Harga, Catatan, Nomor Polisi, Nomor Mesin, Nomor Rangka, Perolehan
+                  Nama Aset*, Kode Aset, NomorRegister, KIB, Kategori, Bidang Distribusi, Merk/Type, Spesifikasi, Material, Tahun, Harga, Catatan, Nomor Polisi, Nomor Mesin, Nomor Rangka, Perolehan
                 </div>
                 <p className="leading-relaxed">
                   * Kolom **Nama Aset** wajib diisi. Kolom **KIB** dapat diisi kode huruf (misal: A, B, C). Jika kolom kode1-kode5 tidak ada, sistem akan otomatis mem-parsing dari kolom **Kode Aset** (contoh format: `1.3.02.05.01.03.02.0001`).
@@ -367,7 +399,7 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
           <>
             <Button
               variant="outline"
-              onClick={onClose}
+              onClick={handleCloseWrapper}
               disabled={isImporting}
               className="cursor-pointer"
             >
@@ -393,7 +425,7 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
           </>
         ) : (
           <Button
-            onClick={onClose}
+            onClick={handleCloseWrapper}
             className="bg-zinc-800 hover:bg-zinc-700 text-white font-bold cursor-pointer"
           >
             Tutup

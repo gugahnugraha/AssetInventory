@@ -10,6 +10,7 @@ import {
   XCircle,
   Clock,
   Lock,
+  Archive,
   Eye,
   Search,
   Filter,
@@ -85,35 +86,39 @@ export function PeriodeDetailClient({ period, stats, totalAssets, userRole }: Pe
   };
 
   return (
-    <div className="space-y-6 pt-2 pb-8">
-      {/* Header */}
-      <div>
-        <Link href="/rekonsiliasi/periode" className="flex items-center gap-1 text-sm text-zinc-500 hover:text-emerald-700 mb-3 transition-colors">
-          <ChevronLeft className="h-4 w-4" /> Kembali ke Daftar Periode
-        </Link>
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl font-bold text-zinc-950">{period.nama}</h1>
-              <Badge variant={period.status === "OPEN" ? "success" : period.status === "LOCKED" ? "warning" : "outline"}>
-                {statusLabel[period.status]}
-              </Badge>
+    <div className="space-y-6 pt-0 pb-8 -mt-6">
+      {/* Hero Header Banner */}
+      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 p-6 rounded-b-3xl shadow-sm -mx-6 sm:-mx-8 px-6 sm:px-12 mb-8 relative">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <Link href="/rekonsiliasi/periode" prefetch={false}>
+              <Button variant="outline" size="icon" className="rounded-full h-10 w-10 shrink-0 bg-white hover:bg-zinc-50 text-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 transition-all cursor-pointer">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm">{period.nama}</h1>
+                <Badge variant={period.status === "OPEN" ? "success" : period.status === "LOCKED" ? "warning" : "outline"} className="shadow-sm">
+                  {statusLabel[period.status]}
+                </Badge>
+              </div>
+              <p className="text-zinc-600 dark:text-zinc-400 font-medium">
+                Triwulan {period.triwulan} — {period.tahun} &nbsp;·&nbsp;
+                {new Date(period.tanggalMulai).toLocaleDateString("id-ID")} s/d {new Date(period.tanggalSelesai).toLocaleDateString("id-ID")}
+                &nbsp;·&nbsp; Dibuat oleh {period.creator.nama}
+              </p>
             </div>
-            <p className="text-sm text-zinc-500 mt-1">
-              Triwulan {period.triwulan} — {period.tahun} &nbsp;·&nbsp;
-              {new Date(period.tanggalMulai).toLocaleDateString("id-ID")} s/d {new Date(period.tanggalSelesai).toLocaleDateString("id-ID")}
-              &nbsp;·&nbsp; Dibuat oleh {period.creator.nama}
-            </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-wrap items-center gap-3 pt-2">
             {isAdmin && period.status === "OPEN" && (
-              <Button variant="outline" size="sm" className="border-amber-200 text-amber-700 hover:bg-amber-50 cursor-pointer gap-1" onClick={() => setLockConfirm(true)}>
-                <Lock className="h-3.5 w-3.5" /> Kunci Periode
+              <Button variant="outline" className="border-amber-200 text-amber-700 hover:bg-amber-50 cursor-pointer shadow-sm font-bold gap-2" onClick={() => setLockConfirm(true)}>
+                <Lock className="h-4 w-4" /> Kunci Periode
               </Button>
             )}
             {isAdmin && period.status === "LOCKED" && (
-              <Button variant="outline" size="sm" className="border-zinc-200 cursor-pointer gap-1" onClick={() => setCloseConfirm(true)}>
-                <CheckCircle2 className="h-3.5 w-3.5" /> Tutup Periode
+              <Button variant="outline" className="border-zinc-200 cursor-pointer shadow-sm font-bold gap-2" onClick={() => setCloseConfirm(true)}>
+                <Archive className="h-4 w-4" /> Tutup Permanen
               </Button>
             )}
           </div>

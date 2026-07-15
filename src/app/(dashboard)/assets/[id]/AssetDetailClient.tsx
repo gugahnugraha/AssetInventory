@@ -38,7 +38,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
   const router = useRouter();
   const [activePhoto, setActivePhoto] = React.useState<string>(asset.fotoUtama || "/placeholder-asset.png");
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState<"spec" | "history">("spec");
+  const [activeTab, setActiveTab] = React.useState<"spec" | "history" | "audit" | "notes">("spec");
   const [isSubmittingPhoto, setIsSubmittingPhoto] = React.useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
 
@@ -184,97 +184,128 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
 
   return (
     <>
-    <div className="space-y-6 pt-2 pb-8">
-      {/* Title & Action Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Link href="/assets" prefetch={false}>
-            <Button variant="outline" size="icon" className="rounded-full h-8 w-8 cursor-pointer">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">Detail Aset</h1>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-1 font-mono text-sm">
-              Kode Lengkap: {asset.kodeLengkap}
-            </p>
+    <div className="space-y-6 pt-0 pb-8 -mt-6">
+      {/* Hero Header Banner */}
+      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 p-6 rounded-b-3xl shadow-sm -mx-6 sm:-mx-8 px-6 sm:px-12 mb-8 relative">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <Link href="/assets" prefetch={false}>
+              <Button variant="outline" size="icon" className="rounded-full h-10 w-10 shrink-0 bg-white hover:bg-zinc-50 text-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 transition-all cursor-pointer">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div className="space-y-2">
+              <div className="flex items-center gap-3 flex-wrap">
+                <Badge className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 font-bold px-3 py-1">
+                  KIB {asset.category?.kib?.kode || "B"}
+                </Badge>
+                <Badge variant="secondary" className="bg-emerald-50 text-emerald-800 border border-emerald-250 font-medium px-3 py-1">
+                  {asset.category?.nama || "Peralatan"}
+                </Badge>
+                <Badge variant={getKondisiBadgeVariant(asset.kondisi)} className="shadow-sm">
+                  {getKondisiLabel(asset.kondisi)}
+                </Badge>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm">{asset.namaAset}</h1>
+              <p className="text-zinc-600 dark:text-zinc-400 font-mono text-sm sm:text-base bg-zinc-100 dark:bg-zinc-900 inline-block px-3 py-1 rounded-md border border-zinc-200 dark:border-zinc-800 shadow-inner">
+                {asset.kodeLengkap}
+              </p>
+            </div>
           </div>
-        </div>
 
-        {userRole !== Role.MANAGER && (
-          <div className="flex items-center gap-2">
-            <Link href={`/mutasi?assetId=${asset.id}`} prefetch={false}>
-              <Button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-xs font-semibold">
-                <ArrowRightLeft className="h-4 w-4" />
-                Mutasi Aset
+          {userRole !== Role.MANAGER && (
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <Link href={`/mutasi?assetId=${asset.id}`} prefetch={false}>
+                <Button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-sm font-bold border-0 transition-all">
+                  <ArrowRightLeft className="h-4 w-4" />
+                  Mutasi
+                </Button>
+              </Link>
+              <Link href={`/assets/${asset.id}/edit`} prefetch={false}>
+                <Button className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white cursor-pointer shadow-sm font-bold border-0 transition-all">
+                  <Edit3 className="h-4 w-4" />
+                  Sunting
+                </Button>
+              </Link>
+              <Button
+                onClick={handleDelete}
+                className="flex items-center gap-2 bg-rose-600 hover:bg-rose-500 text-white cursor-pointer shadow-sm font-bold border border-rose-400/30 transition-all"
+              >
+                <Trash2 className="h-4 w-4" />
+                Hapus
               </Button>
-            </Link>
-            <Link href={`/assets/${asset.id}/edit`} prefetch={false}>
-              <Button className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white cursor-pointer shadow-xs font-semibold">
-                <Edit3 className="h-4 w-4" />
-                Sunting Aset
-              </Button>
-            </Link>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              className="flex items-center gap-2 cursor-pointer font-semibold"
-            >
-              <Trash2 className="h-4 w-4" />
-              Hapus Aset
-            </Button>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex border-b border-zinc-200">
+      <div className="flex border-b border-zinc-200 overflow-x-auto hide-scrollbar">
         <button
           onClick={() => setActiveTab("spec")}
-          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer ${
+          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
             activeTab === "spec"
               ? "border-emerald-600 text-emerald-800"
               : "border-transparent text-zinc-800 hover:text-zinc-950"
           }`}
         >
-          Detail & Spesifikasi Aset
+          Detail & Spesifikasi
         </button>
         <button
           onClick={() => setActiveTab("history")}
-          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer ${
+          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
             activeTab === "history"
               ? "border-emerald-600 text-emerald-800"
               : "border-transparent text-zinc-800 hover:text-zinc-950"
           }`}
         >
-          Riwayat Aset ({asset.history?.length || 0})
+          Riwayat Mutasi ({asset.history?.length || 0})
+        </button>
+        <button
+          onClick={() => setActiveTab("audit")}
+          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+            activeTab === "audit"
+              ? "border-emerald-600 text-emerald-800"
+              : "border-transparent text-zinc-800 hover:text-zinc-950"
+          }`}
+        >
+          Riwayat Perubahan (Audit)
+        </button>
+        <button
+          onClick={() => setActiveTab("notes")}
+          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
+            activeTab === "notes"
+              ? "border-emerald-600 text-emerald-800"
+              : "border-transparent text-zinc-800 hover:text-zinc-950"
+          }`}
+        >
+          Keterangan & Catatan
         </button>
       </div>
 
       {activeTab === "spec" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Photos Gallery (Left column) */}
-          <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
+          {/* Photos & Placement (Left Column - 4 cols wide) */}
+          <div className="lg:col-span-4 space-y-6">
             <Card className="border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden">
               <div 
-                className="relative aspect-4/3 bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center border-b cursor-zoom-in group"
+                className="relative aspect-4/3 bg-zinc-100/50 dark:bg-zinc-900/50 flex items-center justify-center border-b cursor-zoom-in group p-4"
                 onClick={() => activePhoto && activePhoto !== "/placeholder-asset.png" && setIsLightboxOpen(true)}
               >
                 {activePhoto && activePhoto !== "/placeholder-asset.png" ? (
                   <img
                     src={activePhoto}
                     alt={asset.namaAset}
-                    className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                    className="w-full h-full object-cover rounded-md shadow-sm group-hover:scale-[1.03] transition-transform duration-500"
                   />
                 ) : (
-                  <div className="flex flex-col items-center gap-2 text-zinc-400">
-                    <ImageIcon className="h-12 w-12" />
-                    <span className="text-xs">Tidak ada foto dokumentasi</span>
+                  <div className="flex flex-col items-center gap-3 text-zinc-400/80">
+                    <div className="h-16 w-16 rounded-full bg-zinc-200/50 flex items-center justify-center">
+                      <ImageIcon className="h-8 w-8" />
+                    </div>
+                    <span className="text-xs font-medium">Belum ada dokumentasi</span>
                   </div>
                 )}
-                <Badge variant={getKondisiBadgeVariant(asset.kondisi)} className="absolute top-3 right-3 text-xs shadow-md">
-                  {getKondisiLabel(asset.kondisi)}
-                </Badge>
               </div>
               
               {/* Photo Actions for Admin/Operator */}
@@ -373,158 +404,88 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
             </Card>
           </div>
 
-          {/* Specifications & Notes (Center column) */}
-          <div className="space-y-6">
-            <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-              <CardHeader className="border-b pb-4">
-                <CardTitle className="text-sm font-bold uppercase tracking-wider text-zinc-500">
-                  Spesifikasi & Identitas Barang
+          {/* Specifications & Details (Right column - 8 cols wide) */}
+          <div className="lg:col-span-8 space-y-6">
+            <Card className="border-zinc-200/80 dark:border-zinc-800/80 shadow-md overflow-hidden">
+              <CardHeader className="bg-zinc-50 dark:bg-zinc-900/50 border-b pb-4 pt-5">
+                <CardTitle className="text-sm font-black uppercase tracking-widest text-emerald-800 flex items-center gap-2">
+                  <div className="w-1.5 h-5 bg-emerald-500 rounded-full"></div>
+                  Identitas Spesifikasi
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-4 divide-y">
-                <div className="flex justify-between py-2 text-sm">
-                  <span className="text-zinc-500 font-medium">Nama Aset</span>
-                  <span className="font-semibold text-zinc-950 dark:text-zinc-100">{asset.namaAset}</span>
+              <CardContent className="p-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-zinc-100 dark:divide-zinc-800/50">
+                  <div className="p-5 space-y-4">
+                    <div>
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1">Merk / Type</span>
+                      <span className="font-bold text-zinc-900 dark:text-zinc-100 text-base">{asset.merkType || "-"}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1">Material / Bahan</span>
+                      <span className="font-semibold text-zinc-800 dark:text-zinc-300 text-sm">{asset.material || "-"}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1">Cara Perolehan</span>
+                      <span className="font-semibold text-zinc-800 dark:text-zinc-300 text-sm">{asset.caraPerolehan || "-"}</span>
+                    </div>
+                  </div>
+                  <div className="p-5 space-y-4 bg-zinc-50/30 dark:bg-zinc-900/10">
+                    <div>
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1">Harga Perolehan</span>
+                      <span className="font-black text-lg text-emerald-600 dark:text-emerald-400 tracking-tight">Rp {asset.harga ? asset.harga.toLocaleString("id-ID") : "0"}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1">Tahun Pembelian</span>
+                      <span className="font-semibold text-zinc-800 dark:text-zinc-300 text-sm">{asset.tahunPembelian}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1">Kode Aset</span>
+                        <span className="font-mono font-bold text-zinc-700 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded text-sm">
+                          1.3.{String(asset.kode1).padStart(2, '0')}.{String(asset.kode2).padStart(2, '0')}.{String(asset.kode3).padStart(2, '0')}.{String(asset.kode4).padStart(2, '0')}.{String(asset.kode5).padStart(3, '0')}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1">Register</span>
+                        <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-sm">{asset.nomorRegister}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between py-2 text-sm">
-                  <span className="text-zinc-500 font-medium">KIB</span>
-                  <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                    <Badge className="bg-emerald-600 hover:bg-emerald-500 text-white border-0 font-bold">
-                      KIB {asset.category?.kib?.kode || "B"} - {asset.category?.kib?.nama || "Peralatan dan Mesin"}
-                    </Badge>
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 text-sm">
-                  <span className="text-zinc-500 font-medium">Kategori</span>
-                  <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                    <Badge variant="secondary" className="bg-emerald-50 text-emerald-800 border border-emerald-250">
-                      {asset.category?.nama || "-"}
-                    </Badge>
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 text-sm">
-                  <span className="text-zinc-500 font-medium">Merk / Type</span>
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-200">{asset.merkType || "-"}</span>
-                </div>
-                <div className="flex justify-between py-2 text-sm">
-                  <span className="text-zinc-500 font-medium">Material / Bahan</span>
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-200">{asset.material || "-"}</span>
-                </div>
-                <div className="flex justify-between py-2 text-sm">
-                  <span className="text-zinc-500 font-medium">Cara Perolehan</span>
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-200">{asset.caraPerolehan || "-"}</span>
-                </div>
-                <div className="flex justify-between py-2 text-sm gap-4">
-                  <span className="text-zinc-500 font-medium shrink-0">Spesifikasi</span>
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-200 text-right break-words max-w-[70%]">{asset.spesifikasi || "-"}</span>
-                </div>
-                <div className="flex justify-between py-2 text-sm">
-                  <span className="text-zinc-500 font-medium">Harga Perolehan</span>
-                  <span className="font-bold text-emerald-850 dark:text-emerald-400">Rp {asset.harga ? asset.harga.toLocaleString("id-ID") : "0"}</span>
-                </div>
-                <div className="flex justify-between py-2 text-sm">
-                  <span className="text-zinc-500 font-medium">Tahun Pembelian</span>
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-200">{asset.tahunPembelian}</span>
-                </div>
-                <div className="flex justify-between py-2 text-sm">
-                  <span className="text-zinc-500 font-medium">Nomor Register</span>
-                  <span className="font-mono font-bold text-emerald-800 dark:text-emerald-400">{asset.nomorRegister}</span>
-                </div>
-                <div className="flex justify-between py-2 text-sm">
-                  <span className="text-zinc-500 font-medium">Kode Bidang (Kelompok)</span>
-                  <span className="font-mono font-semibold text-zinc-900">
-                    1.3.
-                    {String(asset.kode1).padStart(2, '0')}.
-                    {String(asset.kode2).padStart(2, '0')}.
-                    {String(asset.kode3).padStart(2, '0')}.
-                    {String(asset.kode4).padStart(2, '0')}.
-                    {String(asset.kode5).padStart(3, '0')}
-                  </span>
+                {/* Full width row for Specs */}
+                <div className="border-t border-zinc-100 dark:border-zinc-800/50 p-5 bg-zinc-50/50 dark:bg-zinc-900/30">
+                  <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Deskripsi Spesifikasi</span>
+                  <p className="font-medium text-zinc-800 dark:text-zinc-300 leading-relaxed text-sm break-words max-w-[95%]">
+                    {asset.spesifikasi || "-"}
+                  </p>
                 </div>
               </CardContent>
             </Card>
 
             {/* Dynamic Attributes Section */}
             {asset.attributes && asset.attributes.length > 0 && (
-              <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-                <CardHeader className="border-b pb-4">
-                  <CardTitle className="text-sm font-bold uppercase tracking-wider text-emerald-800">
-                    Atribut Tambahan ({asset.category?.nama})
+              <Card className="border-zinc-200/80 dark:border-zinc-800/80 shadow-md overflow-hidden">
+                <CardHeader className="bg-zinc-50 dark:bg-zinc-900/50 border-b pb-4 pt-5">
+                  <CardTitle className="text-sm font-black uppercase tracking-widest text-emerald-800 flex items-center gap-2">
+                    <div className="w-1.5 h-5 bg-emerald-500 rounded-full"></div>
+                    Atribut Kendaraan & Khusus
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-4 divide-y bg-zinc-50/20 dark:bg-zinc-900/10">
-                  {asset.attributes.map((attr: any) => (
-                    <div key={attr.id} className="flex justify-between py-2 text-sm">
-                      <span className="text-zinc-500 font-medium">{attr.categoryAttribute?.nama}</span>
-                      <span className="font-semibold text-zinc-900 dark:text-zinc-250">{attr.value || "-"}</span>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Catatan Card */}
-            <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-              <CardHeader className="border-b pb-4">
-                <CardTitle className="text-sm font-bold uppercase tracking-wider text-zinc-500">
-                  Keterangan & Catatan
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4 text-sm text-zinc-850 dark:text-zinc-300">
-                {asset.catatan ? (
-                  <p className="whitespace-pre-wrap leading-relaxed font-medium">{asset.catatan}</p>
-                ) : (
-                  <p className="italic text-zinc-500 font-medium">Tidak ada catatan tambahan untuk aset ini.</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Audit History Timeline (Right column) */}
-          <div className="space-y-6">
-            <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-              <CardHeader className="border-b pb-4 flex flex-row items-center justify-between">
-                <CardTitle className="text-sm font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
-                  <History className="h-4 w-4" />
-                  Riwayat Perubahan
-                </CardTitle>
-                <Badge variant="outline" className="text-[10px] uppercase font-bold text-zinc-500 border-zinc-300">
-                  Audit Trail
-                </Badge>
-              </CardHeader>
-              <CardContent className="pt-6">
-                {asset.auditLogs.length === 0 ? (
-                  <div className="flex items-center justify-center py-12 text-sm text-muted-foreground italic">
-                    Belum ada riwayat perubahan data.
-                  </div>
-                ) : (
-                  <div className="relative border-l border-zinc-250 dark:border-zinc-800 pl-4 space-y-6">
-                    {asset.auditLogs.map((log: any) => (
-                      <div key={log.id} className="relative text-sm">
-                        {/* Timeline dot */}
-                        <span className="absolute -left-6 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 border border-white dark:border-zinc-950 shadow-xs" />
-                        
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between gap-2 flex-wrap">
-                            <span className="font-bold text-zinc-900 dark:text-zinc-100">{log.user.nama}</span>
-                            <span className="text-[11px] font-semibold text-zinc-800 flex items-center gap-0.5">
-                              <Clock className="h-3 w-3" />
-                              {formatDate(log.createdAt)}
-                            </span>
-                          </div>
-                          <p className="text-zinc-800 dark:text-zinc-400 leading-normal text-xs pt-0.5 font-medium">
-                            {parseDiff(log)}
-                          </p>
-                        </div>
+                <CardContent className="p-0">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-zinc-100 dark:divide-zinc-800/50">
+                    {asset.attributes.map((attr: any) => (
+                      <div key={attr.id} className="p-4 space-y-1">
+                        <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400">{attr.categoryAttribute?.nama}</span>
+                        <span className="font-bold text-zinc-900 dark:text-zinc-100 text-[15px]">{attr.value || "-"}</span>
                       </div>
                     ))}
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
-      ) : (
+      ) : activeTab === "history" ? (
         /* Tab Riwayat Aset (Asset Mutation History) */
         <Card className="border-zinc-200/80">
           <CardHeader className="border-b pb-4">
@@ -649,6 +610,66 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
                   </tbody>
                 </table>
               </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : activeTab === "audit" ? (
+        /* Tab Audit Trail */
+        <Card className="border-zinc-200/80 dark:border-zinc-800/80">
+          <CardHeader className="border-b pb-4 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-bold uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+                <History className="h-4 w-4" />
+                Riwayat Perubahan Data (Audit Trail)
+              </CardTitle>
+              <CardDescription className="text-zinc-800 font-medium mt-1">
+                Jejak rekam aktivitas penyuntingan pada spesifikasi dan atribut aset.
+              </CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            {asset.auditLogs.length === 0 ? (
+              <div className="flex items-center justify-center py-12 text-sm text-muted-foreground italic">
+                Belum ada riwayat perubahan data pada aset ini.
+              </div>
+            ) : (
+              <div className="relative border-l border-zinc-250 dark:border-zinc-800 pl-4 space-y-6">
+                {asset.auditLogs.map((log: any) => (
+                  <div key={log.id} className="relative text-sm">
+                    <span className="absolute -left-6 top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 border border-white dark:border-zinc-950 shadow-xs" />
+                    
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="font-bold text-zinc-900 dark:text-zinc-100">{log.user.nama}</span>
+                        <span className="text-[11px] font-semibold text-zinc-800 flex items-center gap-0.5">
+                          <Clock className="h-3 w-3" />
+                          {formatDate(log.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-zinc-800 dark:text-zinc-400 leading-normal text-xs pt-0.5 font-medium">
+                        {parseDiff(log)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        /* Tab Keterangan & Catatan */
+        <Card className="border-zinc-200/80 dark:border-zinc-800/80 shadow-sm overflow-hidden">
+          <CardHeader className="bg-amber-50/50 dark:bg-amber-950/20 border-b pb-3 pt-4">
+            <CardTitle className="text-sm font-bold uppercase tracking-wider text-amber-800 dark:text-amber-500 flex items-center gap-2">
+              <div className="w-1.5 h-4 bg-amber-500 rounded-full"></div>
+              Keterangan Tambahan & Catatan
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 text-sm text-zinc-800 dark:text-zinc-300">
+            {asset.catatan ? (
+              <p className="whitespace-pre-wrap leading-relaxed font-medium bg-amber-50/30 p-4 rounded-lg border border-amber-100/50">{asset.catatan}</p>
+            ) : (
+              <p className="italic text-zinc-400 font-medium py-8 text-center">Tidak ada keterangan atau catatan tambahan yang dicatat untuk aset ini.</p>
             )}
           </CardContent>
         </Card>

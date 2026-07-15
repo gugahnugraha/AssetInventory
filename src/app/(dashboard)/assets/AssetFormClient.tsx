@@ -136,9 +136,10 @@ interface AssetFormClientProps {
   holders: any[];
   categories: any[];
   kibs: any[];
+  userRole?: string;
 }
 
-export function AssetFormClient({ initialData, distributions, holders, categories, kibs }: AssetFormClientProps) {
+export function AssetFormClient({ initialData, distributions, holders, categories, kibs, userRole }: AssetFormClientProps) {
   const router = useRouter();
   const [error, setError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -146,6 +147,8 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
   const [deletePhotoIds, setDeletePhotoIds] = React.useState<string[]>([]);
 
   const isEditMode = !!initialData;
+  const isAdmin = userRole === "ADMINISTRATOR" || userRole === "ADMIN";
+  const disableFields = isEditMode && !isAdmin;
 
   // Prepopulated brand & type input states
   const [selectedBrand, setSelectedBrand] = React.useState("");
@@ -577,22 +580,26 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
 
   return (
     <div className="space-y-6 pt-2 pb-8">
-      {/* Header breadcrumb */}
-      <div className="flex items-center gap-4">
-        <Link href="/assets" prefetch={false}>
-          <Button variant="outline" size="icon" className="rounded-full h-8 w-8 cursor-pointer">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {isEditMode ? "Edit Aset" : "Tambah Aset Baru"}
-          </h1>
-          <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-            {isEditMode 
-              ? "Ubah data inventaris barang milik daerah." 
-              : "Masukkan data spesifikasi barang baru ke dalam inventaris."}
-          </p>
+      {/* Hero Header Banner */}
+      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 p-6 rounded-b-3xl shadow-sm -mx-6 sm:-mx-8 px-6 sm:px-12 mb-8 relative">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <Link href="/assets" prefetch={false}>
+              <Button variant="outline" size="icon" className="rounded-full h-10 w-10 shrink-0 bg-white hover:bg-zinc-50 text-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 transition-all cursor-pointer">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            </Link>
+            <div className="space-y-2">
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm">
+                {isEditMode ? "Edit Aset" : "Tambah Aset Baru"}
+              </h1>
+              <p className="text-zinc-600 dark:text-zinc-400 font-medium">
+                {isEditMode 
+                  ? "Ubah data inventaris barang milik daerah." 
+                  : "Masukkan data spesifikasi barang baru ke dalam inventaris."}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -608,105 +615,16 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
         <div className="lg:col-span-2 space-y-6">
           <Card className="border-zinc-200/80 dark:border-zinc-800/80">
             <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
-              <CardTitle>Identitas & Kode Aset</CardTitle>
-              <CardDescription>Masukkan kode register dan nama jenis aset barang.</CardDescription>
+              <CardTitle>Identitas Utama</CardTitle>
+              <CardDescription>Pilih KIB, kategori, dan detail identitas dasar aset.</CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
-              {/* Asset Code Parts */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                  Kode Klasifikasi & Register
-                </label>
-                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
-                  <div>
-                    <Input
-                      value="1"
-                      disabled
-                      readOnly
-                      className="text-center font-mono font-bold bg-sky-50 text-sky-600 border-sky-200 dark:bg-sky-900/20 dark:text-sky-400 dark:border-sky-800"
-                    />
-                    <p className="text-[10px] text-zinc-400 text-center mt-1">Sistem</p>
-                  </div>
-                  <div>
-                    <Input
-                      value="3"
-                      disabled
-                      readOnly
-                      className="text-center font-mono font-bold bg-sky-50 text-sky-600 border-sky-200 dark:bg-sky-900/20 dark:text-sky-400 dark:border-sky-800"
-                    />
-                    <p className="text-[10px] text-zinc-400 text-center mt-1">Sistem</p>
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="XX"
-                      maxLength={2}
-                      className="text-center font-mono font-bold"
-                      {...register("kode1")}
-                    />
-                    {errors.kode1 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode1.message}</p>}
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="XX"
-                      maxLength={2}
-                      className="text-center font-mono font-bold"
-                      {...register("kode2")}
-                    />
-                    {errors.kode2 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode2.message}</p>}
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="XX"
-                      maxLength={2}
-                      className="text-center font-mono font-bold"
-                      {...register("kode3")}
-                    />
-                    {errors.kode3 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode3.message}</p>}
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="XX"
-                      maxLength={2}
-                      className="text-center font-mono font-bold"
-                      {...register("kode4")}
-                    />
-                    {errors.kode4 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode4.message}</p>}
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="XXX"
-                      maxLength={3}
-                      className="text-center font-mono font-bold"
-                      {...register("kode5")}
-                    />
-                    {errors.kode5 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode5.message}</p>}
-                  </div>
-                  <div>
-                    <Input
-                      placeholder="XXXX"
-                      className="text-center font-mono font-bold focus-visible:ring-emerald-500 focus-visible:border-emerald-500"
-                      {...register("nomorRegister")}
-                    />
-                    {errors.nomorRegister && <p className="text-[10px] text-rose-500 mt-1">{errors.nomorRegister.message}</p>}
-                  </div>
-                </div>
-
-                {/* Compiled Preview */}
-                <div className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 border text-sm mt-2">
-                  <span className="text-zinc-500 dark:text-zinc-400 font-medium">Format Kode Lengkap:</span>
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-base tracking-wider">
-                    {kodeLengkapPreview}
-                  </span>
-                </div>
-              </div>
-
               {/* KIB & Kategori */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
                     Klasifikasi KIB <span className="text-rose-500">*</span>
                   </label>
-                  {/* KIB is locked to KIB B (only active KIB). Hidden field keeps form value in sync. */}
                   <input type="hidden" {...register("kibId")} />
                   <div className="w-full h-10 rounded-md border border-sky-200 bg-sky-50 dark:bg-sky-900/20 dark:border-sky-800 px-3 py-2 text-sm flex items-center gap-2 cursor-not-allowed">
                     <span className="font-mono font-bold text-sky-600 dark:text-sky-400">
@@ -754,7 +672,6 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
                     Merk / Type <span className="text-rose-500">*</span>
                   </label>
-                  {/* Keep react-hook-form registered and updated */}
                   <input type="hidden" {...register("merkType")} />
 
                   {!watchCategoryId ? (
@@ -764,7 +681,6 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   ) : availableBrands.length > 0 ? (
                     <div className="space-y-2">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {/* Brand Select Dropdown */}
                         <div>
                           <select
                             value={selectedBrand}
@@ -786,7 +702,6 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                           </select>
                         </div>
 
-                        {/* Type/Model Details Input (shown if predefined brand is selected) */}
                         {selectedBrand && selectedBrand !== "LAINNYA" && (
                           <Input
                             placeholder="Tipe / Model (e.g. L14 Gen 3)"
@@ -795,7 +710,6 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                           />
                         )}
 
-                        {/* Custom Brand Input (shown if "Lainnya" is selected) */}
                         {selectedBrand === "LAINNYA" && (
                           <Input
                             placeholder="Masukkan Merk & Tipe Aset..."
@@ -818,7 +732,15 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   {errors.merkType && <p className="text-xs text-rose-500 mt-1">{errors.merkType.message}</p>}
                 </div>
               </div>
+            </CardContent>
+          </Card>
 
+          <Card className="border-zinc-200/80 dark:border-zinc-800/80">
+            <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
+              <CardTitle>Spesifikasi & Harga</CardTitle>
+              <CardDescription>Lengkapi data spesifikasi fisik dan perolehan.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
               {/* Material, Cara Perolehan & Spesifikasi */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
@@ -873,7 +795,6 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
                     Harga Perolehan (Rp) <span className="text-rose-500">*</span>
                   </label>
-                  {/* Keep react-hook-form registered */}
                   <input type="hidden" {...register("harga")} />
                   <Input
                     type="text"
@@ -900,6 +821,93 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   />
                   {errors.tahunPembelian && <p className="text-xs text-rose-500 mt-1">{errors.tahunPembelian.message}</p>}
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-zinc-200/80 dark:border-zinc-800/80">
+            <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
+              <CardTitle>Kode Aset</CardTitle>
+              <CardDescription>Masukkan kode registrasi aset barang.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              {/* Asset Code Parts */}
+              <div className="space-y-2">
+                <div className="grid grid-cols-5 gap-2">
+                  <div>
+                    <Input
+                      placeholder="XX"
+                      maxLength={2}
+                      className="text-center font-mono font-bold"
+                      {...register("kode1")}
+                    />
+                    {errors.kode1 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode1.message}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="XX"
+                      maxLength={2}
+                      className="text-center font-mono font-bold"
+                      {...register("kode2")}
+                    />
+                    {errors.kode2 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode2.message}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="XX"
+                      maxLength={2}
+                      className="text-center font-mono font-bold"
+                      {...register("kode3")}
+                    />
+                    {errors.kode3 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode3.message}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="XX"
+                      maxLength={2}
+                      className="text-center font-mono font-bold"
+                      {...register("kode4")}
+                    />
+                    {errors.kode4 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode4.message}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="XXX"
+                      maxLength={3}
+                      className="text-center font-mono font-bold"
+                      {...register("kode5")}
+                    />
+                    {errors.kode5 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode5.message}</p>}
+                  </div>
+                </div>
+
+                {/* Compiled Preview */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900 border text-sm mt-2">
+                  <span className="text-zinc-500 dark:text-zinc-400 font-medium">Format Kode Lengkap:</span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-base tracking-wider">
+                    {kodeLengkapPreview}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Nomor Register At Bottom */}
+          <Card className="border-emerald-200/80 dark:border-emerald-800/80 bg-emerald-50/30 dark:bg-emerald-900/10">
+            <CardHeader className="border-b border-emerald-100 dark:border-emerald-800/50 pb-4">
+              <CardTitle className="text-emerald-800 dark:text-emerald-300">Nomor Register Aset</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                  Nomor Register <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  placeholder="XXXX"
+                  className="font-mono font-bold focus-visible:ring-emerald-500 focus-visible:border-emerald-500 bg-white dark:bg-zinc-950"
+                  {...register("nomorRegister")}
+                />
+                {errors.nomorRegister && <p className="text-[10px] text-rose-500 mt-1">{errors.nomorRegister.message}</p>}
               </div>
             </CardContent>
           </Card>
@@ -942,12 +950,12 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
               <CardTitle>Penempatan & Kondisi Aset</CardTitle>
               <CardDescription>Pilih bidang penempatan, pemegang tanggung jawab, dan kondisi fisik barang.</CardDescription>
             </CardHeader>
-            {isEditMode && (
+            {disableFields && (
               <div className="mx-6 mt-4 p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-xs font-semibold flex items-start gap-2">
                 <AlertTriangle className="h-4 w-4 shrink-0 text-amber-700 mt-0.5" />
                 <span>
-                  Penempatan Bidang, Pemegang Barang, dan Kondisi tidak dapat diubah dari formulir edit. 
-                  Gunakan menu <strong>Mutasi Aset</strong> jika ingin memindahkan/memutasi barang atau mengubah kondisi.
+                  Penempatan Bidang, Pemegang Barang, dan Kondisi tidak dapat diubah dari formulir edit untuk role non-Admin. 
+                  Gunakan menu <strong>Mutasi Aset</strong> jika ingin memindahkan/memutasi barang atau hubungi Administrator.
                 </span>
               </div>
             )}
@@ -960,7 +968,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   </label>
                   <select
                     {...register("distributionId")}
-                    disabled={isEditMode}
+                    disabled={disableFields}
                     className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <option value="" className="bg-background text-foreground">Pilih Bidang</option>
@@ -978,7 +986,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   </label>
                   <select
                     {...register("holderId")}
-                    disabled={isEditMode || !watchDistributionId}
+                    disabled={disableFields || !watchDistributionId}
                     className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <option value="" className="bg-background text-foreground">Tanpa Pemegang (Di Simpan di Gudang/Umum)</option>
@@ -1002,7 +1010,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                   </label>
                   <select
                     {...register("kondisi")}
-                    disabled={isEditMode}
+                    disabled={disableFields}
                     className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <option value={Kondisi.NORMAL} className="bg-background text-foreground">Normal (Baik)</option>

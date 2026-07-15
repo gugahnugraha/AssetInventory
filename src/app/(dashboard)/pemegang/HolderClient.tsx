@@ -153,21 +153,25 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
 
   return (
     <>
-    <div className="space-y-6 pt-2 pb-8">
-      {/* Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-950">Pemegang Barang (PJB)</h1>
-          <p className="text-zinc-800 font-semibold mt-1">
-            Kelola daftar aparatur penanggung jawab pemegang barang inventaris.
-          </p>
+    <div className="space-y-6 pt-0 pb-8 -mt-6">
+      {/* Hero Header Banner */}
+      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 p-6 rounded-b-3xl shadow-sm -mx-6 sm:-mx-8 px-6 sm:px-12 mb-8 relative">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm">Pemegang Barang (PJB)</h1>
+            <p className="text-zinc-600 dark:text-zinc-400 font-medium">
+              Kelola daftar aparatur penanggung jawab pemegang barang inventaris.
+            </p>
+          </div>
+          {userRole !== Role.MANAGER && (
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <Button onClick={handleOpenCreate} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-sm font-bold border-0 transition-all">
+                <Plus className="h-4 w-4" />
+                Tambah Pemegang
+              </Button>
+            </div>
+          )}
         </div>
-        {userRole !== Role.MANAGER && (
-          <Button onClick={handleOpenCreate} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-xs">
-            <Plus className="h-4 w-4" />
-            Tambah Pemegang
-          </Button>
-        )}
       </div>
 
       {/* Table List */}
