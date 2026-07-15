@@ -643,8 +643,8 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
                       <TableHead
                         key={header.id}
                         className={cn(
-                          "font-semibold text-zinc-100 dark:text-zinc-100 whitespace-nowrap py-3 bg-zinc-800 dark:bg-zinc-900",
-                          isActions && "sticky right-0 bg-zinc-800 dark:bg-zinc-900 border-l border-zinc-700 dark:border-zinc-700 shadow-[-6px_0_12px_rgba(0,0,0,0.15)] z-10 text-right"
+                          "font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap py-3 bg-zinc-100/90 dark:bg-zinc-900",
+                          isActions && "sticky right-0 bg-zinc-100/90 dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 shadow-[-6px_0_12px_rgba(0,0,0,0.08)] z-10 text-right"
                         )}
                       >
                         {header.isPlaceholder
