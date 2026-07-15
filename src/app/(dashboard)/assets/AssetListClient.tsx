@@ -222,7 +222,12 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         header: ({ table }) => (
           <input
             type="checkbox"
-            checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+            ref={(el) => {
+              if (el) {
+                el.indeterminate = !table.getIsAllPageRowsSelected() && table.getIsSomePageRowsSelected();
+              }
+            }}
+            checked={table.getIsAllPageRowsSelected()}
             onChange={table.getToggleAllPageRowsSelectedHandler()}
             className="h-4 w-4 rounded border-zinc-300 dark:border-zinc-700 bg-background text-emerald-600 focus:ring-emerald-500 cursor-pointer"
           />

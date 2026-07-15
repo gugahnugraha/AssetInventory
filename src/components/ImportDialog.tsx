@@ -90,7 +90,7 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
 
         // Filter out empty rows (where "Nama Aset" is undefined or empty string)
         const validRows = rawJson.filter(row => {
-          const name = row["Nama Aset"] || row["Nama"] || row["nama"];
+          const name = row["Nama Aset"] || (row as any)["Nama"] || (row as any)["nama"];
           return name && String(name).trim() !== "";
         });
 
@@ -102,7 +102,7 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
 
         // Check if has header columns we expect
         const firstRow = validRows[0];
-        if (!("Nama Aset" in firstRow) && !("Nama" in firstRow || "nama" in firstRow)) {
+        if (!("Nama Aset" in firstRow) && !("Nama" in (firstRow as any) || "nama" in (firstRow as any))) {
           setParseError("Judul kolom 'Nama Aset' tidak ditemukan. Pastikan format kolom sesuai panduan.");
           setIsParsing(false);
           return;
