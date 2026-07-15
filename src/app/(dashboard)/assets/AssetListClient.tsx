@@ -632,21 +632,20 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       {/* Table block */}
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden shadow-sm">
         {/* Table wrapper */}
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map(headerGroup => (
-                <TableRow key={headerGroup.id} className="hover:bg-transparent border-b border-zinc-200 dark:border-zinc-700">
-                  {headerGroup.headers.map(header => {
-                    const isActions = header.column.id === "actions";
-                    return (
-                      <TableHead
-                        key={header.id}
-                        className={cn(
-                          "font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap py-3 bg-zinc-100/90 dark:bg-zinc-900",
-                          isActions && "sticky right-0 bg-zinc-100/90 dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 shadow-[-6px_0_12px_rgba(0,0,0,0.08)] z-10 text-right"
-                        )}
-                      >
+        <Table wrapperClassName="max-h-[580px] overflow-y-auto">
+          <TableHeader>
+            {table.getHeaderGroups().map(headerGroup => (
+              <TableRow key={headerGroup.id} className="hover:bg-transparent border-b border-zinc-200 dark:border-zinc-700">
+                {headerGroup.headers.map(header => {
+                  const isActions = header.column.id === "actions";
+                  return (
+                    <TableHead
+                      key={header.id}
+                      className={cn(
+                        "font-semibold text-emerald-950 dark:text-emerald-200 whitespace-nowrap py-3 bg-emerald-50 dark:bg-emerald-950 sticky top-0 z-10",
+                        isActions && "sticky top-0 right-0 bg-emerald-50 dark:bg-emerald-950 border-l border-zinc-200 dark:border-zinc-800 shadow-[-6px_0_12px_rgba(0,0,0,0.08)] z-20 text-right"
+                      )}
+                    >
                         {header.isPlaceholder
                           ? null
                           : flexRender(header.column.columnDef.header, header.getContext())}
@@ -703,7 +702,6 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
               )}
             </TableBody>
           </Table>
-        </div>
 
         {/* Pagination */}
         <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-200 dark:border-zinc-700 bg-zinc-50/80 dark:bg-zinc-900/60 gap-2 flex-wrap">
