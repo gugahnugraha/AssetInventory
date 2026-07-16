@@ -87,7 +87,7 @@ export function LoginClient() {
         <div className="space-y-6 my-auto relative z-10 max-w-sm">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
             <Sparkles className="h-3 w-3" />
-            <span>Versi Enterprise 2026</span>
+            <span>Versi Prototype 2026</span>
           </div>
           <h2 className="text-4xl font-extrabold tracking-tight leading-tight text-zinc-50">
             Kelola Aset SKPD Lebih Cerdas &amp; Akurat.

@@ -99,6 +99,31 @@ const styles = StyleSheet.create({
   }
 });
 
+// Helper to format Merk/Type text to fit nicely on the sticker
+const formatMerkType = (merkType?: string | null): string => {
+  if (!merkType) return "-";
+  const cleaned = merkType.trim();
+  if (!cleaned || cleaned === "-") return "-";
+
+  // If it's short enough, use it as is
+  if (cleaned.length <= 22) {
+    return cleaned;
+  }
+
+  // If it has a slash, split and get the brand (merk)
+  if (cleaned.includes("/")) {
+    const brand = cleaned.split("/")[0].trim();
+    if (brand && brand.length <= 22) {
+      return brand;
+    }
+    // If brand is still too long, truncate it
+    return brand.substring(0, 19) + "...";
+  }
+
+  // Otherwise truncate the whole string
+  return cleaned.substring(0, 19) + "...";
+};
+
 interface AssetStickerDocumentProps {
   assets: any[];
   qrCodes: Record<string, string>;
@@ -106,10 +131,30 @@ interface AssetStickerDocumentProps {
 }
 
 export const AssetStickerDocument = ({ assets, qrCodes, logoUrl }: AssetStickerDocumentProps) => {
+  // Urutkan aset berdasarkan kode aset (classCode) dan nomor register secara ascending
+  const sortedAssets = [...assets].sort((a, b) => {
+    const partsA = (a.kodeLengkap || "").split(".");
+    const noRegAStr = partsA.pop() || "";
+    const classCodeA = partsA.join(".");
+
+    const partsB = (b.kodeLengkap || "").split(".");
+    const noRegBStr = partsB.pop() || "";
+    const classCodeB = partsB.join(".");
+
+    // 1. Bandingkan kode aset (classCode)
+    const compCode = classCodeA.localeCompare(classCodeB, undefined, { numeric: true, sensitivity: 'base' });
+    if (compCode !== 0) return compCode;
+
+    // 2. Bandingkan nomor register secara numerik
+    const regA = Number(noRegAStr) || a.nomorRegister || 0;
+    const regB = Number(noRegBStr) || b.nomorRegister || 0;
+    return regA - regB;
+  });
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        {assets.map((asset, index) => {
+        {sortedAssets.map((asset, index) => {
           const parts = (asset.kodeLengkap || "").split(".");
           const noReg = parts.pop() || "-";
           const classCode = parts.join(".") || "-";
@@ -137,6 +182,11 @@ export const AssetStickerDocument = ({ assets, qrCodes, logoUrl }: AssetStickerD
                     <Text style={styles.label}>NAMA ASET</Text>
                     <Text style={styles.colon}>:</Text>
                     <Text style={styles.value}>{namaAset}</Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Text style={styles.label}>MERK/TYPE</Text>
+                    <Text style={styles.colon}>:</Text>
+                    <Text style={styles.value}>{formatMerkType(asset.merkType)}</Text>
                   </View>
                   <View style={styles.row}>
                     <Text style={styles.label}>TAHUN</Text>

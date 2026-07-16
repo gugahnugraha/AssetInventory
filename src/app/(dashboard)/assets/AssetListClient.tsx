@@ -67,7 +67,20 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; code: string } | null>(null);
   const [sensusYear, setSensusYear] = React.useState(new Date().getFullYear().toString());
   const [labelSize, setLabelSize] = React.useState("60x40");
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [rowSelection, setRowSelection] = React.useState<Record<string, boolean>>({});
+  const selectedCount = React.useMemo(() => {
+    return Object.values(rowSelection).filter(Boolean).length;
+  }, [rowSelection]);
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = React.useState(false);
   const [previewAssets, setPreviewAssets] = React.useState<any[]>([]);
   const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
@@ -356,6 +369,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const table = useReactTable({
     data: filteredData,
     columns,
+    getRowId: (row) => row.id,
     state: {
       sorting,
       globalFilter,
@@ -450,8 +464,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   };
 
   const handleBulkPrint = () => {
-    const selectedRows = table.getSelectedRowModel().rows;
-    const selectedAssets = selectedRows.map(row => row.original);
+    const selectedAssets = assets.filter(asset => rowSelection[asset.id] === true);
     if (selectedAssets.length === 0) return;
     setPreviewAssets(selectedAssets);
     setIsPdfPreviewOpen(true);
@@ -582,7 +595,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
-              if (Object.keys(rowSelection).length === 0) {
+              if (selectedCount === 0) {
                 setIsPrintWarningOpen(true);
               } else {
                 handleBulkPrint();
@@ -592,9 +605,9 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
           >
             <Printer className="h-4 w-4 transition-transform group-hover:scale-110" />
             Cetak Label
-            {Object.keys(rowSelection).length > 0 && (
+            {selectedCount > 0 && (
               <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300 text-xs font-bold animate-in fade-in zoom-in duration-150">
-                {Object.keys(rowSelection).length}
+                {selectedCount}
               </span>
             )}
           </button>
@@ -813,6 +826,26 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
             <div className="flex-1 flex flex-col items-center justify-center p-12 space-y-4">
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-zinc-600 border-t-emerald-500" />
               <p className="text-zinc-400 text-sm animate-pulse">Menyiapkan Preview Vektor...</p>
+            </div>
+          ) : isMobile ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+              <div className="flex items-center justify-center h-16 w-16 rounded-full bg-zinc-800/80 border border-zinc-700 text-emerald-400">
+                <Printer className="h-8 w-8" />
+              </div>
+              <div className="max-w-xs space-y-2">
+                <p className="text-white font-bold text-base">Pratinjau PDF Tidak Didukung di HP</p>
+                <p className="text-zinc-400 text-xs leading-relaxed">
+                  Browser HP Anda tidak mendukung penayangan PDF secara langsung. Silakan unduh dokumen untuk melihat atau mencetak stiker.
+                </p>
+              </div>
+              <Button
+                onClick={handleDownloadPdf}
+                disabled={isGeneratingPdf}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-9 cursor-pointer flex items-center gap-2 px-5 py-2.5 rounded-xl shadow-lg active:scale-95 transition-all"
+              >
+                <Printer className="h-4 w-4" />
+                {isGeneratingPdf ? "Menyiapkan PDF..." : "Unduh PDF Label"}
+              </Button>
             </div>
           ) : (
             <PDFViewer width="100%" height="100%" className="border-0 bg-transparent flex-1" showToolbar={true}>

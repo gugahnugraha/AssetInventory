@@ -48,6 +48,16 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
   const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
   const [sensusYear, setSensusYear] = React.useState(new Date().getFullYear().toString());
   const [labelSize, setLabelSize] = React.useState("60x40");
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
   
   // Printing states & logic
   const [isPrintModalOpen, setIsPrintModalOpen] = React.useState(false);
@@ -875,6 +885,26 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
             <div className="flex-1 flex flex-col items-center justify-center p-12 space-y-4">
               <div className="h-10 w-10 animate-spin rounded-full border-4 border-zinc-600 border-t-emerald-500" />
               <p className="text-zinc-400 text-sm animate-pulse">Menyiapkan Preview Vektor...</p>
+            </div>
+          ) : isMobile ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-4">
+              <div className="flex items-center justify-center h-16 w-16 rounded-full bg-zinc-800/80 border border-zinc-700 text-emerald-400">
+                <Printer className="h-8 w-8" />
+              </div>
+              <div className="max-w-xs space-y-2">
+                <p className="text-white font-bold text-base">Pratinjau PDF Tidak Didukung di HP</p>
+                <p className="text-zinc-400 text-xs leading-relaxed">
+                  Browser HP Anda tidak mendukung penayangan PDF secara langsung. Silakan unduh dokumen untuk melihat atau mencetak stiker.
+                </p>
+              </div>
+              <button
+                onClick={handleDownloadPdf}
+                disabled={isGeneratingPdf}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg active:scale-95 transition-all cursor-pointer"
+              >
+                <Printer className="h-4 w-4" />
+                {isGeneratingPdf ? "Menyiapkan PDF..." : "Unduh PDF Label"}
+              </button>
             </div>
           ) : (
             <PDFViewer width="100%" height="100%" className="border-0 bg-transparent flex-1" showToolbar={true}>
