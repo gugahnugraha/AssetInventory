@@ -10,6 +10,7 @@ enum Role {
   ADMINISTRATOR
   OPERATOR
   MANAGER
+  DEMO
 }
 
 enum Kondisi {

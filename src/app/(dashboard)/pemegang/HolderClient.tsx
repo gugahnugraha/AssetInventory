@@ -158,9 +158,9 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
       <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 px-4 sm:px-6 py-5 rounded-2xl shadow-sm mb-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">Pemegang Barang (PJB)</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">Pemegang Aset (PJB)</h1>
             <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium">
-              Kelola daftar aparatur penanggung jawab pemegang barang inventaris.
+              Kelola daftar aparatur penanggung jawab pemegang aset inventaris.
             </p>
           </div>
           {userRole !== Role.MANAGER && (

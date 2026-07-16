@@ -11,6 +11,7 @@ import {
   ChevronDown,
   Shield,
   ClipboardCheck,
+  Database,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Role } from "@prisma/client"
@@ -31,15 +32,25 @@ export function Sidebar({ user }: SidebarProps) {
 
   // Auto-expand accordion if path matches one of the child links
   const isAssetPathActive = React.useMemo(() => {
-    const assetSubPaths = ["/assets", "/mutasi", "/distribusi", "/pemegang", "/kategori", "/kib"];
+    const assetSubPaths = ["/assets", "/mutasi"];
     return assetSubPaths.some(path => pathname.startsWith(path));
   }, [pathname]);
 
+  const isMasterPathActive = React.useMemo(() => {
+    const masterSubPaths = ["/distribusi", "/pemegang", "/kategori", "/kib"];
+    return masterSubPaths.some(path => pathname.startsWith(path));
+  }, [pathname]);
+
   const [assetsExpanded, setAssetsExpanded] = React.useState(isAssetPathActive);
+  const [masterExpanded, setMasterExpanded] = React.useState(isMasterPathActive);
 
   React.useEffect(() => {
     if (isAssetPathActive) setAssetsExpanded(true);
   }, [pathname, isAssetPathActive]);
+
+  React.useEffect(() => {
+    if (isMasterPathActive) setMasterExpanded(true);
+  }, [pathname, isMasterPathActive]);
 
   const links = [
     {
@@ -65,13 +76,22 @@ export function Sidebar({ user }: SidebarProps) {
           href: "/mutasi",
           roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
         },
+      ]
+    },
+    {
+      label: "Master Data",
+      icon: Database,
+      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+      expandedState: masterExpanded,
+      setExpanded: setMasterExpanded,
+      children: [
         {
           label: "Bidang & Unit Kerja",
           href: "/distribusi",
           roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
         },
         {
-          label: "Pemegang Barang",
+          label: "Pemegang Aset",
           href: "/pemegang",
           roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
         },
@@ -81,7 +101,7 @@ export function Sidebar({ user }: SidebarProps) {
           roles: [Role.ADMINISTRATOR],
         },
         {
-          label: "Master KIB",
+          label: "KIB",
           href: "/kib",
           roles: [Role.ADMINISTRATOR],
         },
@@ -144,11 +164,14 @@ export function Sidebar({ user }: SidebarProps) {
                       setCollapsed(false);
                       if (link.label === "Manajemen Aset") {
                         setAssetsExpanded(true);
+                      } else if (link.label === "Master Data") {
+                        setMasterExpanded(true);
                       }
                     } else {
                       if (link.label === "Manajemen Aset") {
-                        const nextVal = !assetsExpanded;
-                        setAssetsExpanded(nextVal);
+                        setAssetsExpanded(!assetsExpanded);
+                      } else if (link.label === "Master Data") {
+                        setMasterExpanded(!masterExpanded);
                       }
                     }
                   }}

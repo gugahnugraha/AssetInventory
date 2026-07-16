@@ -243,15 +243,19 @@ export function MutasiClient({
         </div>
 
         {/* Filter bar */}
-        <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-zinc-200 shadow-xs">
-          <Search className="h-5 w-5 text-zinc-550 shrink-0" />
-          <Input
-            placeholder="Cari berdasarkan nama aset, kode lengkap, atau nomor berita acara..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 placeholder:text-zinc-500 font-medium"
-          />
-        </div>
+        <Card className="border-zinc-200/80 dark:border-zinc-800/80 shadow-xs">
+          <CardContent className="p-3 sm:p-4">
+            <div className="relative max-w-2xl">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+              <Input
+                placeholder="Cari berdasarkan nama aset, kode lengkap, atau nomor berita acara..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 placeholder:text-zinc-500 font-medium"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Mutations List Table */}
         <Card className="border-zinc-200/85 overflow-hidden shadow-xs">

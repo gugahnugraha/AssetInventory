@@ -22,9 +22,9 @@ export function KibClient({ initialKibs }: KibClientProps) {
       {/* Hero Header Banner */}
       <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 px-4 sm:px-6 py-5 rounded-2xl shadow-sm mb-2">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">Master KIB</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">KIB</h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium">
-            Kelola master klasifikasi Kartu Inventaris Barang (KIB) A sampai F untuk Barang Milik Daerah.
+            Kelola klasifikasi Kartu Inventaris Barang (KIB) A sampai F untuk Barang Milik Daerah.
           </p>
         </div>
       </div>
