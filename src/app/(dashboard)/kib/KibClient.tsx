@@ -18,16 +18,14 @@ export function KibClient({ initialKibs }: KibClientProps) {
 
 
   return (
-    <div className="space-y-6 pt-0 pb-8 -mt-6 max-w-5xl">
+    <div className="space-y-4 pt-0 pb-8 max-w-5xl">
       {/* Hero Header Banner */}
-      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 p-6 rounded-b-3xl shadow-sm -mx-6 sm:-mx-8 px-6 sm:px-12 mb-8 relative">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-          <div className="space-y-2">
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm">Master KIB</h1>
-            <p className="text-zinc-600 dark:text-zinc-400 font-medium">
-              Kelola master klasifikasi Kartu Inventaris Barang (KIB) A sampai F untuk Barang Milik Daerah.
-            </p>
-          </div>
+      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 px-4 sm:px-6 py-5 rounded-2xl shadow-sm mb-2">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">Master KIB</h1>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium">
+            Kelola master klasifikasi Kartu Inventaris Barang (KIB) A sampai F untuk Barang Milik Daerah.
+          </p>
         </div>
       </div>
 

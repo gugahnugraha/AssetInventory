@@ -86,31 +86,31 @@ export function PeriodeDetailClient({ period, stats, totalAssets, userRole }: Pe
   };
 
   return (
-    <div className="space-y-6 pt-0 pb-8 -mt-6">
+    <div className="space-y-4 pt-0 pb-8">
       {/* Hero Header Banner */}
-      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 p-6 rounded-b-3xl shadow-sm -mx-6 sm:-mx-8 px-6 sm:px-12 mb-8 relative">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 px-4 sm:px-6 py-5 rounded-2xl shadow-sm mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
             <Link href="/rekonsiliasi/periode" prefetch={false}>
               <Button variant="outline" size="icon" className="rounded-full h-10 w-10 shrink-0 bg-white hover:bg-zinc-50 text-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 transition-all cursor-pointer">
                 <ChevronLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-1.5">
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm">{period.nama}</h1>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">{period.nama}</h1>
                 <Badge variant={period.status === "OPEN" ? "success" : period.status === "LOCKED" ? "warning" : "outline"} className="shadow-sm">
                   {statusLabel[period.status]}
                 </Badge>
               </div>
-              <p className="text-zinc-600 dark:text-zinc-400 font-medium">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium">
                 Triwulan {period.triwulan} — {period.tahun} &nbsp;·&nbsp;
                 {new Date(period.tanggalMulai).toLocaleDateString("id-ID")} s/d {new Date(period.tanggalSelesai).toLocaleDateString("id-ID")}
                 &nbsp;·&nbsp; Dibuat oleh {period.creator.nama}
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3 pt-2">
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
             {isAdmin && period.status === "OPEN" && (
               <Button variant="outline" className="border-amber-200 text-amber-700 hover:bg-amber-50 cursor-pointer shadow-sm font-bold gap-2" onClick={() => setLockConfirm(true)}>
                 <Lock className="h-4 w-4" /> Kunci Periode

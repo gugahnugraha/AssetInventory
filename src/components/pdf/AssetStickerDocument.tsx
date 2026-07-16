@@ -103,25 +103,7 @@ const styles = StyleSheet.create({
 const formatMerkType = (merkType?: string | null): string => {
   if (!merkType) return "-";
   const cleaned = merkType.trim();
-  if (!cleaned || cleaned === "-") return "-";
-
-  // If it's short enough, use it as is
-  if (cleaned.length <= 22) {
-    return cleaned;
-  }
-
-  // If it has a slash, split and get the brand (merk)
-  if (cleaned.includes("/")) {
-    const brand = cleaned.split("/")[0].trim();
-    if (brand && brand.length <= 22) {
-      return brand;
-    }
-    // If brand is still too long, truncate it
-    return brand.substring(0, 19) + "...";
-  }
-
-  // Otherwise truncate the whole string
-  return cleaned.substring(0, 19) + "...";
+  return cleaned || "-";
 };
 
 interface AssetStickerDocumentProps {

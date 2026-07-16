@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, CopyObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, CopyObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import prisma from "./db";
 import { EntityType, DocumentType } from "@prisma/client";
 import sharp from "sharp";
@@ -383,6 +383,34 @@ export class DocumentService {
   }
 
   /**
+   * Retrieves a file from R2 as a Buffer and its ContentType
+   */
+  static async getFileFromR2(objectKey: string): Promise<{ buffer: Buffer; contentType: string }> {
+    this.checkConfig();
+    try {
+      const command = new GetObjectCommand({
+        Bucket: bucketName,
+        Key: objectKey,
+      });
+      const response = await r2Client!.send(command);
+      if (!response.Body) {
+        throw new Error("Berkas kosong.");
+      }
+      
+      const bytes = await response.Body.transformToByteArray();
+      const buffer = Buffer.from(bytes);
+      
+      return {
+        buffer,
+        contentType: response.ContentType || "application/octet-stream",
+      };
+    } catch (error) {
+      console.error(`Failed to get object ${objectKey} from R2:`, error);
+      throw new Error("Gagal mengambil berkas dari server penyimpanan.");
+    }
+  }
+
+  /**
    * Generates public URL for a file
    */
   static generateFileUrl(objectKey: string | null): string {
@@ -393,10 +421,7 @@ export class DocumentService {
       return objectKey;
     }
 
-    const publicUrlBase = process.env.R2_PUBLIC_URL || "";
-    const cleanBase = publicUrlBase.endsWith("/") ? publicUrlBase.slice(0, -1) : publicUrlBase;
-    
-    return `${cleanBase}/${objectKey}`;
+    return `/api/documents?key=${encodeURIComponent(objectKey)}`;
   }
 
   // --- NEW ASSET PHOTO SYSTEM METHODS ---

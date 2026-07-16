@@ -83,24 +83,24 @@ export function PemeriksaanClient({ assets, activePeriod, reconStatusMap, userRo
   }
 
   return (
-    <div className="space-y-6 pt-0 pb-8 -mt-6">
+    <div className="space-y-4 pt-0 pb-8">
       {/* Hero Header Banner */}
-      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 p-6 rounded-b-3xl shadow-sm -mx-6 sm:-mx-8 px-6 sm:px-12 mb-8 relative">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-          <div className="space-y-2 flex items-center gap-4">
+      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 px-4 sm:px-6 py-5 rounded-2xl shadow-sm mb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
             <div className="bg-emerald-50 dark:bg-emerald-900/30 p-3 rounded-full border border-emerald-100 dark:border-emerald-800 hidden sm:block">
               <ClipboardCheck className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm flex items-center gap-2">
+            <div className="flex flex-col gap-1">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">
                 Pemeriksaan Aset
               </h1>
-              <p className="text-zinc-600 dark:text-zinc-400 font-medium">
+              <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium">
                 Pilih aset untuk diperiksa — <span className="font-semibold text-emerald-700">{activePeriod.nama}</span>
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3 pt-2">
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
             <Badge variant="success" className="text-xs">Periode Aktif: {activePeriod.nama}</Badge>
           </div>
         </div>

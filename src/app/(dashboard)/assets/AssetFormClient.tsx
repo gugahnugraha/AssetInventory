@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Kondisi } from "@prisma/client";
 import {
   ArrowLeft,
@@ -150,7 +151,36 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
   const [deletePhotoIds, setDeletePhotoIds] = React.useState<string[]>([]);
-  const [activeTab, setActiveTab] = React.useState("utama");
+
+  // Dialog state variables
+  const [showDialog, setShowDialog] = React.useState(false);
+  const [dialogConfig, setDialogConfig] = React.useState<{
+    title: string;
+    description: string;
+    type: "success" | "error";
+  }>({
+    title: "",
+    description: "",
+    type: "success",
+  });
+
+  React.useEffect(() => {
+    if (successMsg) {
+      setDialogConfig({
+        title: "Simpan Berhasil",
+        description: successMsg,
+        type: "success",
+      });
+      setShowDialog(true);
+      setSuccessMsg(null);
+    }
+  }, [successMsg]);
+
+  React.useEffect(() => {
+    if (error) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [error]);
 
   const isEditMode = !!initialData;
   const isAdmin = userRole === "ADMINISTRATOR" || userRole === "ADMIN";
@@ -523,6 +553,16 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
     setValue("fotoUtama", url);
   };
 
+  const onError = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setDialogConfig({
+      title: "Validasi Gagal",
+      description: "Harap periksa kembali isian form. Beberapa bidang wajib diisi dengan benar.",
+      type: "error",
+    });
+    setShowDialog(true);
+  };
+
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
     setError(null);
@@ -552,10 +592,21 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
           setError(res.error);
           setSuccessMsg(null);
           setIsSubmitting(false);
+          setDialogConfig({
+            title: "Gagal Menyimpan",
+            description: res.error,
+            type: "error",
+          });
+          setShowDialog(true);
         } else if (res.success) {
-          setSuccessMsg("Data aset berhasil diperbarui!");
           setError(null);
           setIsSubmitting(false);
+          setDialogConfig({
+            title: "Simpan Berhasil",
+            description: "Data aset berhasil diperbarui!",
+            type: "success",
+          });
+          setShowDialog(true);
           router.refresh();
         }
       } else {
@@ -577,6 +628,12 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
           setError(res.error);
           setSuccessMsg(null);
           setIsSubmitting(false);
+          setDialogConfig({
+            title: "Gagal Menyimpan",
+            description: res.error,
+            type: "error",
+          });
+          setShowDialog(true);
         } else if (res.success) {
           // Stay on edit page by redirecting to the newly created asset's edit URL
           router.push(`/assets/${res.asset.id}/edit?success=1`);
@@ -586,30 +643,34 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
       console.error("Asset form submission error:", err);
       setError("Terjadi kesalahan saat menyimpan data aset.");
       setIsSubmitting(false);
+      setDialogConfig({
+        title: "Sistem Error",
+        description: "Terjadi kesalahan sistem saat memproses penyimpanan data aset.",
+        type: "error",
+      });
+      setShowDialog(true);
     }
   };
 
   return (
-    <div className="space-y-6 pt-2 pb-8">
+    <div className="space-y-4 pt-0 pb-8">
       {/* Hero Header Banner */}
-      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 p-6 rounded-b-3xl shadow-sm -mx-6 sm:-mx-8 px-6 sm:px-12 mb-8 relative">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <Link href="/assets" prefetch={false}>
-              <Button variant="outline" size="icon" className="rounded-full h-10 w-10 shrink-0 bg-white hover:bg-zinc-50 text-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 transition-all cursor-pointer">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div className="space-y-2">
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm">
-                {isEditMode ? "Edit Aset" : "Tambah Aset Baru"}
-              </h1>
-              <p className="text-zinc-600 dark:text-zinc-400 font-medium">
-                {isEditMode
-                  ? "Ubah data inventaris barang milik daerah."
-                  : "Masukkan data spesifikasi barang baru ke dalam inventaris."}
-              </p>
-            </div>
+      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 px-4 sm:px-6 py-5 rounded-2xl shadow-sm mb-2">
+        <div className="flex items-center gap-4">
+          <Link href="/assets" prefetch={false}>
+            <Button variant="outline" size="icon" className="rounded-full h-10 w-10 shrink-0 bg-white hover:bg-zinc-50 text-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 transition-all cursor-pointer">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">
+              {isEditMode ? "Edit Aset" : "Tambah Aset Baru"}
+            </h1>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium">
+              {isEditMode
+                ? "Ubah data inventaris barang milik daerah."
+                : "Masukkan data spesifikasi barang baru ke dalam inventaris."}
+            </p>
           </div>
         </div>
       </div>
@@ -628,587 +689,574 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
         </div>
       )}
 
-      {/* Tabs Navigation */}
-      <div className="flex border-b border-zinc-200 overflow-x-auto hide-scrollbar mb-6">
-        <button
-          type="button"
-          onClick={() => setActiveTab("utama")}
-          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${activeTab === "utama"
-              ? "border-emerald-600 text-emerald-800"
-              : "border-transparent text-zinc-800 hover:text-zinc-950"
-            }`}
-        >
-          Data Utama
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("spesifikasi")}
-          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${activeTab === "spesifikasi"
-              ? "border-emerald-600 text-emerald-800"
-              : "border-transparent text-zinc-800 hover:text-zinc-950"
-            }`}
-        >
-          Spesifikasi & Atribut
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("penempatan")}
-          className={`py-2.5 px-4 font-semibold text-sm border-b-2 transition-colors cursor-pointer whitespace-nowrap ${activeTab === "penempatan"
-              ? "border-emerald-600 text-emerald-800"
-              : "border-transparent text-zinc-800 hover:text-zinc-950"
-            }`}
-        >
-          Penempatan & Kondisi
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          {/* TAB: UTAMA */}
-          <div className={activeTab === "utama" ? "space-y-6 block" : "hidden"}>
-            <Card className="border-zinc-200/80 dark:border-zinc-800/80 shadow-xs">
-              <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 pb-3">
-                <CardTitle className="text-base font-bold text-zinc-900 dark:text-zinc-50">Kode & Nomor Register Aset</CardTitle>
-                <CardDescription className="text-xs">Masukkan kode klasifikasi aset barang dan nomor register.</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Kode Klasifikasi Section */}
-                  <div className="md:col-span-2 space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                      Kode Klasifikasi Aset
-                    </label>
-                    <div className="grid grid-cols-5 gap-1.5">
-                      <div>
-                        <Input
-                          placeholder="XX"
-                          maxLength={2}
-                          className="text-center font-mono font-bold h-9 text-xs"
-                          {...register("kode1")}
-                        />
-                        {errors.kode1 && <p className="text-[10px] text-rose-500 mt-0.5">{errors.kode1.message}</p>}
-                      </div>
-                      <div>
-                        <Input
-                          placeholder="XX"
-                          maxLength={2}
-                          className="text-center font-mono font-bold h-9 text-xs"
-                          {...register("kode2")}
-                        />
-                        {errors.kode2 && <p className="text-[10px] text-rose-500 mt-0.5">{errors.kode2.message}</p>}
-                      </div>
-                      <div>
-                        <Input
-                          placeholder="XX"
-                          maxLength={2}
-                          className="text-center font-mono font-bold h-9 text-xs"
-                          {...register("kode3")}
-                        />
-                        {errors.kode3 && <p className="text-[10px] text-rose-500 mt-0.5">{errors.kode3.message}</p>}
-                      </div>
-                      <div>
-                        <Input
-                          placeholder="XX"
-                          maxLength={2}
-                          className="text-center font-mono font-bold h-9 text-xs"
-                          {...register("kode4")}
-                        />
-                        {errors.kode4 && <p className="text-[10px] text-rose-500 mt-0.5">{errors.kode4.message}</p>}
-                      </div>
-                      <div>
-                        <Input
-                          placeholder="XXX"
-                          maxLength={3}
-                          className="text-center font-mono font-bold h-9 text-xs"
-                          {...register("kode5")}
-                        />
-                        {errors.kode5 && <p className="text-[10px] text-rose-500 mt-0.5">{errors.kode5.message}</p>}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Nomor Register Section */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-emerald-850 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                      Nomor Register <span className="text-rose-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="XXXX"
-                      maxLength={4}
-                      className="font-mono font-bold focus-visible:ring-emerald-500 focus-visible:border-emerald-500 h-9 text-xs"
-                      {...register("nomorRegister")}
-                    />
-                    {errors.nomorRegister && <p className="text-[10px] text-rose-500 mt-0.5">{errors.nomorRegister.message}</p>}
-                  </div>
-                </div>
-
-                {/* Compiled Code Preview */}
-                <div className="flex items-center justify-between p-2.5 rounded-lg bg-emerald-50/40 dark:bg-emerald-950/10 border border-emerald-100/60 dark:border-emerald-900/30 text-xs">
-                  <span className="text-zinc-500 dark:text-zinc-400 font-medium">Format Kode Lengkap:</span>
-                  <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-sm tracking-wider">
-                    {kodeLengkapPreview}
+      <form onSubmit={handleSubmit(onSubmit, onError)} className="max-w-4xl mx-auto space-y-4">
+        {/* Card 1: Identitas & Klasifikasi Aset */}
+        <Card className="border-zinc-200/80 dark:border-zinc-800/80 shadow-xs">
+          <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 p-6 pb-4">
+            <CardTitle className="text-base font-bold text-zinc-900 dark:text-zinc-50">1. Identitas & Klasifikasi Aset</CardTitle>
+            <CardDescription className="text-xs">Tentukan kategori, kode register, nama, dan merk barang.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 pt-0 space-y-4">
+            {/* KIB & Kategori */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                  Klasifikasi KIB <span className="text-rose-500">*</span>
+                </label>
+                <input type="hidden" {...register("kibId")} />
+                <div className="w-full h-9 rounded-md border border-sky-200 bg-sky-50 dark:bg-sky-900/20 dark:border-sky-850 px-3 py-2 text-sm flex items-center gap-2 cursor-not-allowed max-w-[360px]">
+                  <span className="font-mono font-bold text-sky-600 dark:text-sky-400">
+                    {(() => { const kibB = kibs.find((k: any) => k.kode === "B"); return kibB ? `KIB ${kibB.kode} - ${kibB.nama}` : "KIB B - Peralalan dan Mesin"; })()}
                   </span>
                 </div>
-              </CardContent>
-            </Card>
+                {errors.kibId && <p className="text-xs text-rose-500 mt-1">{errors.kibId.message}</p>}
+              </div>
 
-            <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-              <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
-                <CardTitle>Identitas Utama</CardTitle>
-                <CardDescription>Pilih KIB, kategori, dan detail identitas dasar aset.</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-4">
-                {/* KIB & Kategori */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                      Klasifikasi KIB <span className="text-rose-500">*</span>
-                    </label>
-                    <input type="hidden" {...register("kibId")} />
-                    <div className="w-full h-10 rounded-md border border-sky-200 bg-sky-50 dark:bg-sky-900/20 dark:border-sky-800 px-3 py-2 text-sm flex items-center gap-2 cursor-not-allowed">
-                      <span className="font-mono font-bold text-sky-600 dark:text-sky-400">
-                        {(() => { const kibB = kibs.find((k: any) => k.kode === "B"); return kibB ? `KIB ${kibB.kode} - ${kibB.nama}` : "KIB B - Peralatan dan Mesin"; })()}
-                      </span>
-                      {/* <span className="ml-auto text-[10px] uppercase tracking-widest text-sky-500 bg-sky-100 dark:bg-sky-900/40 px-1.5 py-0.5 rounded font-semibold">Sistem</span> */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                  Kategori Aset <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  {...register("categoryId")}
+                  disabled={!watchKibId}
+                  className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 max-w-[360px]"
+                >
+                  <option value="" className="bg-background text-foreground">Pilih Kategori</option>
+                  {filteredCategories.map((c) => (
+                    <option key={c.id} value={c.id} className="bg-background text-foreground">
+                      {c.nama}
+                    </option>
+                  ))}
+                </select>
+                {errors.categoryId && <p className="text-xs text-rose-500 mt-1">{errors.categoryId.message}</p>}
+              </div>
+            </div>
+
+            {/* Kode & Register */}
+            <div className="flex flex-wrap gap-4 items-end">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                  Kode Klasifikasi Aset <span className="text-rose-500">*</span>
+                </label>
+                <div className="grid grid-cols-5 gap-1.5 w-[280px]">
+                  <div>
+                    <Input
+                      placeholder="XX"
+                      maxLength={2}
+                      className="text-center font-mono font-bold h-9 text-sm px-1"
+                      {...register("kode1")}
+                    />
+                    {errors.kode1 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode1.message}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="XX"
+                      maxLength={2}
+                      className="text-center font-mono font-bold h-9 text-sm px-1"
+                      {...register("kode2")}
+                    />
+                    {errors.kode2 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode2.message}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="XX"
+                      maxLength={2}
+                      className="text-center font-mono font-bold h-9 text-sm px-1"
+                      {...register("kode3")}
+                    />
+                    {errors.kode3 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode3.message}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="XX"
+                      maxLength={2}
+                      className="text-center font-mono font-bold h-9 text-sm px-1"
+                      {...register("kode4")}
+                    />
+                    {errors.kode4 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode4.message}</p>}
+                  </div>
+                  <div>
+                    <Input
+                      placeholder="XXX"
+                      maxLength={3}
+                      className="text-center font-mono font-bold h-9 text-sm px-1"
+                      {...register("kode5")}
+                    />
+                    {errors.kode5 && <p className="text-[10px] text-rose-500 mt-1">{errors.kode5.message}</p>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                  Nomor Register <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  placeholder="XXXX"
+                  maxLength={4}
+                  className="text-center font-mono font-bold h-9 text-sm px-2 w-[120px]"
+                  {...register("nomorRegister")}
+                />
+                {errors.nomorRegister && <p className="text-[10px] text-rose-500 mt-1">{errors.nomorRegister.message}</p>}
+              </div>
+
+              {/* Compiled Code Preview */}
+              <div className="flex items-center justify-start gap-2 px-3 h-9 rounded-lg bg-emerald-50/40 dark:bg-emerald-950/10 border border-emerald-100/60 dark:border-emerald-900/30 text-xs flex-1 min-w-[280px] max-w-[360px]">
+                <span className="text-zinc-500 dark:text-zinc-400 font-medium whitespace-nowrap">Format Kode Lengkap:</span>
+                <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 text-sm tracking-wider whitespace-nowrap">
+                  {kodeLengkapPreview}
+                </span>
+              </div>
+            </div>
+
+            {/* Nama Aset & Merk/Type */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                  Nama Aset <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  placeholder="Contoh: Mobil Avanza, Laptop ThinkPad"
+                  className="h-9 text-sm max-w-md"
+                  {...register("namaAset")}
+                />
+                {errors.namaAset && <p className="text-xs text-rose-500 mt-1">{errors.namaAset.message}</p>}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                  Merk / Type <span className="text-rose-500">*</span>
+                </label>
+                <input type="hidden" {...register("merkType")} />
+
+                {!watchCategoryId ? (
+                  <div className="text-xs text-zinc-500 italic p-3 border border-dashed rounded-md bg-zinc-50/50 dark:bg-zinc-900/10 max-w-[360px]">
+                    Pilih Kategori Aset terlebih dahulu untuk memunculkan pilihan Merk
+                  </div>
+                ) : availableBrands.length > 0 ? (
+                  <div className="space-y-1.5 max-w-[360px]">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <div>
+                        <select
+                          value={selectedBrand}
+                          onChange={(e) => {
+                            setSelectedBrand(e.target.value);
+                            if (e.target.value !== "LAINNYA") {
+                              setCustomBrand("");
+                            }
+                          }}
+                          className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        >
+                          <option value="" className="bg-background text-foreground">Pilih Merk / Brand</option>
+                          {availableBrands.map((b) => (
+                            <option key={b} value={b} className="bg-background text-foreground">
+                              {b}
+                            </option>
+                          ))}
+                          <option value="LAINNYA" className="bg-background text-foreground font-semibold">Lainnya (Input Manual)</option>
+                        </select>
+                      </div>
+
+                      {selectedBrand && selectedBrand !== "LAINNYA" && (
+                        <Input
+                          placeholder="Tipe / Model (e.g. L14 Gen 3)"
+                          className="h-9 text-sm w-full"
+                          value={typeDetail}
+                          onChange={(e) => setTypeDetail(e.target.value)}
+                        />
+                      )}
+
+                      {selectedBrand === "LAINNYA" && (
+                        <Input
+                          placeholder="Masukkan Merk & Tipe Aset..."
+                          className="h-9 text-sm w-full"
+                          value={customBrand}
+                          onChange={(e) => setCustomBrand(e.target.value)}
+                        />
+                      )}
                     </div>
-                    {errors.kibId && <p className="text-xs text-rose-500 mt-1">{errors.kibId.message}</p>}
                   </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                      Kategori Aset <span className="text-rose-500">*</span>
-                    </label>
-                    <select
-                      {...register("categoryId")}
-                      disabled={!watchKibId}
-                      className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
-                    >
-                      <option value="" className="bg-background text-foreground">Pilih Kategori</option>
-                      {filteredCategories.map((c) => (
-                        <option key={c.id} value={c.id} className="bg-background text-foreground">
-                          {c.nama}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.categoryId && <p className="text-xs text-rose-500 mt-1">{errors.categoryId.message}</p>}
-                  </div>
-                </div>
-
-                {/* Nama Aset & Merk/Type */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                      Nama Aset <span className="text-rose-500">*</span>
-                    </label>
-                    <Input
-                      placeholder="Contoh: Mobil Avanza, Laptop ThinkPad"
-                      {...register("namaAset")}
-                    />
-                    {errors.namaAset && <p className="text-xs text-rose-500 mt-1">{errors.namaAset.message}</p>}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                      Merk / Type <span className="text-rose-500">*</span>
-                    </label>
-                    <input type="hidden" {...register("merkType")} />
-
-                    {!watchCategoryId ? (
-                      <div className="text-xs text-zinc-500 italic p-3 border border-dashed rounded-md bg-zinc-50/50 dark:bg-zinc-900/10">
-                        Pilih Kategori Aset terlebih dahulu untuk memunculkan pilihan Merk
-                      </div>
-                    ) : availableBrands.length > 0 ? (
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <div>
-                            <select
-                              value={selectedBrand}
-                              onChange={(e) => {
-                                setSelectedBrand(e.target.value);
-                                if (e.target.value !== "LAINNYA") {
-                                  setCustomBrand("");
-                                }
-                              }}
-                              className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                            >
-                              <option value="" className="bg-background text-foreground">Pilih Merk / Brand</option>
-                              {availableBrands.map((b) => (
-                                <option key={b} value={b} className="bg-background text-foreground">
-                                  {b}
-                                </option>
-                              ))}
-                              <option value="LAINNYA" className="bg-background text-foreground font-semibold">Lainnya (Input Manual)</option>
-                            </select>
-                          </div>
-
-                          {selectedBrand && selectedBrand !== "LAINNYA" && (
-                            <Input
-                              placeholder="Tipe / Model (e.g. L14 Gen 3)"
-                              value={typeDetail}
-                              onChange={(e) => setTypeDetail(e.target.value)}
-                            />
-                          )}
-
-                          {selectedBrand === "LAINNYA" && (
-                            <Input
-                              placeholder="Masukkan Merk & Tipe Aset..."
-                              value={customBrand}
-                              onChange={(e) => setCustomBrand(e.target.value)}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <Input
-                        placeholder="Contoh: Lenovo L14 Gen 3, Kayu Jati"
-                        value={customBrand}
-                        onChange={(e) => {
-                          setSelectedBrand("LAINNYA");
-                          setCustomBrand(e.target.value);
-                        }}
-                      />
-                    )}
-                    {errors.merkType && <p className="text-xs text-rose-500 mt-1">{errors.merkType.message}</p>}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-
-          </div>
-
-          {/* TAB: SPESIFIKASI */}
-          <div className={activeTab === "spesifikasi" ? "space-y-6 block" : "hidden"}>
-            <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-              <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
-                <CardTitle>Spesifikasi & Harga</CardTitle>
-                <CardDescription>Lengkapi data spesifikasi fisik dan perolehan.</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                      Material / Bahan
-                    </label>
-                    <Input
-                      placeholder="Contoh: Aluminium, Kayu Jati, Plastik ABS"
-                      {...register("material")}
-                    />
-                    {errors.material && <p className="text-xs text-rose-500 mt-1">{errors.material.message}</p>}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                      Cara Perolehan
-                    </label>
-                    <select
-                      {...register("caraPerolehan")}
-                      className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                    >
-                      <option value="">-- Pilih Cara Perolehan --</option>
-                      <option value="Pembelian">Pembelian</option>
-                      <option value="Hibah">Hibah</option>
-                      <option value="Produksi Sendiri">Produksi Sendiri</option>
-                      <option value="Tukar Menukar">Tukar Menukar</option>
-                      <option value="Bantuan Pusat">Bantuan Pusat</option>
-                      <option value="Bantuan Provinsi">Bantuan Provinsi</option>
-                      <option value="Sumbangan / Donasi">Sumbangan / Donasi</option>
-                      <option value="Lainnya">Lainnya</option>
-                    </select>
-                    {errors.caraPerolehan && <p className="text-xs text-rose-500 mt-1">{errors.caraPerolehan.message}</p>}
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                    Spesifikasi Teknis
-                  </label>
-                  <textarea
-                    placeholder="Contoh: Prosesor Intel Core i5 Gen 11, RAM 8GB DDR4, SSD 512GB NVMe, Layar 14 inci FHD IPS"
-                    rows={3}
-                    className="flex w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    {...register("spesifikasi")}
+                ) : (
+                  <Input
+                    placeholder="Contoh: Lenovo L14 Gen 3, Kayu Jati"
+                    className="h-9 text-sm max-w-[360px]"
+                    value={customBrand}
+                    onChange={(e) => {
+                      setSelectedBrand("LAINNYA");
+                      setCustomBrand(e.target.value);
+                    }}
                   />
-                  {errors.spesifikasi && <p className="text-xs text-rose-500 mt-1">{errors.spesifikasi.message}</p>}
-                </div>
+                )}
+                {errors.merkType && <p className="text-xs text-rose-500 mt-1">{errors.merkType.message}</p>}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                      Harga Perolehan (Rp) <span className="text-rose-500">*</span>
-                    </label>
-                    <input type="hidden" {...register("harga")} />
-                    <Input
-                      type="text"
-                      placeholder="Contoh: 15.000.000"
-                      value={formattedHarga}
-                      onChange={(e) => {
-                        const rawValStr = e.target.value.replace(/\D/g, "");
-                        const rawNum = rawValStr ? parseInt(rawValStr, 10) : 0;
-                        setFormattedHarga(formatNumberWithSeparator(rawValStr));
-                        setValue("harga", rawNum, { shouldValidate: true });
-                      }}
-                    />
-                    {errors.harga && <p className="text-xs text-rose-500 mt-1">{errors.harga.message}</p>}
-                  </div>
+        {/* Card 2: Spesifikasi & Nilai Perolehan */}
+        <Card className="border-zinc-200/80 dark:border-zinc-800/80 shadow-xs">
+          <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 p-6 pb-4">
+            <CardTitle className="text-base font-bold text-zinc-900 dark:text-zinc-50">2. Spesifikasi & Nilai Perolehan</CardTitle>
+            <CardDescription className="text-xs">Masukkan spesifikasi fisik, metode perolehan, dan nilai aset.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 pt-0 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                  Material / Bahan
+                </label>
+                <Input
+                  placeholder="Contoh: Aluminium, Kayu Jati, Plastik ABS"
+                  className="h-9 text-sm max-w-md"
+                  {...register("material")}
+                />
+                {errors.material && <p className="text-xs text-rose-500 mt-1">{errors.material.message}</p>}
+              </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                      Tahun Perolehan <span className="text-rose-500">*</span>
-                    </label>
-                    <Input
-                      type="number"
-                      placeholder="Tahun"
-                      {...register("tahunPembelian")}
-                    />
-                    {errors.tahunPembelian && <p className="text-xs text-rose-500 mt-1">{errors.tahunPembelian.message}</p>}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                  Cara Perolehan
+                </label>
+                <select
+                  {...register("caraPerolehan")}
+                  className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring max-w-[360px]"
+                >
+                  <option value="">-- Pilih Cara Perolehan --</option>
+                  <option value="Pembelian">Pembelian</option>
+                  <option value="Hibah">Hibah</option>
+                  <option value="Produksi Sendiri">Produksi Sendiri</option>
+                  <option value="Tukar Menukar">Tukar Menukar</option>
+                  <option value="Bantuan Pusat">Bantuan Pusat</option>
+                  <option value="Bantuan Provinsi">Bantuan Provinsi</option>
+                  <option value="Sumbangan / Donasi">Sumbangan / Donasi</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
+                {errors.caraPerolehan && <p className="text-xs text-rose-500 mt-1">{errors.caraPerolehan.message}</p>}
+              </div>
+            </div>
 
-            {/* Dynamic Attributes Form Section */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                  Harga Perolehan (Rp) <span className="text-rose-500">*</span>
+                </label>
+                <input type="hidden" {...register("harga")} />
+                <Input
+                  type="text"
+                  placeholder="Contoh: 15.000.000"
+                  className="h-9 text-sm max-w-md"
+                  value={formattedHarga}
+                  onChange={(e) => {
+                    const rawValStr = e.target.value.replace(/\D/g, "");
+                    const rawNum = rawValStr ? parseInt(rawValStr, 10) : 0;
+                    setFormattedHarga(formatNumberWithSeparator(rawValStr));
+                    setValue("harga", rawNum, { shouldValidate: true });
+                  }}
+                />
+                {errors.harga && <p className="text-xs text-rose-500 mt-1">{errors.harga.message}</p>}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                  Tahun Perolehan <span className="text-rose-500">*</span>
+                </label>
+                <Input
+                  type="number"
+                  placeholder="Tahun"
+                  className="h-9 text-sm max-w-[120px]"
+                  {...register("tahunPembelian")}
+                />
+                {errors.tahunPembelian && <p className="text-xs text-rose-500 mt-1">{errors.tahunPembelian.message}</p>}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                Spesifikasi Teknis
+              </label>
+              <textarea
+                placeholder="Contoh: Prosesor Intel Core i5 Gen 11, RAM 8GB DDR4, SSD 512GB NVMe, Layar 14 inci FHD IPS"
+                rows={2}
+                className="flex w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-w-xl"
+                {...register("spesifikasi")}
+              />
+              {errors.spesifikasi && <p className="text-xs text-rose-500 mt-1">{errors.spesifikasi.message}</p>}
+            </div>
+
+            {/* Dynamic Attributes Form Section (Embedded inside specifications) */}
             {categoryAttributes.length > 0 && (
-              <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-                <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
-                  <CardTitle className="text-emerald-700 font-bold">Atribut Tambahan ({selectedCategory?.nama})</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-3">
+                <h4 className="text-sm font-bold text-emerald-700 uppercase tracking-wider">Atribut Tambahan ({selectedCategory?.nama})</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {categoryAttributes.map((attr: any, index: number) => (
                     <div key={`${attr.id}-${index}`} className="space-y-1.5">
                       <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
                         {attr.nama} {attr.required && <span className="text-rose-500">*</span>}
                       </label>
-
                       <Input
                         type={attr.fieldType === "NUMBER" ? "number" : "text"}
                         placeholder={`Masukkan ${attr.nama}`}
+                        className="h-9 text-sm max-w-md"
                         {...register(`dynamicAttributes.${attr.id}`, {
                           required: attr.required ? `${attr.nama} wajib diisi` : false
                         })}
                       />
-
                       {errors.dynamicAttributes?.[attr.id] && (
-                        <p className="text-[10px] text-rose-500 mt-1">
+                        <p className="text-xs text-rose-500 mt-1">
                           {(errors.dynamicAttributes as any)[attr.id]?.message}
                         </p>
                       )}
                     </div>
                   ))}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* TAB: PENEMPATAN */}
-          <div className={activeTab === "penempatan" ? "space-y-6 block" : "hidden"}>
-            <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-              <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
-                <CardTitle>Penempatan & Kondisi Aset</CardTitle>
-                <CardDescription>Tentukan pemegang barang dan kondisi terkini.</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                      Bidang / Distribusi <span className="text-rose-500">*</span>
-                    </label>
-                    <select
-                      {...register("distributionId")}
-                      disabled={disableFields}
-                      className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
-                    >
-                      <option value="">Pilih Bidang</option>
-                      {distributions.map((d) => (
-                        <option key={d.id} value={d.id}>{d.nama}</option>
-                      ))}
-                    </select>
-                    {errors.distributionId && <p className="text-[10px] text-rose-500 mt-1">{errors.distributionId.message}</p>}
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                      Pemegang Barang
-                    </label>
-                    <select
-                      {...register("holderId")}
-                      disabled={disableFields}
-                      className="w-full h-10 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
-                    >
-                      <option value="">Disimpan di Gudang / Inventaris Umum</option>
-                      {filteredHolders.map((h) => (
-                        <option key={h.id} value={h.id}>{h.nama} ({h.nip})</option>
-                      ))}
-                    </select>
-                    {errors.holderId && <p className="text-[10px] text-rose-500 mt-1">{errors.holderId.message}</p>}
-                  </div>
-                </div>
-
-                <div className="space-y-1.5 pt-2">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                    Kondisi Terkini <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {[
-                      { value: "BAIK", label: "Baik (B)", color: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400" },
-                      { value: "KURANG_BAIK", label: "Kurang Baik (KB)", color: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-400" },
-                      { value: "RUSAK_BERAT", label: "Rusak Berat (RB)", color: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-900/20 dark:text-rose-400" }
-                    ].map((kondisi) => (
-                      <label
-                        key={kondisi.value}
-                        className={`relative flex cursor-pointer rounded-lg border ${watchKondisi === kondisi.value ? `ring-2 ring-emerald-500 ${kondisi.color}` : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900'} p-3 shadow-sm focus:outline-none`}
-                      >
-                        <input
-                          type="radio"
-                          value={kondisi.value}
-                          {...register("kondisi")}
-                          disabled={disableFields}
-                          className="sr-only"
-                        />
-                        <span className="flex flex-1">
-                          <span className="flex flex-col">
-                            <span className="block text-sm font-medium">{kondisi.label}</span>
-                          </span>
-                        </span>
-                        {watchKondisi === kondisi.value && (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                        )}
-                      </label>
-                    ))}
-                  </div>
-                  {errors.kondisi && <p className="text-[10px] text-rose-500 mt-1">{errors.kondisi.message}</p>}
-                </div>
-
-                <div className="space-y-1.5 pt-2">
-                  <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                    Catatan Tambahan
-                  </label>
-                  <textarea
-                    placeholder="Contoh: Didanai oleh dana APBD 2026, Penempatan di ruang Aula utama."
-                    rows={4}
-                    className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    {...register("catatan")}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Image Upload Sidebar (Right) */}
-        <div className="space-y-6">
-          <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-            <CardHeader className="border-b border-zinc-100 dark:border-zinc-800">
-              <CardTitle>Foto Dokumentasi</CardTitle>
-              <CardDescription>Upload foto aset (Maks. 5MB, format: JPG/PNG/WEBP).</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              {/* Upload Trigger Box */}
-              <div className="relative border-2 border-dashed border-zinc-300 dark:border-zinc-800 rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors">
-                <input
-                  type="file"
-                  multiple
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
-                  onChange={handlePhotoUpload}
-                  disabled={uploading}
-                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer disabled:cursor-not-allowed"
-                />
-                {uploading ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <Loader2 className="h-8 w-8 text-emerald-600 animate-spin" />
-                    <span className="text-xs font-medium text-zinc-500">Mengupload foto...</span>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center gap-2">
-                    <Upload className="h-8 w-8 text-emerald-600" />
-                    <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                      Klik atau Tarik Foto ke Sini
-                    </span>
-                    <span className="text-[10px] text-zinc-500">JPG, PNG, atau WEBP hingga 5MB</span>
-                  </div>
-                )}
+        {/* Card 3: Penempatan & Foto Dokumentasi */}
+        <Card className="border-zinc-200/80 dark:border-zinc-800/80 shadow-xs">
+          <CardHeader className="border-b border-zinc-100 dark:border-zinc-800 p-6 pb-4">
+            <CardTitle className="text-base font-bold text-zinc-900 dark:text-zinc-50">3. Penempatan & Foto Dokumentasi</CardTitle>
+            <CardDescription className="text-xs">Tentukan penempatan bidang, pemegang barang, kondisi fisik, dan foto dokumentasi.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 pt-0 space-y-4">
+            {/* Penempatan */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                  Bidang / Distribusi <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  {...register("distributionId")}
+                  disabled={disableFields}
+                  className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 max-w-md"
+                >
+                  <option value="">Pilih Bidang</option>
+                  {distributions.map((d) => (
+                    <option key={d.id} value={d.id}>{d.nama}</option>
+                  ))}
+                </select>
+                {errors.distributionId && <p className="text-xs text-rose-500 mt-1">{errors.distributionId.message}</p>}
               </div>
 
-              {/* Uploaded Previews */}
-              {watchPhotos.length > 0 && (
-                <div className="space-y-2">
-                  <span className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
-                    Daftar Foto Aset ({watchPhotos.length})
-                  </span>
-                  <div className="grid grid-cols-2 gap-2">
-                    {watchPhotos.map((photo) => {
-                      const isMain = watchFotoUtama === photo.url;
-                      return (
-                        <div
-                          key={photo.url}
-                          className={`relative group rounded-lg overflow-hidden border h-28 bg-zinc-100 ${isMain ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-zinc-200"
-                            }`}
-                        >
-                          <img
-                            src={photo.url}
-                            alt="Aset"
-                            className="w-full h-full object-cover"
-                          />
-                          {/* Hover action overlay */}
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleSetMainPhoto(photo.url)}
-                              title={isMain ? "Foto Utama" : "Jadikan Foto Utama"}
-                              className={`p-1.5 rounded-full cursor-pointer transition-colors ${isMain ? "bg-emerald-500 text-white" : "bg-white text-zinc-800 hover:bg-emerald-50 hover:text-emerald-600"
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                  Pemegang Barang
+                </label>
+                <select
+                  {...register("holderId")}
+                  disabled={disableFields}
+                  className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 max-w-md"
+                >
+                  <option value="">Disimpan di Gudang / Inventaris Umum</option>
+                  {filteredHolders.map((h) => (
+                    <option key={h.id} value={h.id}>{h.nama} ({h.nip})</option>
+                  ))}
+                </select>
+                {errors.holderId && <p className="text-xs text-rose-500 mt-1">{errors.holderId.message}</p>}
+              </div>
+            </div>
+
+            {/* Kondisi Terkini */}
+            <div className="space-y-1.5 pt-1">
+              <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                Kondisi Terkini <span className="text-rose-500">*</span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl">
+                {[
+                  { value: "BAIK", label: "Baik (B)", color: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400" },
+                  { value: "KURANG_BAIK", label: "Kurang Baik (KB)", color: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-400" },
+                  { value: "RUSAK_BERAT", label: "Rusak Berat (RB)", color: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-900/20 dark:text-rose-400" }
+                ].map((kondisi) => (
+                  <label
+                    key={kondisi.value}
+                    className={`relative flex cursor-pointer rounded-lg border ${watchKondisi === kondisi.value ? `ring-2 ring-emerald-500 ${kondisi.color}` : 'border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900'} p-2 shadow-xs focus:outline-none items-center justify-between`}
+                  >
+                    <input
+                      type="radio"
+                      value={kondisi.value}
+                      {...register("kondisi")}
+                      disabled={disableFields}
+                      className="sr-only"
+                    />
+                    <span className="flex flex-1">
+                      <span className="flex flex-col">
+                        <span className="block text-xs font-semibold">{kondisi.label}</span>
+                      </span>
+                    </span>
+                    {watchKondisi === kondisi.value && (
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                    )}
+                  </label>
+                ))}
+              </div>
+              {errors.kondisi && <p className="text-xs text-rose-500 mt-1">{errors.kondisi.message}</p>}
+            </div>
+
+            {/* Foto Dokumentasi (Two Column Layout on Desktop for Compactness) */}
+            <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800 space-y-3">
+              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                Foto Dokumentasi Aset
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                {/* Column 1: Upload box */}
+                <div className="relative border-2 border-dashed border-zinc-300 dark:border-zinc-800 rounded-lg p-5 flex flex-col items-center justify-center text-center hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors h-[130px]">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handlePhotoUpload}
+                    disabled={uploading}
+                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer disabled:cursor-not-allowed"
+                  />
+                  {uploading ? (
+                    <div className="flex flex-col items-center gap-1.5">
+                      <Loader2 className="h-6 w-6 text-emerald-600 animate-spin" />
+                      <span className="text-[11px] font-medium text-zinc-500">Mengupload...</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1.5">
+                      <Upload className="h-6 w-6 text-emerald-600" />
+                      <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                        Klik atau Tarik Foto ke Sini
+                      </span>
+                      <span className="text-[10px] text-zinc-500">JPG, PNG, WEBP s/d 5MB</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Column 2: Uploaded Previews */}
+                <div className="border border-zinc-200 dark:border-zinc-800 rounded-lg p-3 bg-zinc-50/30 dark:bg-zinc-900/10 min-h-[130px] flex flex-col justify-center">
+                  {watchPhotos.length === 0 ? (
+                    <p className="text-xs text-zinc-400 dark:text-zinc-500 italic text-center">Belum ada foto yang diunggah</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <span className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                        Daftar Foto ({watchPhotos.length}/5)
+                      </span>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {watchPhotos.map((photo) => {
+                          const isMain = watchFotoUtama === photo.url;
+                          return (
+                            <div
+                              key={photo.url}
+                              className={`relative group rounded-lg overflow-hidden border h-16 bg-zinc-100 ${isMain ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-zinc-200"
                                 }`}
                             >
-                              <Star className="h-4 w-4 fill-current" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleRemovePhoto(photo.url)}
-                              title="Hapus Foto"
-                              className="p-1.5 rounded-full bg-white text-zinc-800 hover:bg-rose-50 hover:text-rose-600 cursor-pointer transition-colors"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                          {isMain && (
-                            <Badge className="absolute top-1.5 left-1.5 bg-emerald-600 text-white border-0 font-medium text-[9px] px-1 py-0 shadow-sm flex items-center gap-0.5">
-                              <Star className="h-2.5 w-2.5 fill-current" />
-                              Utama
-                            </Badge>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                              <img
+                                src={photo.url}
+                                alt="Aset"
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleSetMainPhoto(photo.url)}
+                                  title={isMain ? "Foto Utama" : "Jadikan Foto Utama"}
+                                  className={`p-1 rounded-full cursor-pointer transition-colors ${isMain ? "bg-emerald-500 text-white" : "bg-white text-zinc-800 hover:bg-emerald-50 hover:text-emerald-600"
+                                    }`}
+                                >
+                                  <Star className="h-3 w-3 fill-current" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemovePhoto(photo.url)}
+                                  title="Hapus Foto"
+                                  className="p-1 rounded-full bg-white text-zinc-800 hover:bg-rose-50 hover:text-rose-600 cursor-pointer transition-colors"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              </div>
+                              {isMain && (
+                                <Badge className="absolute top-1 left-1 bg-emerald-600 text-white border-0 font-medium text-[8px] px-1 py-0 shadow-sm flex items-center gap-0.5">
+                                  Utama
+                                </Badge>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </div>
+            </div>
 
-          {/* Form Action Box */}
-          <Card className="border-zinc-200/80 dark:border-zinc-800/80">
-            <CardContent className="p-4 space-y-3">
-              <Button
-                type="submit"
-                disabled={isSubmitting || uploading}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold cursor-pointer h-10 disabled:pointer-events-none"
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Menyimpan...
-                  </span>
-                ) : (
-                  "Simpan Data Aset"
-                )}
+            {/* Catatan Tambahan */}
+            <div className="space-y-1.5 pt-1">
+              <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                Catatan Tambahan
+              </label>
+              <textarea
+                placeholder="Contoh: Didanai oleh dana APBD 2026, Penempatan di ruang Aula utama."
+                rows={2}
+                className="flex w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent px-3 py-2 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring max-w-xl"
+                {...register("catatan")}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Form Action Box - Spanning bottom of the page */}
+        <Card className="border-zinc-200/80 dark:border-zinc-800/80 shadow-sm mt-6">
+          <CardContent className="p-4 flex flex-col sm:flex-row items-center justify-end gap-3">
+            <Link href="/assets" prefetch={false} className="w-full sm:w-auto order-2 sm:order-1">
+              <Button variant="outline" type="button" className="w-full cursor-pointer h-10 px-6">
+                Batalkan
               </Button>
-              <Link href="/assets" prefetch={false} className="block">
-                <Button variant="outline" type="button" className="w-full cursor-pointer h-10">
-                  Batalkan
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
+            </Link>
+            <Button
+              type="submit"
+              disabled={isSubmitting || uploading}
+              className="w-full sm:w-auto order-1 sm:order-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold cursor-pointer h-10 px-8 disabled:pointer-events-none"
+            >
+              {isSubmitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Menyimpan...
+                </span>
+              ) : (
+                "Simpan Data Aset"
+              )}
+            </Button>
+          </CardContent>
+        </Card>
       </form>
+
+      {/* Success/Error Dialog Notification */}
+      <Dialog isOpen={showDialog} onClose={() => setShowDialog(false)}>
+        <DialogHeader className="flex flex-col items-center justify-center text-center">
+          {dialogConfig.type === "success" ? (
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/30 mb-3">
+              <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+          ) : (
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-950/30 mb-3">
+              <AlertTriangle className="h-6 w-6 text-rose-600 dark:text-rose-400" />
+            </div>
+          )}
+          <DialogTitle className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+            {dialogConfig.title}
+          </DialogTitle>
+          <DialogDescription className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
+            {dialogConfig.description}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="sm:justify-center">
+          <Button
+            type="button"
+            onClick={() => setShowDialog(false)}
+            className={`w-full sm:w-28 font-semibold cursor-pointer ${
+              dialogConfig.type === "success"
+                ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                : "bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-50 dark:hover:bg-zinc-200 dark:text-zinc-900"
+            }`}
+          >
+            OK
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </div>
   );
 }

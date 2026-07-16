@@ -157,29 +157,27 @@ export function FormPemeriksaanClient({ recon, userRole, currentUserId }: FormPe
   );
 
   return (
-    <div className="space-y-6 pt-0 pb-8 -mt-6">
+    <div className="space-y-4 pt-0 pb-8">
       {/* Hero Header Banner */}
-      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 p-6 rounded-b-3xl shadow-sm -mx-6 sm:-mx-8 px-6 sm:px-12 mb-8 relative">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <Link href="/rekonsiliasi/pemeriksaan" prefetch={false}>
-              <Button variant="outline" size="icon" className="rounded-full h-10 w-10 shrink-0 bg-white hover:bg-zinc-50 text-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 transition-all cursor-pointer">
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div className="space-y-2">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50 drop-shadow-sm">{asset.namaAset}</h1>
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border shadow-sm ${rekonBadgeClass}`}>
-                  {rekonBadgeLabel}
-                </span>
-              </div>
-              <p className="text-zinc-600 dark:text-zinc-400 font-medium">
-                <span className="font-mono font-bold text-zinc-800 dark:text-zinc-200">{asset.kodeLengkap}</span> &nbsp;·&nbsp;
-                Periode: <span className="font-semibold">{period.nama}</span>
-                {recon.checker && <span> &nbsp;·&nbsp; Pemeriksa: {recon.checker.nama}</span>}
-              </p>
+      <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 px-4 sm:px-6 py-5 rounded-2xl shadow-sm mb-6">
+        <div className="flex items-center gap-4">
+          <Link href="/rekonsiliasi/pemeriksaan" prefetch={false}>
+            <Button variant="outline" size="icon" className="rounded-full h-10 w-10 shrink-0 bg-white hover:bg-zinc-50 text-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 border-zinc-200 dark:border-zinc-700 transition-all cursor-pointer">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">{asset.namaAset}</h1>
+              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border shadow-sm ${rekonBadgeClass}`}>
+                {rekonBadgeLabel}
+              </span>
             </div>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium">
+              <span className="font-mono font-bold text-zinc-800 dark:text-zinc-200">{asset.kodeLengkap}</span> &nbsp;·&nbsp;
+              Periode: <span className="font-semibold">{period.nama}</span>
+              {recon.checker && <span> &nbsp;·&nbsp; Pemeriksa: {recon.checker.nama}</span>}
+            </p>
           </div>
         </div>
       </div>
