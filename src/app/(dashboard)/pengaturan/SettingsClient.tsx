@@ -13,12 +13,18 @@ import {
   ShieldCheck, 
   Loader2, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  Download,
+  Upload,
+  ShieldAlert
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { updateOpdAction } from "@/actions/opd";
+import { exportBackupAction, importBackupAction } from "@/actions/backup";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { cn } from "@/lib/utils";
 import { Role } from "@prisma/client";
 
 const opdSchema = z.object({
@@ -47,6 +53,99 @@ export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClient
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const isAdmin = userRole === Role.ADMINISTRATOR;
+
+  const [backupSuccess, setBackupSuccess] = React.useState<string | null>(null);
+  const [backupError, setBackupError] = React.useState<string | null>(null);
+  const [isExporting, setIsExporting] = React.useState(false);
+  const [isImporting, setIsImporting] = React.useState(false);
+  const [showRestoreConfirm, setShowRestoreConfirm] = React.useState(false);
+  const [uploadedJsonContent, setUploadedJsonContent] = React.useState<string | null>(null);
+  const [uploadedFileName, setUploadedFileName] = React.useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleExportBackup = async () => {
+    if (!isAdmin) return;
+    setIsExporting(true);
+    setBackupSuccess(null);
+    setBackupError(null);
+
+    try {
+      const res = await exportBackupAction();
+      if (res.error) {
+        setBackupError(res.error);
+      } else if (res.backupData) {
+        const dataStr = JSON.stringify(res.backupData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(dataBlob);
+        
+        const link = document.createElement("a");
+        link.href = url;
+        const dateStr = new Date().toISOString().split("T")[0];
+        link.download = `Backup_SIM_Aset_${opd.kode}_${dateStr}.json`;
+        document.body.appendChild(link);
+        link.click();
+        
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 1000);
+
+        setBackupSuccess("Ekspor data berhasil. File cadangan telah diunduh.");
+      }
+    } catch (err) {
+      console.error(err);
+      setBackupError("Gagal mengekspor data cadangan.");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadedFileName(file.name);
+    setBackupSuccess(null);
+    setBackupError(null);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      setUploadedJsonContent(content);
+    };
+    reader.onerror = () => {
+      setBackupError("Gagal membaca file unggahan.");
+    };
+    reader.readAsText(file);
+  };
+
+  const handleRestoreConfirmed = async () => {
+    if (!isAdmin || !uploadedJsonContent) return;
+    setShowRestoreConfirm(false);
+    setIsImporting(true);
+    setBackupSuccess(null);
+    setBackupError(null);
+
+    try {
+      const res = await importBackupAction(uploadedJsonContent);
+      if (res.error) {
+        setBackupError(res.error);
+      } else if (res.success) {
+        setBackupSuccess("Pemulihan data berhasil diselesaikan. Seluruh database telah diperbarui.");
+        setUploadedJsonContent(null);
+        setUploadedFileName(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        router.refresh();
+      }
+    } catch (err) {
+      console.error(err);
+      setBackupError("Gagal memulihkan database dari berkas cadangan.");
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   const {
     register,
