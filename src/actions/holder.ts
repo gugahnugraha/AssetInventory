@@ -24,13 +24,13 @@ export async function createHolderAction(data: CreateHolderInput) {
   try {
     await requireWriteAccess();
     
-    if (!data.nama.trim() || !data.nip.trim() || !data.jabatan.trim() || !data.distributionId) {
-      return { error: "Semua data pemegang barang wajib diisi." };
+    if (!data.nama.trim() || !data.jabatan.trim() || !data.distributionId) {
+      return { error: "Nama, jabatan, dan bidang penempatan wajib diisi." };
     }
 
     const newHolder = await createHolder({
       nama: data.nama.trim(),
-      nip: data.nip.trim(),
+      nip: data.nip?.trim() || "",
       jabatan: data.jabatan.trim(),
       distributionId: data.distributionId,
     });

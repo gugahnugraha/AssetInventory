@@ -39,7 +39,7 @@ export async function getHolderById(id: string) {
 
 export interface CreateHolderInput {
   nama: string;
-  nip: string;
+  nip?: string;
   jabatan: string;
   distributionId: string;
 }
@@ -47,7 +47,10 @@ export interface CreateHolderInput {
 export async function createHolder(data: CreateHolderInput) {
   try {
     return await prisma.holder.create({
-      data,
+      data: {
+        ...data,
+        nip: data.nip ?? "",
+      },
     });
   } catch (error) {
     console.error("Error in createHolder:", error);

@@ -27,7 +27,7 @@ import { useRouter } from "next/navigation";
 
 const holderSchema = z.object({
   nama: z.string().min(1, "Nama pemegang wajib diisi"),
-  nip: z.string().min(18, "NIP wajib 18 digit").max(18, "NIP wajib 18 digit"),
+  nip: z.string().max(18, "NIP maksimal 18 digit").optional().or(z.literal("")),
   jabatan: z.string().min(1, "Jabatan wajib diisi"),
   distributionId: z.string().min(1, "Bidang wajib dipilih"),
 });
@@ -107,10 +107,6 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
       triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
       return;
     }
-    if (userRole === Role.OPERATOR) {
-      triggerAlert("Akses Terbatas", "Anda tidak diizinkan membuat data master, hubungi Administrator!", "warning");
-      return;
-    }
     setIsSubmitting(true);
     setError(null);
     try {
@@ -133,10 +129,6 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
   const onEditSubmit = async (values: HolderFormValues) => {
     if (userRole === Role.DEMO) {
       triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
-      return;
-    }
-    if (userRole === Role.OPERATOR) {
-      triggerAlert("Akses Terbatas", "Anda tidak diizinkan mengubah data master, hubungi Administrator!", "warning");
       return;
     }
     if (!selectedHolder) return;
@@ -317,7 +309,7 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">NIP (18 Digit)</label>
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">NIP <span className="text-zinc-400 font-normal lowercase">(opsional)</span></label>
             <Input
               placeholder="Contoh: 198203152008011003"
               maxLength={18}
@@ -384,7 +376,7 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">NIP (18 Digit)</label>
+            <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">NIP <span className="text-zinc-400 font-normal lowercase">(opsional)</span></label>
             <Input
               placeholder="Contoh: 198203152008011003"
               maxLength={18}

@@ -12,6 +12,7 @@ import {
   Shield,
   ClipboardCheck,
   Database,
+  BookOpen,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Role } from "@prisma/client"
@@ -125,6 +126,12 @@ export function Sidebar({ user }: SidebarProps) {
       label: "Rekonsiliasi Aset",
       href: "/rekonsiliasi",
       icon: ClipboardCheck,
+      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
+    },
+    {
+      label: "Dokumentasi",
+      href: "/dokumentasi",
+      icon: BookOpen,
       roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
     },
   ]
