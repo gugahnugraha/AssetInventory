@@ -10,7 +10,9 @@ import {
   Lock, 
   Loader2, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -70,6 +72,9 @@ export function ProfileClient({ user }: ProfileClientProps) {
       confirmPassword: "",
     },
   });
+
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
   const onSubmit = async (values: ProfileFormValues) => {
     if (user.role === Role.DEMO) {
@@ -203,12 +208,40 @@ export function ProfileClient({ user }: ProfileClientProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Password Baru</label>
-                    <Input type="password" placeholder="••••••••" {...register("password")} />
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        {...register("password")}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-2 text-zinc-400 hover:text-zinc-650 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                     {errors.password && <p className="text-xs text-rose-500 mt-1">{errors.password.message}</p>}
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold uppercase tracking-wider text-zinc-700 dark:text-zinc-300">Konfirmasi Password Baru</label>
-                    <Input type="password" placeholder="••••••••" {...register("confirmPassword")} />
+                    <div className="relative">
+                      <Input
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        {...register("confirmPassword")}
+                        className="pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-2 text-zinc-400 hover:text-zinc-650 cursor-pointer"
+                      >
+                        {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                     {errors.confirmPassword && <p className="text-xs text-rose-500 mt-1">{errors.confirmPassword.message}</p>}
                   </div>
                 </div>

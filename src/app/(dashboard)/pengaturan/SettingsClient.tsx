@@ -16,12 +16,16 @@ import {
   AlertCircle,
   Download,
   Upload,
-  ShieldAlert
+  ShieldAlert,
+  Cpu,
+  Activity,
+  Clock,
+  RefreshCw
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { updateOpdAction } from "@/actions/opd";
+import { updateOpdAction, getServerDiagnosticsAction } from "@/actions/opd";
 import { exportBackupAction, importBackupAction } from "@/actions/backup";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
@@ -51,6 +55,40 @@ export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClient
   const [success, setSuccess] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const [diagnostics, setDiagnostics] = React.useState<any | null>(null);
+  const [isRunningDiagnostics, setIsRunningDiagnostics] = React.useState(false);
+
+  const handleRunDiagnostics = React.useCallback(async () => {
+    setIsRunningDiagnostics(true);
+    try {
+      const res = await getServerDiagnosticsAction();
+      if (res.success && res.data) {
+        setDiagnostics(res.data);
+      } else {
+        console.error("Diagnostics failed", res.error);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsRunningDiagnostics(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    handleRunDiagnostics();
+  }, [handleRunDiagnostics]);
+
+  const formatUptime = (secondsStr: string) => {
+    const seconds = parseInt(secondsStr, 10);
+    if (isNaN(seconds)) return "-";
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h} jam ${m} menit`;
+    if (m > 0) return `${m} menit ${s} detik`;
+    return `${s} detik`;
+  };
 
   const isAdmin = userRole === Role.ADMINISTRATOR;
 
@@ -193,6 +231,20 @@ export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClient
       setError("Gagal menyimpan pengaturan.");
       setIsSubmitting(false);
     }
+  };
+
+  const getMemoryStatus = () => {
+    if (!diagnostics) return "unknown";
+    const match = diagnostics.system.memoryHeap.match(/(\d+)MB\s*\/\s*(\d+)MB/);
+    if (match) {
+      const used = parseInt(match[1], 10);
+      const total = parseInt(match[2], 10);
+      const pct = used / total;
+      if (pct >= 0.90) return "critical";
+      if (pct >= 0.75) return "warning";
+      return "healthy";
+    }
+    return "healthy";
   };
 
   return (
@@ -430,47 +482,152 @@ export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClient
             </CardHeader>
             <CardContent className="pt-6 space-y-4 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
               {/* Media storage */}
-              <div className="flex items-start gap-3 p-3 rounded-lg border bg-zinc-50 dark:bg-zinc-900/60">
-                <HardDrive className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-zinc-50 dark:bg-zinc-900/60 border-zinc-200/60 dark:border-zinc-800">
+                <div className="relative shrink-0">
+                  <HardDrive className="h-5 w-5 text-emerald-600 mt-0.5" />
+                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
+                </div>
                 <div className="flex-1 min-w-0">
                   <span className="text-[10px] text-zinc-400">Penyimpanan Media</span>
                   <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200 mt-0.5 leading-none">
-                    {isR2Configured ? "Cloudflare R2 Active" : "Local Disk Storage"}
+                    {isR2Configured ? "Penyimpanan Objek Terdistribusi (Aktif)" : "Penyimpanan Berkas Lokal (Aktif)"}
                   </p>
                   <p className="text-[9px] text-zinc-400 lowercase font-medium tracking-normal mt-1 leading-normal">
                     {isR2Configured 
-                      ? "Penyimpanan cloud berbasis obyek S3 Cloudflare aktif." 
-                      : "Penyimpanan lokal di folder public/uploads/ (mode pengembangan)."}
+                      ? "Penyimpanan awan terdistribusi aktif untuk dokumentasi foto aset." 
+                      : "Penyimpanan lokal di folder server aktif (mode pengembangan)."}
                   </p>
                 </div>
               </div>
 
               {/* Database */}
-              <div className="flex items-start gap-3 p-3 rounded-lg border bg-zinc-50 dark:bg-zinc-900/60">
-                <Database className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-zinc-50 dark:bg-zinc-900/60 border-zinc-200/60 dark:border-zinc-800">
+                <div className="relative shrink-0">
+                  <Database className="h-5 w-5 text-emerald-600 mt-0.5" />
+                  {diagnostics ? (
+                    (() => {
+                      const lat = parseInt(diagnostics.database.latency, 10);
+                      if (isNaN(lat)) {
+                        return <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white dark:ring-zinc-900 animate-pulse" />;
+                      }
+                      if (lat >= 150) {
+                        return <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-white dark:ring-zinc-900 animate-pulse" />;
+                      }
+                      return <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />;
+                    })()
+                  ) : (
+                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-zinc-450 ring-2 ring-white dark:ring-zinc-900 animate-pulse" />
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-[10px] text-zinc-400">Database Driver</span>
-                  <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200 mt-0.5 leading-none">
-                    PostgreSQL Client (Wasm)
+                  <span className="text-[10px] text-zinc-400">Koneksi Database</span>
+                  <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200 mt-0.5 leading-none flex items-center gap-1.5">
+                    {diagnostics ? (
+                      <>
+                        Online
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400 rounded-md border border-emerald-100 dark:border-emerald-900/50 font-medium">
+                          {diagnostics.database.latency}
+                        </span>
+                      </>
+                    ) : (
+                      "Menghubungkan..."
+                    )}
                   </p>
                   <p className="text-[9px] text-zinc-400 lowercase font-medium tracking-normal mt-1 leading-normal">
-                    Prisma 7 Wasm engine dengan driver adapter Pool pg PostgreSQL Neon.
+                    {diagnostics 
+                      ? `${diagnostics.database.driver} · ${diagnostics.database.assetCount} aset · ${diagnostics.database.userCount} pengguna`
+                      : "Mendapatkan statistik mesin database dengan Prisma adapter..."}
                   </p>
                 </div>
               </div>
 
-              {/* Authentication */}
-              <div className="flex items-start gap-3 p-3 rounded-lg border bg-zinc-50 dark:bg-zinc-900/60">
-                <ShieldCheck className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+              {/* Runtime Specs */}
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-zinc-50 dark:bg-zinc-900/60 border-zinc-200/60 dark:border-zinc-800">
+                <div className="relative shrink-0">
+                  <Cpu className="h-5 w-5 text-emerald-600 mt-0.5" />
+                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
+                </div>
                 <div className="flex-1 min-w-0">
-                  <span className="text-[10px] text-zinc-400">Autentikasi</span>
-                  <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200 mt-0.5 leading-none">
-                    Auth.js JWT Session
+                  <span className="text-[10px] text-zinc-400">Sistem & Runtime</span>
+                  <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200 mt-0.5 leading-none flex items-center gap-1.5">
+                    {diagnostics ? (
+                      <>
+                        Node.js {diagnostics.system.nodeVersion}
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 bg-zinc-150 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-md font-medium uppercase">
+                          {diagnostics.system.envMode}
+                        </span>
+                      </>
+                    ) : (
+                      "Memuat..."
+                    )}
                   </p>
                   <p className="text-[9px] text-zinc-400 lowercase font-medium tracking-normal mt-1 leading-normal">
-                    Middleware proteksi rute dengan JWT token terenkripsi.
+                    {diagnostics 
+                      ? `Platform: ${diagnostics.system.platform} · Memori RSS: ${diagnostics.system.memoryRss}`
+                      : "Membaca spesifikasi OS, arsitektur, dan alokasi heap..."}
                   </p>
                 </div>
+              </div>
+
+              {/* Memory Heap */}
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-zinc-50 dark:bg-zinc-900/60 border-zinc-200/60 dark:border-zinc-800">
+                <div className="relative shrink-0">
+                  <Activity className="h-5 w-5 text-emerald-600 mt-0.5" />
+                  {diagnostics ? (
+                    (() => {
+                      const status = getMemoryStatus();
+                      if (status === "critical") {
+                        return <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white dark:ring-zinc-900 animate-pulse" />;
+                      }
+                      if (status === "warning") {
+                        return <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-amber-500 ring-2 ring-white dark:ring-zinc-900 animate-pulse" />;
+                      }
+                      return <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />;
+                    })()
+                  ) : (
+                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-zinc-450 ring-2 ring-white dark:ring-zinc-900 animate-pulse" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-[10px] text-zinc-400">Alokasi Memori Heap</span>
+                  <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200 mt-0.5 leading-none">
+                    {diagnostics ? diagnostics.system.memoryHeap : "Mengukur..."}
+                  </p>
+                  <p className="text-[9px] text-zinc-400 lowercase font-medium tracking-normal mt-1 leading-normal font-sans">
+                    {diagnostics 
+                      ? "Porsi memori v8 heap yang digunakan dari total alokasi runtime."
+                      : "Mengambil data penggunaan ram node process..."}
+                  </p>
+                </div>
+              </div>
+
+              {/* Uptime */}
+              <div className="flex items-start gap-3 p-3 rounded-lg border bg-zinc-50 dark:bg-zinc-900/60 border-zinc-200/60 dark:border-zinc-800">
+                <div className="relative shrink-0">
+                  <Clock className="h-5 w-5 text-emerald-600 mt-0.5" />
+                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-zinc-900" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-[10px] text-zinc-400">Uptime Server</span>
+                  <p className="text-sm font-bold text-zinc-800 dark:text-zinc-200 mt-0.5 leading-none">
+                    {diagnostics ? formatUptime(diagnostics.system.uptime) : "Menghitung..."}
+                  </p>
+                  <p className="text-[9px] text-zinc-400 lowercase font-medium tracking-normal mt-1 leading-normal">
+                    Durasi aktif runtime aplikasi sejak proses dihidupkan.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  onClick={handleRunDiagnostics}
+                  disabled={isRunningDiagnostics}
+                  variant="outline"
+                  className="w-full text-xs font-bold gap-2 cursor-pointer flex items-center justify-center h-9"
+                >
+                  <RefreshCw className={cn("h-3.5 w-3.5", isRunningDiagnostics && "animate-spin")} />
+                  {isRunningDiagnostics ? "Memeriksa..." : "Segarkan Diagnostik"}
+                </Button>
               </div>
             </CardContent>
           </Card>

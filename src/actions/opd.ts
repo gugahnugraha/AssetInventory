@@ -44,3 +44,54 @@ export async function updateOpdAction(id: string, name: string, code: string, nu
     return { error: error.message || "Gagal memperbarui data instansi." };
   }
 }
+
+export async function getServerDiagnosticsAction() {
+  const session = await auth();
+  if (!session) {
+    return { error: "Anda harus masuk terlebih dahulu." };
+  }
+
+  try {
+    const startTime = Date.now();
+    // Test database connection
+    await prisma.$queryRaw`SELECT 1`;
+    const dbLatency = Date.now() - startTime;
+
+    // Get table stats
+    const assetCount = await prisma.asset.count();
+    const userCount = await prisma.user.count();
+
+    // Memory info
+    const memoryUsage = process.memoryUsage();
+    const heapUsedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
+    const heapTotalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
+    const rssMB = Math.round(memoryUsage.rss / 1024 / 1024);
+
+    return {
+      success: true,
+      data: {
+        database: {
+          status: "connected",
+          latency: `${dbLatency}ms`,
+          driver: "PostgreSQL Database Engine",
+          assetCount,
+          userCount,
+        },
+        system: {
+          nodeVersion: process.version,
+          platform: process.platform,
+          envMode: process.env.NODE_ENV || "production",
+          memoryHeap: `${heapUsedMB}MB / ${heapTotalMB}MB`,
+          memoryRss: `${rssMB}MB`,
+          uptime: `${Math.round(process.uptime())}s`,
+        },
+      },
+    };
+  } catch (error: any) {
+    console.error("Diagnostics Error:", error);
+    return {
+      success: false,
+      error: error.message || "Gagal melakukan diagnostik server.",
+    };
+  }
+}

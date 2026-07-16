@@ -79,6 +79,28 @@ export function MutasiClient({
     }
   }, [preselectedAssetId, assets]);
 
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowAssetDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
+
   // Reset form helper
   const resetForm = () => {
     setSelectedAsset(null);
@@ -412,6 +434,7 @@ export function MutasiClient({
                 </label>
                 <div className="relative">
                   <Input
+                    ref={inputRef}
                     placeholder="Ketik nama aset atau kode lengkap..."
                     value={assetSearch}
                     onChange={(e) => {
@@ -428,14 +451,15 @@ export function MutasiClient({
 
                 {/* Dropdown list for autocomplete */}
                 {showAssetDropdown && assetSearch.length > 0 && !selectedAsset && (
-                  <div className="absolute z-50 w-full left-0 mt-1 max-h-48 overflow-y-auto bg-white border border-zinc-200 rounded-lg shadow-lg divide-y text-sm">
+                  <div ref={dropdownRef} className="absolute z-50 w-full left-0 mt-1 max-h-48 overflow-y-auto bg-white border border-zinc-200 rounded-lg shadow-lg divide-y text-sm">
                     {filteredAssetsForSelect.length === 0 ? (
                       <div className="p-3 text-zinc-500 italic text-center">Aset tidak ditemukan.</div>
                     ) : (
                       filteredAssetsForSelect.map((a) => (
                         <div
                           key={a.id}
-                          onClick={() => {
+                          onPointerDown={(e) => {
+                            e.preventDefault();
                             setSelectedAsset(a);
                             setAssetSearch(`${a.namaAset} (${a.kodeLengkap})`);
                             // Prepopulate default fields

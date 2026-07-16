@@ -718,11 +718,19 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
                   >
                     {row.getVisibleCells().map(cell => {
                       const isActions = cell.column.id === "actions";
+                      const isSelect = cell.column.id === "select";
+                      const handleCellClick = () => {
+                        if (!isActions && !isSelect) {
+                          router.push(`/assets/${row.original.id}`);
+                        }
+                      };
                       return (
                         <TableCell
                           key={cell.id}
+                          onClick={handleCellClick}
                           className={cn(
                             "whitespace-nowrap py-2.5",
+                            !isActions && !isSelect && "cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors",
                             isActions && cn(
                               "sticky right-0 border-l border-zinc-100 dark:border-zinc-800 shadow-[-6px_0_12px_rgba(0,0,0,0.04)]",
                               idx % 2 === 0
