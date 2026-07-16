@@ -51,7 +51,20 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
   const [selectedHolder, setSelectedHolder] = React.useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; name: string } | null>(null);
-  const [showDemoAlert, setShowDemoAlert] = React.useState(false);
+  const [alertDialog, setAlertDialog] = React.useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    variant: "success" | "danger" | "warning" | "info";
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    variant: "info",
+  });
+  const triggerAlert = (title: string, description: string, variant: "success" | "danger" | "warning" | "info" = "info") => {
+    setAlertDialog({ isOpen: true, title, description, variant });
+  };
 
   const {
     register,
@@ -91,7 +104,11 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
 
   const onCreateSubmit = async (values: HolderFormValues) => {
     if (userRole === Role.DEMO) {
-      setError("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan membuat data master, hubungi Administrator!", "warning");
       return;
     }
     setIsSubmitting(true);
@@ -115,7 +132,11 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
 
   const onEditSubmit = async (values: HolderFormValues) => {
     if (userRole === Role.DEMO) {
-      setError("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan mengubah data master, hubungi Administrator!", "warning");
       return;
     }
     if (!selectedHolder) return;
@@ -142,7 +163,11 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
   const handleDelete = (id: string, name: string) => {
     if (userRole === Role.MANAGER) return;
     if (userRole === Role.DEMO) {
-      setShowDemoAlert(true);
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan menghapus data master, hubungi Administrator!", "warning");
       return;
     }
     setDeleteTarget({ id, name });
@@ -150,7 +175,11 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
 
   const handleDeleteConfirmed = async () => {
     if (userRole === Role.DEMO) {
-      setShowDemoAlert(true);
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan menghapus data master, hubungi Administrator!", "warning");
       return;
     }
     if (!deleteTarget) return;
@@ -411,11 +440,11 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
     />
 
     <AlertDialog
-      isOpen={showDemoAlert}
-      onClose={() => setShowDemoAlert(false)}
-      title="Demo Only"
-      description="Anda tidak diizinkan melakukan perubahan."
-      variant="warning"
+      isOpen={alertDialog.isOpen}
+      onClose={() => setAlertDialog(prev => ({ ...prev, isOpen: false }))}
+      title={alertDialog.title}
+      description={alertDialog.description}
+      variant={alertDialog.variant}
     />
     </>
   );
