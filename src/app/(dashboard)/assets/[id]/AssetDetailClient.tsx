@@ -24,6 +24,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
 import { deleteAssetAction, deleteAssetPhotoAction, setPrimaryPhotoAction } from "@/actions/asset";
@@ -43,6 +44,20 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
   const router = useRouter();
   const [activePhoto, setActivePhoto] = React.useState<string>(asset.fotoUtama || "/placeholder-asset.png");
   const [showDeleteConfirm, setShowDeleteConfirm] = React.useState(false);
+  const [alertDialog, setAlertDialog] = React.useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    variant: "success" | "danger" | "warning" | "info";
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    variant: "info",
+  });
+  const triggerAlert = (title: string, description: string, variant: "success" | "danger" | "warning" | "info" = "info") => {
+    setAlertDialog({ isOpen: true, title, description, variant });
+  };
   const [activeTab, setActiveTab] = React.useState<"spec" | "history" | "audit" | "notes">("spec");
   const [isSubmittingPhoto, setIsSubmittingPhoto] = React.useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
@@ -100,7 +115,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
       const logoUrl = typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : "";
 
       const pdfBlob = await pdf(
-        <AssetStickerDocument assets={[asset]} qrCodes={qrCodes} logoUrl={logoUrl} />
+        <AssetStickerDocument assets={[asset]} qrCodes={qrCodes} logoUrl={logoUrl} isDemo={userRole === Role.DEMO} />
       ).toBlob();
       
       const blobWithMime = new Blob([pdfBlob], { type: 'application/pdf' });
@@ -117,7 +132,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
       }, 1000);
     } catch (err) {
       console.error("Failed to generate PDF", err);
-      alert("Gagal menghasilkan PDF.");
+      triggerAlert("Gagal", "Gagal menghasilkan PDF.", "danger");
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -141,13 +156,17 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
 
   const handleSetPrimary = async () => {
     if (!selectedDoc || userRole === Role.MANAGER) return;
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
     setIsSubmittingPhoto(true);
     try {
       const res = await setPrimaryPhotoAction(asset.id, selectedDoc.id);
       if (res.success) {
         router.refresh();
       } else {
-        alert(res.error || "Gagal mengubah foto utama.");
+        triggerAlert("Gagal", res.error || "Gagal mengubah foto utama.", "danger");
       }
     } catch (err) {
       console.error(err);
@@ -158,6 +177,10 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
 
   const handleDeletePhoto = async () => {
     if (!selectedDoc || userRole === Role.MANAGER) return;
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
     if (!confirm("Apakah Anda yakin ingin menghapus foto ini?")) return;
     setIsSubmittingPhoto(true);
     try {
@@ -168,7 +191,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
         setActivePhoto(remaining.length > 0 ? remaining[0].url : "/placeholder-asset.png");
         router.refresh();
       } else {
-        alert(res.error || "Gagal menghapus foto.");
+        triggerAlert("Gagal", res.error || "Gagal menghapus foto.", "danger");
       }
     } catch (err) {
       console.error(err);
@@ -214,10 +237,18 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
 
   const handleDelete = () => {
     if (userRole === Role.MANAGER) return;
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
     setShowDeleteConfirm(true);
   };
 
   const handleDeleteConfirmed = async () => {
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
     try {
       const res = await deleteAssetAction(asset.id);
       if (res.success) {
@@ -912,12 +943,21 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
                 assets={[asset]}
                 qrCodes={previewQrCodes}
                 logoUrl={typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : ""}
+                isDemo={userRole === Role.DEMO}
               />
             </PDFViewer>
           )}
         </div>
       </div>
     )}
+
+    <AlertDialog
+      isOpen={alertDialog.isOpen}
+      onClose={() => setAlertDialog(prev => ({ ...prev, isOpen: false }))}
+      title={alertDialog.title}
+      description={alertDialog.description}
+      variant={alertDialog.variant}
+    />
     </>
   );
 }

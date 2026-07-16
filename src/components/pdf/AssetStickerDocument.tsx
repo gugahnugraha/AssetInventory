@@ -22,6 +22,26 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     marginRight: '2mm',
     marginBottom: '2mm',
+    position: 'relative',
+  },
+  watermarkContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 99,
+  },
+  watermarkText: {
+    fontFamily: 'Helvetica-Bold',
+    fontSize: 26,
+    color: '#ef4444',
+    opacity: 0.32,
+    transform: 'rotate(-15deg)',
+    textTransform: 'uppercase',
   },
   header: {
     fontFamily: 'Helvetica-Bold',
@@ -110,9 +130,10 @@ interface AssetStickerDocumentProps {
   assets: any[];
   qrCodes: Record<string, string>;
   logoUrl: string;
+  isDemo?: boolean;
 }
 
-export const AssetStickerDocument = ({ assets, qrCodes, logoUrl }: AssetStickerDocumentProps) => {
+export const AssetStickerDocument = ({ assets, qrCodes, logoUrl, isDemo }: AssetStickerDocumentProps) => {
   // Urutkan aset berdasarkan kode aset (classCode) dan nomor register secara ascending
   const sortedAssets = [...assets].sort((a, b) => {
     const partsA = (a.kodeLengkap || "").split(".");
@@ -146,7 +167,7 @@ export const AssetStickerDocument = ({ assets, qrCodes, logoUrl }: AssetStickerD
           const tahunBeli = asset.tahunPembelian || "-";
           const qrDataUrl = qrCodes[asset.id];
 
-          return (
+           return (
             <View key={`${asset.id}-${index}`} style={styles.sticker} wrap={false}>
               <Text style={styles.header}>PEMERINTAH KABUPATEN BANDUNG</Text>
               <View style={styles.body}>
@@ -192,6 +213,11 @@ export const AssetStickerDocument = ({ assets, qrCodes, logoUrl }: AssetStickerD
                   {qrDataUrl && <Image src={qrDataUrl} style={styles.qrCode} />}
                 </View>
               </View>
+              {isDemo && (
+                <View style={styles.watermarkContainer}>
+                  <Text style={styles.watermarkText}>Speciment</Text>
+                </View>
+              )}
             </View>
           );
         })}

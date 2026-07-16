@@ -10,6 +10,9 @@ export async function updateOpdAction(id: string, name: string, code: string, nu
   if (!session) {
     return { error: "Anda harus masuk terlebih dahulu." };
   }
+  if (session.user.role === Role.DEMO) {
+    return { error: "Demo Only: Anda tidak diizinkan melakukan perubahan." };
+  }
   if (session.user.role !== Role.ADMINISTRATOR) {
     return { error: "Akses ditolak. Hanya Administrator yang dapat merubah pengaturan instansi." };
   }

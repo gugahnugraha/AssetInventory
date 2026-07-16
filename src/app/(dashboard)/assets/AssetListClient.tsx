@@ -38,6 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { deleteAssetAction } from "@/actions/asset";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Kondisi, Role } from "@prisma/client";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 import * as XLSX from "xlsx";
 import { cn, formatRupiah } from "@/lib/utils";
 import { ImportDialog } from "@/components/ImportDialog";
@@ -72,6 +73,20 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
     return Object.values(rowSelection).filter(Boolean).length;
   }, [rowSelection]);
   const [isMobile, setIsMobile] = React.useState(false);
+  const [alertDialog, setAlertDialog] = React.useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    variant: "success" | "danger" | "warning" | "info";
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    variant: "info",
+  });
+  const triggerAlert = (title: string, description: string, variant: "success" | "danger" | "warning" | "info" = "info") => {
+    setAlertDialog({ isOpen: true, title, description, variant });
+  };
 
   React.useEffect(() => {
     const checkMobile = () => {
@@ -489,7 +504,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       const logoUrl = typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : "";
 
       const pdfBlob = await pdf(
-        <AssetStickerDocument assets={previewAssets} qrCodes={qrCodes} logoUrl={logoUrl} />
+        <AssetStickerDocument assets={previewAssets} qrCodes={qrCodes} logoUrl={logoUrl} isDemo={userRole === Role.DEMO} />
       ).toBlob();
       
       const blobWithMime = new Blob([pdfBlob], { type: 'application/pdf' });
@@ -506,7 +521,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       }, 1000);
     } catch (err) {
       console.error("Failed to generate PDF", err);
-      alert("Gagal menghasilkan PDF.");
+      triggerAlert("Gagal", "Gagal menghasilkan PDF.", "danger");
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -592,7 +607,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       {/* Action Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
         {/* Left: Cetak Label — always enabled */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => {
               if (selectedCount === 0) {
@@ -611,6 +626,16 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
               </span>
             )}
           </button>
+
+          {selectedCount > 0 && (
+            <button
+              onClick={() => setRowSelection({})}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-600 dark:text-rose-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg active:scale-95 transition-all duration-150 cursor-pointer animate-in fade-in slide-in-from-left-2"
+            >
+              <X className="h-3.5 w-3.5" />
+              Clear All
+            </button>
+          )}
         </div>
 
         {/* Right: Export, Import, Tambah */}
@@ -853,12 +878,21 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
                 assets={previewAssets}
                 qrCodes={previewQrCodes}
                 logoUrl={typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : ""}
+                isDemo={userRole === Role.DEMO}
               />
             </PDFViewer>
           )}
         </div>
       </div>
     )}
+
+    <AlertDialog
+      isOpen={alertDialog.isOpen}
+      onClose={() => setAlertDialog(prev => ({ ...prev, isOpen: false }))}
+      title={alertDialog.title}
+      description={alertDialog.description}
+      variant={alertDialog.variant}
+    />
     </>
   );
 }

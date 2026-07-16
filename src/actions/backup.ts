@@ -19,7 +19,13 @@ const parseDates = (obj: any, dateFields: string[]) => {
 
 export async function exportBackupAction() {
   const session = await auth();
-  if (!session || !session.user || session.user.role !== Role.ADMINISTRATOR) {
+  if (!session || !session.user) {
+    return { error: "Anda harus masuk terlebih dahulu." };
+  }
+  if (session.user.role === Role.DEMO) {
+    return { error: "Demo Only: Anda tidak diizinkan melakukan perubahan." };
+  }
+  if (session.user.role !== Role.ADMINISTRATOR) {
     return { error: "Akses ditolak. Hanya Administrator yang dapat mengekspor cadangan data." };
   }
 
@@ -82,7 +88,13 @@ export async function exportBackupAction() {
 
 export async function importBackupAction(jsonDataStr: string) {
   const session = await auth();
-  if (!session || !session.user || session.user.role !== Role.ADMINISTRATOR) {
+  if (!session || !session.user) {
+    return { error: "Anda harus masuk terlebih dahulu." };
+  }
+  if (session.user.role === Role.DEMO) {
+    return { error: "Demo Only: Anda tidak diizinkan melakukan perubahan." };
+  }
+  if (session.user.role !== Role.ADMINISTRATOR) {
     return { error: "Akses ditolak. Hanya Administrator yang dapat memulihkan data." };
   }
 

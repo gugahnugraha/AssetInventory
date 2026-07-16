@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge";
 
 interface KibClientProps {
   initialKibs: any[];
+  userRole?: string;
 }
 
-export function KibClient({ initialKibs }: KibClientProps) {
+export function KibClient({ initialKibs, userRole }: KibClientProps) {
   const [kibs, setKibs] = React.useState(initialKibs);
 
   React.useEffect(() => {

@@ -11,6 +11,9 @@ async function requireAdminAccess() {
   if (!session) {
     throw new Error("Anda harus masuk terlebih dahulu.");
   }
+  if (session.user.role === Role.DEMO) {
+    throw new Error("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+  }
   if (session.user.role !== Role.ADMINISTRATOR) {
     throw new Error("Akses ditolak. Hanya Administrator yang dapat mengelola data master KIB.");
   }

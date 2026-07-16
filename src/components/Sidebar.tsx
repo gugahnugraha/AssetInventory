@@ -52,58 +52,72 @@ export function Sidebar({ user }: SidebarProps) {
     if (isMasterPathActive) setMasterExpanded(true);
   }, [pathname, isMasterPathActive]);
 
-  const links = [
+  interface LinkItem {
+    label: string;
+    href?: string;
+    icon?: any;
+    roles: Role[];
+    expandedState?: boolean;
+    setExpanded?: React.Dispatch<React.SetStateAction<boolean>>;
+    children?: {
+      label: string;
+      href: string;
+      roles: Role[];
+    }[];
+  }
+
+  const links: LinkItem[] = [
     {
       label: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
-      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
     },
     {
       label: "Manajemen Aset",
       icon: Boxes,
-      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
       expandedState: assetsExpanded,
       setExpanded: setAssetsExpanded,
       children: [
         {
           label: "Data Aset",
           href: "/assets",
-          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
         },
         {
           label: "Mutasi Aset",
           href: "/mutasi",
-          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
         },
       ]
     },
     {
       label: "Master Data",
       icon: Database,
-      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
       expandedState: masterExpanded,
       setExpanded: setMasterExpanded,
       children: [
         {
           label: "Bidang & Unit Kerja",
           href: "/distribusi",
-          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
         },
         {
           label: "Pemegang Aset",
           href: "/pemegang",
-          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
         },
         {
           label: "Kategori Aset",
           href: "/kategori",
-          roles: [Role.ADMINISTRATOR],
+          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.DEMO],
         },
         {
           label: "KIB",
           href: "/kib",
-          roles: [Role.ADMINISTRATOR],
+          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.DEMO],
         },
       ]
     },
@@ -111,7 +125,7 @@ export function Sidebar({ user }: SidebarProps) {
       label: "Rekonsiliasi Aset",
       href: "/rekonsiliasi",
       icon: ClipboardCheck,
-      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER],
+      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
     },
   ]
 
@@ -223,12 +237,12 @@ export function Sidebar({ user }: SidebarProps) {
           }
 
           const Icon = link.icon
-          const isActive = activeLink(link.href)
+          const isActive = link.href ? activeLink(link.href) : false
 
           return (
             <Link
-              key={link.href}
-              href={link.href}
+              key={link.href || link.label}
+              href={link.href || "#"}
               prefetch={false}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer group",

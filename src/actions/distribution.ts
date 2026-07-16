@@ -11,6 +11,9 @@ async function requireWriteAccess() {
   if (!session) {
     throw new Error("Anda harus masuk terlebih dahulu.");
   }
+  if (session.user.role === Role.DEMO) {
+    throw new Error("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+  }
   if (session.user.role === Role.MANAGER) {
     throw new Error("Akses ditolak. Pengguna dengan hak akses Manager hanya dapat membaca data.");
   }

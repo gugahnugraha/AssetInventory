@@ -564,6 +564,16 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
   };
 
   const onSubmit = async (data: any) => {
+    if (userRole === "DEMO") {
+      setDialogConfig({
+        title: "Demo Only",
+        description: "Anda tidak diizinkan melakukan perubahan.",
+        type: "error",
+      });
+      setShowDialog(true);
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     const { kibId, ...submitValues } = data;
@@ -1021,6 +1031,15 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
             <CardDescription className="text-xs">Tentukan penempatan bidang, pemegang barang, kondisi fisik, dan foto dokumentasi.</CardDescription>
           </CardHeader>
           <CardContent className="p-6 pt-0 space-y-4">
+            {isEditMode && userRole === "OPERATOR" && (
+              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-250 dark:border-amber-900 text-xs text-amber-800 dark:text-amber-300">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                <div>
+                  Perubahan bidang/distribusi dan pemegang barang hanya dapat dilakukan melalui menu <strong className="font-bold">Mutasi Aset</strong>.
+                </div>
+              </div>
+            )}
+
             {/* Penempatan */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
@@ -1063,11 +1082,12 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
               <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
                 Kondisi Terkini <span className="text-rose-500">*</span>
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl">
                 {[
-                  { value: "BAIK", label: "Baik (B)", color: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400" },
-                  { value: "KURANG_BAIK", label: "Kurang Baik (KB)", color: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-400" },
-                  { value: "RUSAK_BERAT", label: "Rusak Berat (RB)", color: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-900/20 dark:text-rose-400" }
+                  { value: "NORMAL", label: "Baik (B)", color: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400" },
+                  { value: "RUSAK_RINGAN", label: "Kurang Baik (KB)", color: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-400" },
+                  { value: "RUSAK_BERAT", label: "Rusak Berat (RB)", color: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-900/20 dark:text-rose-400" },
+                  { value: "HILANG", label: "Hilang (H)", color: "border-zinc-300 bg-zinc-50 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-300" }
                 ].map((kondisi) => (
                   <label
                     key={kondisi.value}
@@ -1077,7 +1097,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                       type="radio"
                       value={kondisi.value}
                       {...register("kondisi")}
-                      disabled={disableFields}
+                      disabled={isEditMode && userRole !== "ADMINISTRATOR" && userRole !== "ADMIN" && userRole !== "OPERATOR"}
                       className="sr-only"
                     />
                     <span className="flex flex-1">
@@ -1225,37 +1245,52 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
       </form>
 
       {/* Success/Error Dialog Notification */}
-      <Dialog isOpen={showDialog} onClose={() => setShowDialog(false)}>
-        <DialogHeader className="flex flex-col items-center justify-center text-center">
+      <Dialog 
+        isOpen={showDialog} 
+        onClose={() => setShowDialog(false)}
+        className="max-w-[360px] rounded-3xl p-7 bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-900 shadow-2xl relative"
+      >
+        <div className="flex flex-col items-center text-center">
           {dialogConfig.type === "success" ? (
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/30 mb-3">
-              <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+            <div className="relative mb-5 flex h-20 w-20 items-center justify-center">
+              {/* Pulsing rings */}
+              <div className="absolute inset-0 rounded-full bg-emerald-100 dark:bg-emerald-950/40 animate-ping opacity-75" />
+              <div className="absolute inset-2 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/40" />
+              <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 dark:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30">
+                <Check className="h-7 w-7 stroke-[3]" />
+              </div>
             </div>
           ) : (
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-950/30 mb-3">
-              <AlertTriangle className="h-6 w-6 text-rose-600 dark:text-rose-400" />
+            <div className="relative mb-5 flex h-20 w-20 items-center justify-center">
+              {/* Pulsing rings */}
+              <div className="absolute inset-0 rounded-full bg-rose-100 dark:bg-rose-950/40 animate-ping opacity-75" />
+              <div className="absolute inset-2 rounded-full bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800/40" />
+              <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-rose-600 dark:bg-rose-500 text-white shadow-lg shadow-rose-600/30">
+                <AlertTriangle className="h-6 w-6 stroke-[2.5]" />
+              </div>
             </div>
           )}
-          <DialogTitle className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+
+          <h3 className="text-xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">
             {dialogConfig.title}
-          </DialogTitle>
-          <DialogDescription className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
+          </h3>
+
+          <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2.5 leading-relaxed font-medium max-w-[280px]">
             {dialogConfig.description}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="sm:justify-center">
-          <Button
+          </p>
+
+          <button
             type="button"
             onClick={() => setShowDialog(false)}
-            className={`w-full sm:w-28 font-semibold cursor-pointer ${
+            className={`w-full mt-7 py-3 px-5 rounded-2xl font-extrabold text-sm tracking-wide shadow-lg active:scale-95 transition-all duration-200 cursor-pointer ${
               dialogConfig.type === "success"
-                ? "bg-emerald-600 hover:bg-emerald-500 text-white"
-                : "bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-50 dark:hover:bg-zinc-200 dark:text-zinc-900"
+                ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20"
+                : "bg-zinc-900 hover:bg-zinc-800 text-white shadow-zinc-900/15 dark:bg-zinc-50 dark:hover:bg-zinc-200 dark:text-zinc-900"
             }`}
           >
             OK
-          </Button>
-        </DialogFooter>
+          </button>
+        </div>
       </Dialog>
     </div>
   );

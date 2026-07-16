@@ -167,6 +167,20 @@ async function main() {
     });
     console.log(`- Seeded User Manager: ${manager.username}`);
 
+    const demo = await prisma.user.upsert({
+      where: { username: "demo" },
+      update: {},
+      create: {
+        nama: "Akun Demo",
+        username: "demo",
+        passwordHash: defaultPasswordHash,
+        role: "DEMO",
+        opdId: opd.id,
+        isActive: true,
+      },
+    });
+    console.log(`- Seeded User Demo: ${demo.username}`);
+
     // 3. Create Distributions
     const distributionsData = [
       { nama: "Sekretariat", kode: 1 },

@@ -72,6 +72,11 @@ export function ProfileClient({ user }: ProfileClientProps) {
   });
 
   const onSubmit = async (values: ProfileFormValues) => {
+    if (user.role === Role.DEMO) {
+      setError("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+      return;
+    }
+
     setIsSubmitting(true);
     setSuccess(null);
     setError(null);

@@ -64,6 +64,10 @@ export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClient
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleExportBackup = async () => {
+    if (userRole === Role.DEMO) {
+      setBackupError("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+      return;
+    }
     if (!isAdmin) return;
     setIsExporting(true);
     setBackupSuccess(null);
@@ -120,6 +124,10 @@ export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClient
   };
 
   const handleRestoreConfirmed = async () => {
+    if (userRole === Role.DEMO) {
+      setBackupError("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+      return;
+    }
     if (!isAdmin || !uploadedJsonContent) return;
     setShowRestoreConfirm(false);
     setIsImporting(true);
@@ -161,6 +169,10 @@ export function SettingsClient({ opd, isR2Configured, userRole }: SettingsClient
   });
 
   const onSubmit = async (values: OpdFormValues) => {
+    if (userRole === Role.DEMO) {
+      setError("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+      return;
+    }
     if (!isAdmin) return;
     setIsSubmitting(true);
     setSuccess(null);

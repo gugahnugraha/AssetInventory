@@ -199,6 +199,8 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
         return "default";
       case Role.MANAGER:
         return "info";
+      case Role.DEMO:
+        return "warning";
       default:
         return "outline";
     }
@@ -212,6 +214,8 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
         return "Operator";
       case Role.MANAGER:
         return "Manager (Read Only)";
+      case Role.DEMO:
+        return "Demo (Akses Terbatas)";
       default:
         return role;
     }
@@ -376,6 +380,7 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
                 <option value={Role.OPERATOR} className="bg-background text-foreground">Operator (CRUD Aset)</option>
                 <option value={Role.MANAGER} className="bg-background text-foreground">Manager (Read-Only)</option>
                 <option value={Role.ADMINISTRATOR} className="bg-background text-foreground">Administrator (Akses Penuh)</option>
+                <option value={Role.DEMO} className="bg-background text-foreground">Demo (Akses Terbatas)</option>
               </select>
             </div>
             <div className="space-y-1.5">
@@ -456,6 +461,7 @@ export function UserClient({ initialUsers, currentUserId }: UserClientProps) {
                 <option value={Role.OPERATOR} className="bg-background text-foreground">Operator (CRUD Aset)</option>
                 <option value={Role.MANAGER} className="bg-background text-foreground">Manager (Read-Only)</option>
                 <option value={Role.ADMINISTRATOR} className="bg-background text-foreground">Administrator (Akses Penuh)</option>
+                <option value={Role.DEMO} className="bg-background text-foreground">Demo (Akses Terbatas)</option>
               </select>
               {selectedUser?.id === currentUserId && (
                 <p className="text-[10px] text-amber-600 dark:text-amber-500 font-medium">Tidak dapat mengubah role sendiri</p>

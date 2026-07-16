@@ -25,6 +25,9 @@ async function requireAuth() {
 
 async function requireWriteAccess() {
   const session = await requireAuth();
+  if (session.user.role === Role.DEMO) {
+    throw new Error("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+  }
   if (session.user.role === Role.MANAGER) {
     throw new Error("Akses ditolak. Manager hanya dapat membaca data.");
   }
@@ -33,6 +36,9 @@ async function requireWriteAccess() {
 
 async function requireAdminAccess() {
   const session = await requireAuth();
+  if (session.user.role === Role.DEMO) {
+    throw new Error("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+  }
   if (session.user.role !== Role.ADMINISTRATOR) {
     throw new Error("Akses ditolak. Hanya Administrator yang dapat melakukan tindakan ini.");
   }

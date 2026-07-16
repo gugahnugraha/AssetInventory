@@ -146,6 +146,10 @@ export function MutasiClient({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (userRole === Role.MANAGER) return;
+    if (userRole === Role.DEMO) {
+      setError("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+      return;
+    }
 
     setError(null);
     setIsSubmitting(true);

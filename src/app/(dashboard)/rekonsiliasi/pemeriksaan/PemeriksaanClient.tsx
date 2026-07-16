@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Role } from "@prisma/client";
 import { startReconciliationAction } from "@/actions/reconciliation";
 import { useRouter } from "next/navigation";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 
 interface PemeriksaanClientProps {
   assets: any[];
@@ -29,6 +30,20 @@ export function PemeriksaanClient({ assets, activePeriod, reconStatusMap, userRo
   const [filterStatus, setFilterStatus] = React.useState("ALL");
   const [filterBidang, setFilterBidang] = React.useState("ALL");
   const [startingId, setStartingId] = React.useState<string | null>(null);
+  const [alertDialog, setAlertDialog] = React.useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    variant: "success" | "danger" | "warning" | "info";
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    variant: "info",
+  });
+  const triggerAlert = (title: string, description: string, variant: "success" | "danger" | "warning" | "info" = "info") => {
+    setAlertDialog({ isOpen: true, title, description, variant });
+  };
 
   const canWrite = userRole !== Role.MANAGER;
 
@@ -59,7 +74,7 @@ export function PemeriksaanClient({ assets, activePeriod, reconStatusMap, userRo
     setStartingId(assetId);
     const res = await startReconciliationAction(activePeriod.id, assetId);
     setStartingId(null);
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { triggerAlert("Gagal", res.error, "danger"); return; }
     if (res.data?.id) router.push(`/rekonsiliasi/pemeriksaan/${res.data.id}`);
   };
 
@@ -83,6 +98,7 @@ export function PemeriksaanClient({ assets, activePeriod, reconStatusMap, userRo
   }
 
   return (
+    <>
     <div className="space-y-4 pt-0 pb-8">
       {/* Hero Header Banner */}
       <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 px-4 sm:px-6 py-5 rounded-2xl shadow-sm mb-2">
@@ -108,75 +124,67 @@ export function PemeriksaanClient({ assets, activePeriod, reconStatusMap, userRo
 
       {/* Filters */}
       <Card className="border-zinc-200/80">
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col md:flex-row gap-4 items-center">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-450" />
               <Input
-                placeholder="Cari aset, kode, pemegang..."
+                placeholder="Cari berdasarkan nama aset, kode..."
+                className="pl-9 h-9 text-sm"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-zinc-400 shrink-0" />
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm"
-              >
-                <option value="ALL">Semua Status</option>
-                <option value="BELUM_DIREKON">Belum Direkon</option>
-                <option value="SESUAI">Sesuai</option>
-                <option value="TIDAK_SESUAI">Tidak Sesuai</option>
-              </select>
-            </div>
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-zinc-400 shrink-0" />
-              <select
-                value={filterBidang}
-                onChange={(e) => setFilterBidang(e.target.value)}
-                className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm"
-              >
-                <option value="ALL">Semua Bidang</option>
-                {bidangList.map((b) => <option key={b} value={b}>{b}</option>)}
-              </select>
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto shrink-0 justify-end">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-zinc-500" />
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="h-9 rounded-md border border-input bg-background px-3 text-xs"
+                >
+                  <option value="ALL">Semua Status</option>
+                  <option value="SESUAI">Sesuai</option>
+                  <option value="TIDAK_SESUAI">Tidak Sesuai</option>
+                  <option value="BELUM_DIREKON">Belum Direkon</option>
+                </select>
+              </div>
+
+              {bidangList.length > 0 && (
+                <select
+                  value={filterBidang}
+                  onChange={(e) => setFilterBidang(e.target.value)}
+                  className="h-9 rounded-md border border-input bg-background px-3 text-xs max-w-[200px]"
+                >
+                  <option value="ALL">Semua Bidang</option>
+                  {bidangList.map((b) => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Asset table */}
-      <Card className="border-zinc-200/80 overflow-hidden">
-        <CardHeader className="border-b bg-zinc-50 py-3 px-4">
-          <CardTitle className="text-xs text-zinc-500 font-bold uppercase tracking-wider">
-            {filtered.length} aset ditampilkan
-          </CardTitle>
-        </CardHeader>
+      {/* Table/List */}
+      <Card className="border-zinc-200/80">
         <CardContent className="p-0">
           {filtered.length === 0 ? (
-            <div className="p-10 text-center text-zinc-400 text-sm">Tidak ada aset yang sesuai filter.</div>
+            <div className="p-8 text-center text-zinc-500">Tidak ada aset ditemukan.</div>
           ) : (
-            <div className="divide-y">
+            <div className="divide-y divide-zinc-200/80 dark:divide-zinc-800">
               {filtered.map((a) => {
                 const info = reconStatusMap[a.id] ?? { status: "BELUM_DIREKON", reconId: null };
                 const isStarting = startingId === a.id;
                 return (
-                  <div key={a.id} className="px-4 py-3 flex items-center gap-3 hover:bg-zinc-50 transition-colors">
-                    {a.fotoUtama ? (
-                      <img src={a.fotoUtama} alt={a.namaAset} className="w-10 h-10 rounded-lg object-cover border shrink-0" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-lg bg-zinc-100 border flex items-center justify-center shrink-0">
-                        <ClipboardCheck className="h-4 w-4 text-zinc-400" />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold text-sm text-zinc-900 truncate">{a.namaAset}</p>
+                  <div key={a.id} className="p-4 flex items-center justify-between gap-4 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/30 transition-colors">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-zinc-900 dark:text-zinc-50 text-sm">{a.namaAset}</span>
                         <RekonBadge status={info.status} />
                       </div>
-                      <div className="text-xs text-zinc-500 flex flex-wrap gap-2 mt-0.5">
+                      <div className="text-xs text-zinc-500 flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span className="font-mono">{a.kodeLengkap}</span>
                         {a.distribution && <span>· {a.distribution.nama}</span>}
                         {a.holder && <span>· {a.holder.nama}</span>}
@@ -207,5 +215,14 @@ export function PemeriksaanClient({ assets, activePeriod, reconStatusMap, userRo
         </CardContent>
       </Card>
     </div>
+
+    <AlertDialog
+      isOpen={alertDialog.isOpen}
+      onClose={() => setAlertDialog(prev => ({ ...prev, isOpen: false }))}
+      title={alertDialog.title}
+      description={alertDialog.description}
+      variant={alertDialog.variant}
+    />
+    </>
   );
 }

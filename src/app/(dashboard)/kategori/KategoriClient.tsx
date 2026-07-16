@@ -32,6 +32,8 @@ import {
   deleteCategoryAttributeAction
 } from "@/actions/category";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { AlertDialog } from "@/components/ui/alert-dialog";
+import { Role } from "@prisma/client";
 
 // VALIDATION SCHEMAS
 const categorySchema = z.object({
@@ -52,9 +54,10 @@ type AttributeFormValues = z.infer<typeof attributeSchema>;
 interface KategoriClientProps {
   initialCategories: any[];
   kibs: { id: string; kode: string; nama: string }[];
+  userRole?: Role;
 }
 
-export function KategoriClient({ initialCategories, kibs }: KategoriClientProps) {
+export function KategoriClient({ initialCategories, kibs, userRole }: KategoriClientProps) {
   const router = useRouter();
   const [categories, setCategories] = React.useState(initialCategories);
   const [selectedCatId, setSelectedCatId] = React.useState<string | null>(null);
@@ -73,6 +76,20 @@ export function KategoriClient({ initialCategories, kibs }: KategoriClientProps)
   const [error, setError] = React.useState<string | null>(null);
   const [deleteCatTarget, setDeleteCatTarget] = React.useState<any | null>(null);
   const [deleteAttrTarget, setDeleteAttrTarget] = React.useState<any | null>(null);
+  const [alertDialog, setAlertDialog] = React.useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    variant: "success" | "danger" | "warning" | "info";
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    variant: "info",
+  });
+  const triggerAlert = (title: string, description: string, variant: "success" | "danger" | "warning" | "info" = "info") => {
+    setAlertDialog({ isOpen: true, title, description, variant });
+  };
 
   React.useEffect(() => {
     setCategories(initialCategories);
@@ -121,6 +138,14 @@ export function KategoriClient({ initialCategories, kibs }: KategoriClientProps)
   };
 
   const onCatCreateSubmit = async (values: CategoryFormValues) => {
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan membuat data master, hubungi Administrator!", "warning");
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
     try {
@@ -140,6 +165,14 @@ export function KategoriClient({ initialCategories, kibs }: KategoriClientProps)
   };
 
   const onCatEditSubmit = async (values: CategoryFormValues) => {
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan mengubah data master, hubungi Administrator!", "warning");
+      return;
+    }
     if (!selectedCat) return;
     setIsSubmitting(true);
     setError(null);
@@ -162,10 +195,26 @@ export function KategoriClient({ initialCategories, kibs }: KategoriClientProps)
 
   const handleCatDelete = (cat: any, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan menghapus data master, hubungi Administrator!", "warning");
+      return;
+    }
     setDeleteCatTarget(cat);
   };
 
   const handleCatDeleteConfirmed = async () => {
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan menghapus data master, hubungi Administrator!", "warning");
+      return;
+    }
     if (!deleteCatTarget) return;
     try {
       const res = await deleteCategoryAction(deleteCatTarget.id);
@@ -212,6 +261,14 @@ export function KategoriClient({ initialCategories, kibs }: KategoriClientProps)
   };
 
   const onAttrCreateSubmit = async (values: AttributeFormValues) => {
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan membuat data master, hubungi Administrator!", "warning");
+      return;
+    }
     if (!selectedCatId) return;
     setIsSubmitting(true);
     setError(null);
@@ -238,6 +295,14 @@ export function KategoriClient({ initialCategories, kibs }: KategoriClientProps)
   };
 
   const onAttrEditSubmit = async (values: AttributeFormValues) => {
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan mengubah data master, hubungi Administrator!", "warning");
+      return;
+    }
     if (!selectedAttr) return;
     setIsSubmitting(true);
     setError(null);
@@ -264,10 +329,26 @@ export function KategoriClient({ initialCategories, kibs }: KategoriClientProps)
   };
 
   const handleAttrDelete = (attr: any) => {
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan menghapus data master, hubungi Administrator!", "warning");
+      return;
+    }
     setDeleteAttrTarget(attr);
   };
 
   const handleAttrDeleteConfirmed = async () => {
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan menghapus data master, hubungi Administrator!", "warning");
+      return;
+    }
     if (!deleteAttrTarget) return;
     try {
       const res = await deleteCategoryAttributeAction(deleteAttrTarget.id);
@@ -715,6 +796,14 @@ export function KategoriClient({ initialCategories, kibs }: KategoriClientProps)
       description="Atribut ini akan dihapus beserta seluruh nilai data aset yang tersimpan pada atribut ini. Tindakan ini tidak dapat dibatalkan."
       confirmLabel="Ya, Hapus Atribut"
       variant="danger"
+    />
+
+    <AlertDialog
+      isOpen={alertDialog.isOpen}
+      onClose={() => setAlertDialog(prev => ({ ...prev, isOpen: false }))}
+      title={alertDialog.title}
+      description={alertDialog.description}
+      variant={alertDialog.variant}
     />
     </>
   );

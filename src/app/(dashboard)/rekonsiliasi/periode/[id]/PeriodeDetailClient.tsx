@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Role } from "@prisma/client";
 import { lockPeriodAction, closePeriodAction, startReconciliationAction } from "@/actions/reconciliation";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
 
 interface PeriodeDetailClientProps {
@@ -44,6 +45,20 @@ export function PeriodeDetailClient({ period, stats, totalAssets, userRole }: Pe
   const [lockConfirm, setLockConfirm] = React.useState(false);
   const [closeConfirm, setCloseConfirm] = React.useState(false);
   const [startingId, setStartingId] = React.useState<string | null>(null);
+  const [alertDialog, setAlertDialog] = React.useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    variant: "success" | "danger" | "warning" | "info";
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    variant: "info",
+  });
+  const triggerAlert = (title: string, description: string, variant: "success" | "danger" | "warning" | "info" = "info") => {
+    setAlertDialog({ isOpen: true, title, description, variant });
+  };
 
   const isAdmin = userRole === Role.ADMINISTRATOR;
   const canEdit = userRole !== Role.MANAGER && period.status === "OPEN";
@@ -61,20 +76,20 @@ export function PeriodeDetailClient({ period, stats, totalAssets, userRole }: Pe
     setStartingId(assetId);
     const res = await startReconciliationAction(period.id, assetId);
     setStartingId(null);
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { triggerAlert("Gagal", res.error, "danger"); return; }
     if (res.data?.id) router.push(`/rekonsiliasi/pemeriksaan/${res.data.id}`);
   };
 
   const handleLock = async () => {
     const res = await lockPeriodAction(period.id);
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { triggerAlert("Gagal", res.error, "danger"); return; }
     setLockConfirm(false);
     window.location.reload();
   };
 
   const handleClose = async () => {
     const res = await closePeriodAction(period.id);
-    if (res.error) { alert(res.error); return; }
+    if (res.error) { triggerAlert("Gagal", res.error, "danger"); return; }
     setCloseConfirm(false);
     window.location.reload();
   };
@@ -227,6 +242,14 @@ export function PeriodeDetailClient({ period, stats, totalAssets, userRole }: Pe
 
       <ConfirmDialog isOpen={lockConfirm} onClose={() => setLockConfirm(false)} onConfirm={handleLock} title="Kunci Periode?" description="Setelah dikunci, tidak ada rekonsiliasi baru yang bisa dimulai." confirmLabel="Kunci" variant="warning" />
       <ConfirmDialog isOpen={closeConfirm} onClose={() => setCloseConfirm(false)} onConfirm={handleClose} title="Tutup Periode?" description="Periode akan ditutup secara permanen. Tidak ada perubahan lebih lanjut." confirmLabel="Tutup" variant="danger" />
+      
+      <AlertDialog
+        isOpen={alertDialog.isOpen}
+        onClose={() => setAlertDialog(prev => ({ ...prev, isOpen: false }))}
+        title={alertDialog.title}
+        description={alertDialog.description}
+        variant={alertDialog.variant}
+      />
     </div>
   );
 }

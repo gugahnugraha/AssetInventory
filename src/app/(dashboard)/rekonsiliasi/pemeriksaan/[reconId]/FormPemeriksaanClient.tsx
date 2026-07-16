@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Role } from "@prisma/client";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 import { saveReconciliationAction, addFindingAction, resolveFindingAction } from "@/actions/reconciliation";
 import { formatDate, formatRupiah } from "@/lib/utils";
 
@@ -94,6 +95,7 @@ export function FormPemeriksaanClient({ recon, userRole, currentUserId }: FormPe
 
   // Finding dialog
   const [showFinding, setShowFinding] = React.useState(false);
+  const [showDemoAlert, setShowDemoAlert] = React.useState(false);
   const [findingForm, setFindingForm] = React.useState({
     findingType: "LAINNYA",
     severity: "MEDIUM",
@@ -114,6 +116,10 @@ export function FormPemeriksaanClient({ recon, userRole, currentUserId }: FormPe
   };
 
   const handleSave = async () => {
+    if (userRole === Role.DEMO) {
+      setSaveResult({ error: "Demo Only: Anda tidak diizinkan melakukan perubahan." });
+      return;
+    }
     setSaving(true);
     setSaveResult(null);
     const res = await saveReconciliationAction(
@@ -127,6 +133,10 @@ export function FormPemeriksaanClient({ recon, userRole, currentUserId }: FormPe
   };
 
   const handleAddFinding = async () => {
+    if (userRole === Role.DEMO) {
+      setFindingError("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+      return;
+    }
     if (!findingForm.description.trim()) {
       setFindingError("Deskripsi temuan wajib diisi.");
       return;
@@ -142,6 +152,10 @@ export function FormPemeriksaanClient({ recon, userRole, currentUserId }: FormPe
   };
 
   const handleResolveFinding = async (findingId: string) => {
+    if (userRole === Role.DEMO) {
+      setShowDemoAlert(true);
+      return;
+    }
     await resolveFindingAction(findingId);
     window.location.reload();
   };
@@ -465,6 +479,14 @@ export function FormPemeriksaanClient({ recon, userRole, currentUserId }: FormPe
             </Button>
           </DialogFooter>
       </Dialog>
+
+      <AlertDialog
+        isOpen={showDemoAlert}
+        onClose={() => setShowDemoAlert(false)}
+        title="Demo Only"
+        description="Anda tidak diizinkan melakukan perubahan."
+        variant="warning"
+      />
     </div>
   );
 }

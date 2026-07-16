@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { createDistributionAction, updateDistributionAction, deleteDistributionAction } from "@/actions/distribution";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 import { Role } from "@prisma/client";
 import { useRouter } from "next/navigation";
 
@@ -46,6 +47,20 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
   const [selectedDist, setSelectedDist] = React.useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; name: string } | null>(null);
+  const [alertDialog, setAlertDialog] = React.useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    variant: "success" | "danger" | "warning" | "info";
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    variant: "info",
+  });
+  const triggerAlert = (title: string, description: string, variant: "success" | "danger" | "warning" | "info" = "info") => {
+    setAlertDialog({ isOpen: true, title, description, variant });
+  };
 
   const {
     register,
@@ -77,6 +92,14 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
   };
 
   const onCreateSubmit = async (values: DistFormValues) => {
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan membuat data master, hubungi Administrator!", "warning");
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
     try {
@@ -97,6 +120,14 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
   };
 
   const onEditSubmit = async (values: DistFormValues) => {
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan mengubah data master, hubungi Administrator!", "warning");
+      return;
+    }
     if (!selectedDist) return;
     setIsSubmitting(true);
     setError(null);
@@ -120,10 +151,26 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
 
   const handleDelete = (id: string, name: string) => {
     if (userRole === Role.MANAGER) return;
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan menghapus data master, hubungi Administrator!", "warning");
+      return;
+    }
     setDeleteTarget({ id, name });
   };
 
   const handleDeleteConfirmed = async () => {
+    if (userRole === Role.DEMO) {
+      triggerAlert("Demo Only", "Anda tidak diizinkan melakukan perubahan.", "warning");
+      return;
+    }
+    if (userRole === Role.OPERATOR) {
+      triggerAlert("Akses Terbatas", "Anda tidak diizinkan menghapus data master, hubungi Administrator!", "warning");
+      return;
+    }
     if (!deleteTarget) return;
     try {
       const res = await deleteDistributionAction(deleteTarget.id);
@@ -323,6 +370,14 @@ export function DistribusiClient({ initialDistributions, userRole }: DistribusiC
       description="Bidang ini akan dihapus. Hubungan data pemegang barang dan aset yang terkait akan dinonaktifkan."
       confirmLabel="Ya, Hapus Bidang"
       variant="danger"
+    />
+
+    <AlertDialog
+      isOpen={alertDialog.isOpen}
+      onClose={() => setAlertDialog(prev => ({ ...prev, isOpen: false }))}
+      title={alertDialog.title}
+      description={alertDialog.description}
+      variant={alertDialog.variant}
     />
     </>
   );

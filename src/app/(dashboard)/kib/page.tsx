@@ -17,7 +17,7 @@ export default async function KibPage() {
   }
 
   const userRole = session.user.role as Role;
-  if (userRole !== Role.ADMINISTRATOR) {
+  if (userRole !== Role.ADMINISTRATOR && userRole !== Role.OPERATOR && userRole !== Role.DEMO) {
     return (
       <div className="p-8 text-center bg-rose-50 border border-rose-200 text-rose-800 rounded-lg max-w-2xl mx-auto mt-12">
         <h2 className="text-xl font-bold">Akses Ditolak</h2>
@@ -36,7 +36,7 @@ export default async function KibPage() {
       updatedAt: k.updatedAt.toISOString(),
     }));
 
-    return <KibClient initialKibs={serializedKibs} />;
+    return <KibClient initialKibs={serializedKibs} userRole={userRole} />;
   } catch (error) {
     console.error("Failed to load KIB page data:", error);
     return (

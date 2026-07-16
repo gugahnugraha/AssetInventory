@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Role } from "@prisma/client";
 import { createPeriodAction, lockPeriodAction, closePeriodAction } from "@/actions/reconciliation";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 
 interface Period {
   id: string;
@@ -48,6 +49,20 @@ export function PeriodeClient({ periods, userRole }: PeriodeClientProps) {
   const [error, setError] = React.useState("");
   const [lockTarget, setLockTarget] = React.useState<string | null>(null);
   const [closeTarget, setCloseTarget] = React.useState<string | null>(null);
+  const [alertDialog, setAlertDialog] = React.useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    variant: "success" | "danger" | "warning" | "info";
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    variant: "info",
+  });
+  const triggerAlert = (title: string, description: string, variant: "success" | "danger" | "warning" | "info" = "info") => {
+    setAlertDialog({ isOpen: true, title, description, variant });
+  };
 
   const [form, setForm] = React.useState({
     nama: "",
@@ -77,7 +92,7 @@ export function PeriodeClient({ periods, userRole }: PeriodeClientProps) {
   const handleLock = async () => {
     if (!lockTarget) return;
     const res = await lockPeriodAction(lockTarget);
-    if (res.error) alert(res.error);
+    if (res.error) triggerAlert("Gagal", res.error, "danger");
     setLockTarget(null);
     window.location.reload();
   };
@@ -85,7 +100,7 @@ export function PeriodeClient({ periods, userRole }: PeriodeClientProps) {
   const handleClose = async () => {
     if (!closeTarget) return;
     const res = await closePeriodAction(closeTarget);
-    if (res.error) alert(res.error);
+    if (res.error) triggerAlert("Gagal", res.error, "danger");
     setCloseTarget(null);
     window.location.reload();
   };
@@ -281,6 +296,14 @@ export function PeriodeClient({ periods, userRole }: PeriodeClientProps) {
         description="Periode akan ditutup permanen. Tidak ada perubahan lebih lanjut yang bisa dilakukan."
         confirmLabel="Ya, Tutup"
         variant="danger"
+      />
+
+      <AlertDialog
+        isOpen={alertDialog.isOpen}
+        onClose={() => setAlertDialog(prev => ({ ...prev, isOpen: false }))}
+        title={alertDialog.title}
+        description={alertDialog.description}
+        variant={alertDialog.variant}
       />
     </div>
   );

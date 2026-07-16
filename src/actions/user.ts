@@ -9,7 +9,13 @@ import { Role } from "@prisma/client";
 // Guard to check if current user is Administrator
 async function requireAdmin() {
   const session = await auth();
-  if (!session || session.user.role !== Role.ADMINISTRATOR) {
+  if (!session) {
+    throw new Error("Anda harus masuk terlebih dahulu.");
+  }
+  if (session.user.role === Role.DEMO) {
+    throw new Error("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+  }
+  if (session.user.role !== Role.ADMINISTRATOR) {
     throw new Error("Akses ditolak. Anda harus menjadi Administrator.");
   }
   return session;
@@ -60,6 +66,10 @@ export async function updateUserAction(
     const session = await auth();
     if (!session || !session.user) {
       throw new Error("Akses ditolak. Silakan login terlebih dahulu.");
+    }
+
+    if (session.user.role === Role.DEMO) {
+      throw new Error("Demo Only: Anda tidak diizinkan melakukan perubahan.");
     }
 
     const isSelfUpdate = session.user.id === id;

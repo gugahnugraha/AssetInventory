@@ -21,6 +21,7 @@ import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } fr
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { createHolderAction, updateHolderAction, deleteHolderAction } from "@/actions/holder";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 import { Role } from "@prisma/client";
 import { useRouter } from "next/navigation";
 
@@ -50,6 +51,7 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
   const [selectedHolder, setSelectedHolder] = React.useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; name: string } | null>(null);
+  const [showDemoAlert, setShowDemoAlert] = React.useState(false);
 
   const {
     register,
@@ -88,6 +90,10 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
   };
 
   const onCreateSubmit = async (values: HolderFormValues) => {
+    if (userRole === Role.DEMO) {
+      setError("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
     try {
@@ -108,6 +114,10 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
   };
 
   const onEditSubmit = async (values: HolderFormValues) => {
+    if (userRole === Role.DEMO) {
+      setError("Demo Only: Anda tidak diizinkan melakukan perubahan.");
+      return;
+    }
     if (!selectedHolder) return;
     setIsSubmitting(true);
     setError(null);
@@ -131,10 +141,18 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
 
   const handleDelete = (id: string, name: string) => {
     if (userRole === Role.MANAGER) return;
+    if (userRole === Role.DEMO) {
+      setShowDemoAlert(true);
+      return;
+    }
     setDeleteTarget({ id, name });
   };
 
   const handleDeleteConfirmed = async () => {
+    if (userRole === Role.DEMO) {
+      setShowDemoAlert(true);
+      return;
+    }
     if (!deleteTarget) return;
     try {
       const res = await deleteHolderAction(deleteTarget.id);
@@ -390,6 +408,14 @@ export function HolderClient({ initialHolders, distributions, userRole }: Holder
       description="Data pemegang barang ini akan dihapus. Hubungan pemegang dengan barang inventaris terkait akan dinonaktifkan."
       confirmLabel="Ya, Hapus"
       variant="danger"
+    />
+
+    <AlertDialog
+      isOpen={showDemoAlert}
+      onClose={() => setShowDemoAlert(false)}
+      title="Demo Only"
+      description="Anda tidak diizinkan melakukan perubahan."
+      variant="warning"
     />
     </>
   );
