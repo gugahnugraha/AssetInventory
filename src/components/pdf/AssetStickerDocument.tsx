@@ -1,15 +1,23 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 
-// Define styles exactly matching the 92x38mm dimensions and 7x2 grid layout
+// A4: 297mm tall. Usable = 297 - 10 - 10 = 277mm
+// Each sticker: 29mm height + 2mm marginBottom = 31mm per row
+// Two columns: 92mm + 2mm margin + 92mm = 186mm (fits within 210 - 11 - 9 = 190mm)
+// Rows per page: floor(277 / 31) = 8 rows → 8 × 2 = 16 stickers per page
+const ITEMS_PER_PAGE = 16;
+
 const styles = StyleSheet.create({
   page: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     paddingTop: '10mm',
     paddingLeft: '11mm',
     paddingRight: '9mm',
     paddingBottom: '10mm',
+  },
+  grid: {
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     alignContent: 'flex-start',
   },
   sticker: {
@@ -119,11 +127,9 @@ const styles = StyleSheet.create({
   }
 });
 
-// Helper to format Merk/Type text to fit nicely on the sticker
 const formatMerkType = (merkType?: string | null): string => {
   if (!merkType) return "-";
-  const cleaned = merkType.trim();
-  return cleaned || "-";
+  return merkType.trim() || "-";
 };
 
 interface AssetStickerDocumentProps {
@@ -134,7 +140,7 @@ interface AssetStickerDocumentProps {
 }
 
 export const AssetStickerDocument = ({ assets, qrCodes, logoUrl, isDemo }: AssetStickerDocumentProps) => {
-  // Urutkan aset berdasarkan kode aset (classCode) dan nomor register secara ascending
+  // Sort assets by kode aset then nomor register ascending
   const sortedAssets = [...assets].sort((a, b) => {
     const partsA = (a.kodeLengkap || "").split(".");
     const noRegAStr = partsA.pop() || "";
@@ -144,84 +150,96 @@ export const AssetStickerDocument = ({ assets, qrCodes, logoUrl, isDemo }: Asset
     const noRegBStr = partsB.pop() || "";
     const classCodeB = partsB.join(".");
 
-    // 1. Bandingkan kode aset (classCode)
     const compCode = classCodeA.localeCompare(classCodeB, undefined, { numeric: true, sensitivity: 'base' });
     if (compCode !== 0) return compCode;
 
-    // 2. Bandingkan nomor register secara numerik
     const regA = Number(noRegAStr) || a.nomorRegister || 0;
     const regB = Number(noRegBStr) || b.nomorRegister || 0;
     return regA - regB;
   });
 
+  // Split into fixed-size pages so no sticker ever "hangs" to the next page
+  const pages: any[][] = [];
+  for (let i = 0; i < sortedAssets.length; i += ITEMS_PER_PAGE) {
+    pages.push(sortedAssets.slice(i, i + ITEMS_PER_PAGE));
+  }
+
+  const renderSticker = (asset: any, globalIdx: number) => {
+    const parts = (asset.kodeLengkap || "").split(".");
+    const noReg = parts.pop() || "-";
+    const classCode = parts.join(".") || "-";
+    const opdKode = asset.opd?.kodeNumeric || "-";
+    const opdNama = asset.opd?.kode || "-";
+    const namaAset = asset.namaAset || "-";
+    const tahunBeli = asset.tahunPembelian || "-";
+    const qrDataUrl = qrCodes[asset.id];
+
+    return (
+      <View key={`${asset.id}-${globalIdx}`} style={styles.sticker}>
+        <Text style={styles.header}>PEMERINTAH KABUPATEN BANDUNG</Text>
+        <View style={styles.body}>
+          <View style={styles.logoBox}>
+            {logoUrl && <Image src={logoUrl} style={styles.logo} />}
+          </View>
+
+          <View style={styles.detailsBox}>
+            <View style={styles.row}>
+              <Text style={styles.label}>KODE ASET</Text>
+              <Text style={styles.colon}>:</Text>
+              <Text style={styles.value}>{classCode}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>NAMA ASET</Text>
+              <Text style={styles.colon}>:</Text>
+              <Text style={styles.value}>{namaAset}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>MERK/TYPE</Text>
+              <Text style={styles.colon}>:</Text>
+              <Text style={styles.value}>{formatMerkType(asset.merkType)}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>TAHUN</Text>
+              <Text style={styles.colon}>:</Text>
+              <Text style={styles.value}>{tahunBeli}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>KODE SKPD</Text>
+              <Text style={styles.colon}>:</Text>
+              <Text style={styles.value}>{opdKode}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>NAMA SKPD</Text>
+              <Text style={styles.colon}>:</Text>
+              <Text style={styles.value}>{opdNama}</Text>
+            </View>
+          </View>
+
+          <View style={styles.qrBox}>
+            <Text style={styles.regText}>REG: {noReg}</Text>
+            {qrDataUrl && <Image src={qrDataUrl} style={styles.qrCode} />}
+          </View>
+        </View>
+        {isDemo && (
+          <View style={styles.watermarkContainer}>
+            <Text style={styles.watermarkText}>Speciment</Text>
+          </View>
+        )}
+      </View>
+    );
+  };
+
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        {sortedAssets.map((asset, index) => {
-          const parts = (asset.kodeLengkap || "").split(".");
-          const noReg = parts.pop() || "-";
-          const classCode = parts.join(".") || "-";
-          const opdKode = asset.opd?.kodeNumeric || "-";
-          const opdNama = asset.opd?.kode || "-";
-          const namaAset = asset.namaAset || "-";
-          const tahunBeli = asset.tahunPembelian || "-";
-          const qrDataUrl = qrCodes[asset.id];
-
-           return (
-            <View key={`${asset.id}-${index}`} style={styles.sticker} wrap={false}>
-              <Text style={styles.header}>PEMERINTAH KABUPATEN BANDUNG</Text>
-              <View style={styles.body}>
-                <View style={styles.logoBox}>
-                  {logoUrl && <Image src={logoUrl} style={styles.logo} />}
-                </View>
-
-                <View style={styles.detailsBox}>
-                  <View style={styles.row}>
-                    <Text style={styles.label}>KODE ASET</Text>
-                    <Text style={styles.colon}>:</Text>
-                    <Text style={styles.value}>{classCode}</Text>
-                  </View>
-                  <View style={styles.row}>
-                    <Text style={styles.label}>NAMA ASET</Text>
-                    <Text style={styles.colon}>:</Text>
-                    <Text style={styles.value}>{namaAset}</Text>
-                  </View>
-                  <View style={styles.row}>
-                    <Text style={styles.label}>MERK/TYPE</Text>
-                    <Text style={styles.colon}>:</Text>
-                    <Text style={styles.value}>{formatMerkType(asset.merkType)}</Text>
-                  </View>
-                  <View style={styles.row}>
-                    <Text style={styles.label}>TAHUN</Text>
-                    <Text style={styles.colon}>:</Text>
-                    <Text style={styles.value}>{tahunBeli}</Text>
-                  </View>
-                  <View style={styles.row}>
-                    <Text style={styles.label}>KODE SKPD</Text>
-                    <Text style={styles.colon}>:</Text>
-                    <Text style={styles.value}>{opdKode}</Text>
-                  </View>
-                  <View style={styles.row}>
-                    <Text style={styles.label}>NAMA SKPD</Text>
-                    <Text style={styles.colon}>:</Text>
-                    <Text style={styles.value}>{opdNama}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.qrBox}>
-                  <Text style={styles.regText}>REG: {noReg}</Text>
-                  {qrDataUrl && <Image src={qrDataUrl} style={styles.qrCode} />}
-                </View>
-              </View>
-              {isDemo && (
-                <View style={styles.watermarkContainer}>
-                  <Text style={styles.watermarkText}>Speciment</Text>
-                </View>
-              )}
-            </View>
-          );
-        })}
-      </Page>
+      {pages.map((pageAssets, pageIdx) => (
+        <Page key={`page-${pageIdx}`} size="A4" style={styles.page}>
+          <View style={styles.grid}>
+            {pageAssets.map((asset, idx) =>
+              renderSticker(asset, pageIdx * ITEMS_PER_PAGE + idx)
+            )}
+          </View>
+        </Page>
+      ))}
     </Document>
   );
 };
