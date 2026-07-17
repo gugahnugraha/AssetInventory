@@ -273,11 +273,16 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
       {
         id: "index",
         header: "No.",
-        cell: ({ row }) => (
-          <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
-            {row.index + 1}
-          </span>
-        ),
+        cell: ({ row, table }) => {
+          const { pageIndex, pageSize } = table.getState().pagination;
+          const pageRows = table.getPaginationRowModel().rows;
+          const posInPage = pageRows.findIndex((r) => r.id === row.id);
+          return (
+            <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+              {pageIndex * pageSize + posInPage + 1}
+            </span>
+          );
+        },
       },
       {
         accessorKey: "kodeLengkap",
