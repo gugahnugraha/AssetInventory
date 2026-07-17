@@ -190,13 +190,13 @@ export function Sidebar({ user }: SidebarProps) {
 
       {/* Navigation Links */}
       <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto">
-        {links.map((link) => {
+        {links.map((link, idx) => {
           if (!link.roles.includes(user.role)) return null
 
           // Render divider
           if (link.divider) {
             return (
-              <div key={link.label} className={cn("my-1 px-2", collapsed && "px-1")}>
+              <div key={`divider-${idx}`} className={cn("my-1 px-2", collapsed && "px-1")}>
                 <div className="border-t border-emerald-700/40" />
               </div>
             );

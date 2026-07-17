@@ -62,7 +62,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const [selectedReconStatus, setSelectedReconStatus] = React.useState<string>("ALL");
   const [selectedKib, setSelectedKib] = React.useState<string>("ALL");
   const [selectedKategori, setSelectedKategori] = React.useState<string>("ALL");
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([{ id: "kodeLengkap", desc: false }]);
   // Hide minor columns on small screens by default — user can still scroll horizontally
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; code: string } | null>(null);
