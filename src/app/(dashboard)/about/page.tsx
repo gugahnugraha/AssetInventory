@@ -269,22 +269,19 @@ export default function AboutPage() {
         <div>
           <SectionTitle icon={Code2} title="Developer" />
           <div className="mt-4 rounded-2xl border border-slate-200 dark:border-zinc-700/60 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden">
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 h-20 relative">
-              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 50%, white 1px, transparent 1px)", backgroundSize: "30px 30px" }} />
-            </div>
-            <div className="px-6 pb-6">
-              <div className="flex items-end gap-4 -mt-10 mb-4">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 border-4 border-white dark:border-zinc-900 shadow-lg flex items-center justify-center shrink-0">
-                  <span className="text-3xl font-black text-white select-none">G</span>
+            <div className="px-6 pt-6 pb-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md flex items-center justify-center shrink-0">
+                  <span className="text-2xl font-black text-white select-none">G</span>
                 </div>
-                <div className="pb-1">
+                <div>
                   <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Gugah Nugraha</h2>
                   <p className="text-sm text-zinc-500 dark:text-zinc-400">Full-Stack Developer</p>
                 </div>
               </div>
 
               <p className="text-sm text-zinc-600 dark:text-zinc-300 leading-relaxed mb-5">
-                Pengembang aplikasi berbasis web dengan spesialisasi di ekosistem Next.js, React, dan TypeScript. Berpengalaman dalam membangun sistem informasi pemerintahan yang aman, skalabel, dan mudah digunakan.
+                Pengembang aplikasi berbasis web dengan spesialisasi di ekosistem Next.js, React, dan TypeScript.
               </p>
 
               <div className="flex flex-wrap gap-3">
