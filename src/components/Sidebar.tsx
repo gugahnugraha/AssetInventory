@@ -59,6 +59,7 @@ export function Sidebar({ user }: SidebarProps) {
     href?: string;
     icon?: any;
     roles: Role[];
+    divider?: boolean;
     expandedState?: boolean;
     setExpanded?: React.Dispatch<React.SetStateAction<boolean>>;
     children?: {
@@ -73,6 +74,11 @@ export function Sidebar({ user }: SidebarProps) {
       label: "Dashboard",
       href: "/dashboard",
       icon: LayoutDashboard,
+      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
+    },
+    {
+      label: "__divider_1__",
+      divider: true,
       roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
     },
     {
@@ -124,9 +130,19 @@ export function Sidebar({ user }: SidebarProps) {
       ]
     },
     {
+      label: "__divider_2__",
+      divider: true,
+      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
+    },
+    {
       label: "Rekonsiliasi Aset",
       href: "/rekonsiliasi",
       icon: ClipboardCheck,
+      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
+    },
+    {
+      label: "__divider_3__",
+      divider: true,
       roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
     },
     {
@@ -177,6 +193,14 @@ export function Sidebar({ user }: SidebarProps) {
         {links.map((link) => {
           if (!link.roles.includes(user.role)) return null
 
+          // Render divider
+          if (link.divider) {
+            return (
+              <div key={link.label} className={cn("my-1 px-2", collapsed && "px-1")}>
+                <div className="border-t border-emerald-700/40" />
+              </div>
+            );
+          }
           if (link.children) {
             const visibleChildren = link.children.filter(child => child.roles.includes(user.role));
             if (visibleChildren.length === 0) return null;
