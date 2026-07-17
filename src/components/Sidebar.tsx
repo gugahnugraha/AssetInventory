@@ -13,6 +13,7 @@ import {
   ClipboardCheck,
   Database,
   BookOpen,
+  Info,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Role } from "@prisma/client"
@@ -132,6 +133,12 @@ export function Sidebar({ user }: SidebarProps) {
       label: "Dokumentasi",
       href: "/dokumentasi",
       icon: BookOpen,
+      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
+    },
+    {
+      label: "Tentang Aplikasi",
+      href: "/about",
+      icon: Info,
       roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
     },
   ]
