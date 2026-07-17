@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Menu, User, LogOut, ChevronDown, UserCircle, Users, Settings } from "lucide-react"
+import { Menu, User, LogOut, ChevronDown, UserCircle, Users, Settings, Info } from "lucide-react"
 import { Badge } from "./ui/badge"
 import { ConfirmDialog } from "./ui/confirm-dialog"
 import { Role } from "@prisma/client"
@@ -125,10 +125,18 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
               <Link
                 href="/pengaturan"
                 onClick={() => setDropdownOpen(false)}
-                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded-lg transition-colors font-semibold cursor-pointer border-b border-slate-100 dark:border-zinc-800 pb-2 mb-1.5"
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded-lg transition-colors font-semibold cursor-pointer"
               >
                 <Settings className="h-4 w-4 text-zinc-500" />
                 Pengaturan
+              </Link>
+              <Link
+                href="/about"
+                onClick={() => setDropdownOpen(false)}
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50 rounded-lg transition-colors font-semibold cursor-pointer border-b border-slate-100 dark:border-zinc-800 pb-2 mb-1.5"
+              >
+                <Info className="h-4 w-4 text-zinc-500" />
+                Tentang Aplikasi
               </Link>
               <button
                 onClick={() => { setDropdownOpen(false); setShowLogoutConfirm(true); }}
