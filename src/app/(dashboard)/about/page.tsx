@@ -181,7 +181,7 @@ export default function AboutPage() {
                 </span>
               </div>
               <p className="mt-2 text-emerald-200 text-sm sm:text-base leading-relaxed max-w-xl">
-                Platform manajemen inventarisasi aset pemerintah daerah yang modern, aman, dan efisien. Dirancang untuk membantu pengelolaan aset SKPD Kabupaten Bandung secara digital dan terpusat.
+                Platform manajemen inventarisasi aset pemerintah daerah yang modern, aman, dan efisien. Dirancang untuk membantu pengelolaan aset SKPD Kabupaten Bandung secara digital.
               </p>
               <div className="mt-4 flex flex-wrap gap-3 text-xs text-emerald-300">
                 <span className="flex items-center gap-1.5">
