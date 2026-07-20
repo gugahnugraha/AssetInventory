@@ -17,7 +17,8 @@ import {
   Upload,
   Printer,
   X,
-  FileText
+  FileText,
+  Copy
 } from "lucide-react";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { 
@@ -47,6 +48,49 @@ import dynamic from 'next/dynamic';
 const PDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFViewer), { ssr: false, loading: () => <div className="p-8 text-center text-zinc-400 animate-pulse">Memuat Viewer PDF...</div> });
 import { AssetStickerDocument } from "@/components/pdf/AssetStickerDocument";
 import { AssetTableDocument } from "@/components/pdf/AssetTableDocument";
+function CopyableKodeAset({ code }: { code: string }) {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (!code) return;
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="relative inline-flex items-center">
+      <button
+        onClick={handleCopy}
+        type="button"
+        title={copied ? "Copied to clipboard!" : "Klik untuk menyalin Kode Aset"}
+        className={cn(
+          "group inline-flex items-center gap-1.5 px-2 py-1 rounded-md font-mono text-xs font-semibold transition-all duration-150 active:scale-95 cursor-pointer border",
+          copied
+            ? "bg-emerald-600 text-white border-emerald-600 dark:bg-emerald-600 dark:border-emerald-500 shadow-xs"
+            : "bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-800/60"
+        )}
+      >
+        <span>{code}</span>
+        {copied ? (
+          <Check className="h-3.5 w-3.5 text-white shrink-0 animate-in zoom-in-50 duration-150" />
+        ) : (
+          <Copy className="h-3.5 w-3.5 text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+        )}
+      </button>
+
+      {copied && (
+        <span className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-zinc-900 dark:bg-zinc-800 text-white text-[10px] font-sans font-medium whitespace-nowrap shadow-md animate-in fade-in slide-in-from-bottom-1 duration-150 z-20 pointer-events-none">
+          Copied
+          <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900 dark:border-t-zinc-800" />
+        </span>
+      )}
+    </div>
+  );
+}
+
 interface AssetListClientProps {
   initialAssets: any[];
   distributions: any[];
@@ -294,11 +338,10 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
             Kode Aset <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
-        cell: ({ row }) => (
-          <span className="font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-            {row.getValue("kodeLengkap")}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const code = row.getValue("kodeLengkap") as string;
+          return <CopyableKodeAset code={code} />;
+        },
       },
       {
         accessorKey: "namaAset",
@@ -358,7 +401,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
           const asset = row.original;
           return (
             <div className="flex justify-end gap-1">
-              <Link href={`/assets/${asset.id}`} prefetch={false} title="Detail Aset">
+              <Link href={`/assets/${asset.id}`} target="_blank" rel="noopener noreferrer" prefetch={false} title="Detail Aset (Buka Tab Baru)">
                 <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 active:scale-90 transition-transform">
                   <Eye className="h-4 w-4" />
                 </Button>
@@ -719,22 +762,26 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
               <TableRow key={headerGroup.id} className="hover:bg-transparent border-b border-zinc-200 dark:border-zinc-700">
                 {headerGroup.headers.map(header => {
                   const isActions = header.column.id === "actions";
+                  const isSelect = header.column.id === "select";
+                  const isIndex = header.column.id === "index";
                   return (
                     <TableHead
                       key={header.id}
                       className={cn(
                         "font-semibold text-emerald-950 dark:text-emerald-200 whitespace-nowrap py-3 bg-emerald-50 dark:bg-emerald-950 sticky top-0 z-10",
+                        isSelect && "sticky top-0 left-0 z-30 bg-emerald-50 dark:bg-emerald-950 w-10 min-w-10 text-center",
+                        isIndex && "sticky top-0 left-10 z-30 bg-emerald-50 dark:bg-emerald-950 w-12 min-w-12 text-center border-r border-zinc-200/60 dark:border-zinc-800/60 shadow-[3px_0_6px_rgba(0,0,0,0.04)]",
                         isActions && "sticky top-0 right-0 bg-emerald-50 dark:bg-emerald-950 border-l border-zinc-200 dark:border-zinc-800 shadow-[-6px_0_12px_rgba(0,0,0,0.08)] z-20 text-right"
                       )}
                     >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
             </TableHeader>
             <TableBody>
               {table.getRowModel().rows.length === 0 ? (
@@ -762,23 +809,29 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
                     {row.getVisibleCells().map(cell => {
                       const isActions = cell.column.id === "actions";
                       const isSelect = cell.column.id === "select";
+                      const isIndex = cell.column.id === "index";
+                      const isKode = cell.column.id === "kodeLengkap";
+
                       const handleCellClick = () => {
-                        if (!isActions && !isSelect) {
-                          router.push(`/assets/${row.original.id}`);
+                        if (!isActions && !isSelect && !isKode) {
+                          window.open(`/assets/${row.original.id}`, '_blank', 'noopener,noreferrer');
                         }
                       };
+
+                      const bgClass = idx % 2 === 0 ? "bg-white dark:bg-zinc-950" : "bg-zinc-50 dark:bg-zinc-900";
+
                       return (
                         <TableCell
                           key={cell.id}
                           onClick={handleCellClick}
                           className={cn(
                             "whitespace-nowrap py-2.5",
-                            !isActions && !isSelect && "cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors",
+                            !isActions && !isSelect && !isKode && "cursor-pointer select-none hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors",
+                            isSelect && cn("sticky left-0 z-20 w-10 min-w-10 text-center", bgClass),
+                            isIndex && cn("sticky left-10 z-20 w-12 min-w-12 text-center border-r border-zinc-200/60 dark:border-zinc-800/60 shadow-[3px_0_6px_rgba(0,0,0,0.04)]", bgClass),
                             isActions && cn(
-                              "sticky right-0 border-l border-zinc-100 dark:border-zinc-800 shadow-[-6px_0_12px_rgba(0,0,0,0.04)]",
-                              idx % 2 === 0
-                                ? "bg-white dark:bg-zinc-950"
-                                : "bg-zinc-50 dark:bg-zinc-900/60"
+                              "sticky right-0 z-20 border-l border-zinc-100 dark:border-zinc-800 shadow-[-6px_0_12px_rgba(0,0,0,0.04)]",
+                              bgClass
                             )
                           )}
                         >
