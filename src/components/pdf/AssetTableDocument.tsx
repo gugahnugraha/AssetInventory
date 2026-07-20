@@ -24,11 +24,12 @@ const styles = StyleSheet.create({
   },
   watermarkText: {
     fontFamily: 'Helvetica-Bold',
-    fontSize: 100,
+    fontSize: 75,
     color: '#ef4444',
-    opacity: 0.32,
-    transform: 'rotate(-25deg)',
+    opacity: 0.22,
+    transform: 'rotate(-32deg)',
     textTransform: 'uppercase',
+    letterSpacing: 4,
   },
   headerBanner: {
     display: 'flex',
@@ -305,7 +306,7 @@ export const AssetTableDocument = ({ assets, logoUrl, isDemo }: AssetTableDocume
         {/* Watermark (Rendered last so it sits on top of table rows and backgrounds) */}
         {isDemo && (
           <View style={styles.watermarkContainer} fixed>
-            <Text style={styles.watermarkText}>Protected</Text>
+            <Text style={styles.watermarkText}>DEMO VERSION</Text>
           </View>
         )}
       </Page>
