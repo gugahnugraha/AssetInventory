@@ -845,11 +845,58 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
             </TableBody>
           </Table>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-200 dark:border-zinc-700 bg-zinc-50/80 dark:bg-zinc-900/60 gap-2 flex-wrap">
-          <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-            Menampilkan <span className="font-bold text-zinc-700 dark:text-zinc-200">{table.getRowModel().rows.length}</span> dari <span className="font-bold text-zinc-700 dark:text-zinc-200">{filteredData.length}</span> aset
+        {/* Pagination & Bottom Action Bar */}
+        <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-200 dark:border-zinc-700 bg-zinc-50/80 dark:bg-zinc-900/60 gap-3 flex-wrap">
+          {/* Left: Row count & Bottom Print Actions */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+              Menampilkan <span className="font-bold text-zinc-700 dark:text-zinc-200">{table.getRowModel().rows.length}</span> dari <span className="font-bold text-zinc-700 dark:text-zinc-200">{filteredData.length}</span> aset
+            </div>
+
+            <div className="h-4 w-px bg-zinc-300 dark:bg-zinc-700 hidden sm:block" />
+
+            {/* Bottom Print Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  if (selectedCount === 0) {
+                    setIsPrintWarningOpen(true);
+                  } else {
+                    handleBulkPrint();
+                  }
+                }}
+                className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-sky-500 text-sky-600 dark:text-sky-400 dark:border-sky-500 bg-white dark:bg-zinc-900 hover:bg-sky-50 dark:hover:bg-sky-950/30 active:scale-95 font-semibold text-xs transition-all duration-150 shadow-xs cursor-pointer"
+              >
+                <Printer className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
+                Cetak Label
+                {selectedCount > 0 && (
+                  <span className="inline-flex items-center justify-center h-4.5 min-w-4.5 px-1 rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300 text-[10px] font-bold">
+                    {selectedCount}
+                  </span>
+                )}
+              </button>
+
+              <button
+                onClick={() => {
+                  if (selectedCount === 0) {
+                    setIsPrintWarningOpen(true);
+                  } else {
+                    handleBulkPrintTable();
+                  }
+                }}
+                className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500 text-emerald-600 dark:text-emerald-400 dark:border-emerald-500 bg-white dark:bg-zinc-900 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 active:scale-95 font-semibold text-xs transition-all duration-150 shadow-xs cursor-pointer"
+              >
+                <FileText className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
+                Cetak Tabel PDF
+                {selectedCount > 0 && (
+                  <span className="inline-flex items-center justify-center h-4.5 min-w-4.5 px-1 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">
+                    {selectedCount}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
+
           <div className="flex items-center gap-2">
             <button
               onClick={() => table.previousPage()}

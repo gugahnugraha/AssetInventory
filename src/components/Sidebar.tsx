@@ -46,13 +46,31 @@ export function Sidebar({ user }: SidebarProps) {
   const [assetsExpanded, setAssetsExpanded] = React.useState(isAssetPathActive);
   const [masterExpanded, setMasterExpanded] = React.useState(isMasterPathActive);
 
-  React.useEffect(() => {
-    if (isAssetPathActive) setAssetsExpanded(true);
-  }, [pathname, isAssetPathActive]);
+  const toggleAssetsExpanded = React.useCallback(() => {
+    setAssetsExpanded((prev) => {
+      const next = !prev;
+      if (next) setMasterExpanded(false);
+      return next;
+    });
+  }, []);
+
+  const toggleMasterExpanded = React.useCallback(() => {
+    setMasterExpanded((prev) => {
+      const next = !prev;
+      if (next) setAssetsExpanded(false);
+      return next;
+    });
+  }, []);
 
   React.useEffect(() => {
-    if (isMasterPathActive) setMasterExpanded(true);
-  }, [pathname, isMasterPathActive]);
+    if (isAssetPathActive) {
+      setAssetsExpanded(true);
+      setMasterExpanded(false);
+    } else if (isMasterPathActive) {
+      setMasterExpanded(true);
+      setAssetsExpanded(false);
+    }
+  }, [pathname, isAssetPathActive, isMasterPathActive]);
 
   interface LinkItem {
     label: string;
@@ -214,17 +232,11 @@ export function Sidebar({ user }: SidebarProps) {
                   onClick={() => {
                     if (collapsed) {
                       setCollapsed(false);
-                      if (link.label === "Manajemen Aset") {
-                        setAssetsExpanded(true);
-                      } else if (link.label === "Master Data") {
-                        setMasterExpanded(true);
-                      }
-                    } else {
-                      if (link.label === "Manajemen Aset") {
-                        setAssetsExpanded(!assetsExpanded);
-                      } else if (link.label === "Master Data") {
-                        setMasterExpanded(!masterExpanded);
-                      }
+                    }
+                    if (link.label === "Manajemen Aset") {
+                      toggleAssetsExpanded();
+                    } else if (link.label === "Master Data") {
+                      toggleMasterExpanded();
                     }
                   }}
                   className={cn(

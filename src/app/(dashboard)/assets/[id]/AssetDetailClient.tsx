@@ -590,22 +590,32 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
             </Card>
 
             {/* Dynamic Attributes Section */}
-            {asset.attributes && asset.attributes.length > 0 && (
+            {((asset.category?.attributes && asset.category.attributes.length > 0) || (asset.attributes && asset.attributes.length > 0)) && (
               <Card className="border-zinc-200/80 dark:border-zinc-800/80 shadow-md overflow-hidden">
                 <CardHeader className="bg-zinc-50 dark:bg-zinc-900/50 border-b pb-4 pt-5">
                   <CardTitle className="text-sm font-black uppercase tracking-widest text-emerald-800 flex items-center gap-2">
                     <div className="w-1.5 h-5 bg-emerald-500 rounded-full"></div>
-                    Atribut Kendaraan & Khusus
+                    Atribut Khusus Kategori ({asset.category?.nama || "Spesifikasi"})
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-zinc-100 dark:divide-zinc-800/50">
-                    {asset.attributes.map((attr: any) => (
-                      <div key={attr.id} className="p-4 space-y-1">
-                        <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400">{attr.categoryAttribute?.nama}</span>
-                        <span className="font-bold text-zinc-900 dark:text-zinc-100 text-[15px]">{attr.value || "-"}</span>
-                      </div>
-                    ))}
+                    {asset.category?.attributes && asset.category.attributes.length > 0
+                      ? asset.category.attributes.map((catAttr: any) => {
+                          const valObj = asset.attributes?.find((a: any) => a.categoryAttributeId === catAttr.id || a.categoryAttribute?.nama === catAttr.nama);
+                          return (
+                            <div key={catAttr.id} className="p-4 space-y-1">
+                              <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400">{catAttr.nama}</span>
+                              <span className="font-bold text-zinc-900 dark:text-zinc-100 text-[15px]">{valObj?.value || "-"}</span>
+                            </div>
+                          );
+                        })
+                      : asset.attributes.map((attr: any) => (
+                          <div key={attr.id} className="p-4 space-y-1">
+                            <span className="block text-[11px] font-bold uppercase tracking-wider text-zinc-400">{attr.categoryAttribute?.nama || "Atribut"}</span>
+                            <span className="font-bold text-zinc-900 dark:text-zinc-100 text-[15px]">{attr.value || "-"}</span>
+                          </div>
+                        ))}
                   </div>
                 </CardContent>
               </Card>

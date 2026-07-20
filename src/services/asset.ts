@@ -106,7 +106,10 @@ export async function getAssetById(id: string) {
         opd: true,
         category: {
           include: {
-            kib: true
+            kib: true,
+            attributes: {
+              orderBy: { displayOrder: "asc" }
+            }
           }
         },
         distribution: true,
