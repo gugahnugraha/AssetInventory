@@ -117,14 +117,15 @@ const styles = StyleSheet.create({
   tableRowEven: {
     backgroundColor: '#f9fafb',
   },
-  cellNo: { width: '4%', textAlign: 'center' },
-  cellKode: { width: '19%', paddingLeft: 4, fontFamily: 'Helvetica-Bold' },
-  cellNama: { width: '18%', paddingLeft: 4, fontFamily: 'Helvetica-Bold' },
-  cellKategori: { width: '13%', paddingLeft: 4 },
-  cellMerk: { width: '17%', paddingLeft: 4 },
-  cellTahun: { width: '6%', textAlign: 'center' },
-  cellHarga: { width: '12%', textAlign: 'right', paddingRight: 4, fontFamily: 'Helvetica-Bold' },
-  cellKondisi: { width: '11%', textAlign: 'center' },
+  cellNo: { width: '3.5%', textAlign: 'center' },
+  cellKode: { width: '17%', paddingLeft: 3, fontFamily: 'Helvetica-Bold' },
+  cellNama: { width: '16%', paddingLeft: 3, fontFamily: 'Helvetica-Bold' },
+  cellKategori: { width: '11%', paddingLeft: 3 },
+  cellMerk: { width: '15%', paddingLeft: 3 },
+  cellBidang: { width: '11%', paddingLeft: 3 },
+  cellTahun: { width: '5.5%', textAlign: 'center' },
+  cellHarga: { width: '11%', textAlign: 'right', paddingRight: 3, fontFamily: 'Helvetica-Bold' },
+  cellKondisi: { width: '7%', textAlign: 'center' },
 
   kondisiNormal: { color: '#047857', fontFamily: 'Helvetica-Bold' },
   kondisiRusakRingan: { color: '#d97706', fontFamily: 'Helvetica-Bold' },
@@ -141,7 +142,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   summaryLabel: {
-    width: '77%',
+    width: '79%',
     textAlign: 'right',
     paddingRight: 8,
     fontFamily: 'Helvetica-Bold',
@@ -149,9 +150,9 @@ const styles = StyleSheet.create({
     color: '#064e3b',
   },
   summaryValue: {
-    width: '12%',
+    width: '14%',
     textAlign: 'right',
-    paddingRight: 4,
+    paddingRight: 3,
     fontFamily: 'Helvetica-Bold',
     fontSize: 8.5,
     color: '#047857',
@@ -199,9 +200,23 @@ interface AssetTableDocumentProps {
 }
 
 export const AssetTableDocument = ({ assets, logoUrl, isDemo }: AssetTableDocumentProps) => {
-  // Sort assets by full code
+  // Sort assets by: 1. Bidang (distribution name) ASC, 2. Tahun (tahunPembelian) ASC, 3. Kode Aset (kodeLengkap) ASC
   const sortedAssets = [...assets].sort((a, b) => {
-    return (a.kodeLengkap || '').localeCompare(b.kodeLengkap || '');
+    // 1. Primary sort: Bidang / Unit
+    const bidangA = (a.distribution?.nama || a.distributionName || '').toLowerCase();
+    const bidangB = (b.distribution?.nama || b.distributionName || '').toLowerCase();
+    const cmpBidang = bidangA.localeCompare(bidangB);
+    if (cmpBidang !== 0) return cmpBidang;
+
+    // 2. Secondary sort: Tahun Pembelian (terkecil -> terbesar)
+    const tahunA = Number(a.tahunPembelian) || 9999;
+    const tahunB = Number(b.tahunPembelian) || 9999;
+    if (tahunA !== tahunB) return tahunA - tahunB;
+
+    // 3. Tertiary sort: Kode Aset (kodeLengkap)
+    const kodeA = a.kodeLengkap || '';
+    const kodeB = b.kodeLengkap || '';
+    return kodeA.localeCompare(kodeB);
   });
 
   const totalHarga = sortedAssets.reduce((sum, item) => sum + (item.harga || 0), 0);
@@ -244,6 +259,7 @@ export const AssetTableDocument = ({ assets, logoUrl, isDemo }: AssetTableDocume
             <Text style={styles.cellNama}>Nama Barang / Aset</Text>
             <Text style={styles.cellKategori}>Kategori</Text>
             <Text style={styles.cellMerk}>Merk / Type</Text>
+            <Text style={styles.cellBidang}>Bidang / Unit</Text>
             <Text style={styles.cellTahun}>Tahun</Text>
             <Text style={styles.cellHarga}>Harga (Rp)</Text>
             <Text style={styles.cellKondisi}>Kondisi</Text>
@@ -265,6 +281,7 @@ export const AssetTableDocument = ({ assets, logoUrl, isDemo }: AssetTableDocume
                 <Text style={styles.cellNama}>{asset.namaAset || '-'}</Text>
                 <Text style={styles.cellKategori}>{asset.category?.nama || asset.categoryName || '-'}</Text>
                 <Text style={styles.cellMerk}>{asset.merkType || '-'}</Text>
+                <Text style={styles.cellBidang}>{asset.distribution?.nama || asset.distributionName || '-'}</Text>
                 <Text style={styles.cellTahun}>{asset.tahunPembelian || '-'}</Text>
                 <Text style={styles.cellHarga}>Rp {formatCurrency(asset.harga)}</Text>
                 <Text style={[styles.cellKondisi, kondisiInfo.style]}>{kondisiInfo.label}</Text>
@@ -276,7 +293,7 @@ export const AssetTableDocument = ({ assets, logoUrl, isDemo }: AssetTableDocume
           <View style={styles.summaryRow} wrap={false}>
             <Text style={styles.summaryLabel}>TOTAL NILAI ASET TERPILIH:</Text>
             <Text style={styles.summaryValue}>Rp {formatCurrency(totalHarga)}</Text>
-            <Text style={{ width: '11%' }} />
+            <Text style={{ width: '7%' }} />
           </View>
         </View>
 

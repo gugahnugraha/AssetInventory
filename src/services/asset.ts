@@ -266,7 +266,7 @@ export async function createAsset(data: CreateAssetInput, userId: string) {
           harga: data.harga,
           tahunPembelian: data.tahunPembelian,
           distributionId: data.distributionId,
-          holderId: data.holderId || null,
+          holderId: (data.holderId && data.holderId.trim() !== "" && data.holderId !== "none" && data.holderId !== "null") ? data.holderId : null,
           kondisi: data.kondisi,
           catatan: data.catatan,
           fotoUtama: null, // will be updated if primary photo exists
@@ -491,7 +491,9 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
           harga: data.harga,
           tahunPembelian: data.tahunPembelian,
           distributionId: data.distributionId,
-          holderId: data.holderId !== undefined ? data.holderId : undefined,
+          holderId: data.holderId !== undefined
+            ? ((data.holderId && data.holderId.trim() !== "" && data.holderId !== "none" && data.holderId !== "null") ? data.holderId : null)
+            : undefined,
           kondisi: data.kondisi,
           catatan: data.catatan,
           fotoUtama: primaryKey,
