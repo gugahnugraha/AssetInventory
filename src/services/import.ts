@@ -389,7 +389,7 @@ export async function importAssetsBatch(
       ])) || null;
 
       const caraPerolehan = cleanString(getRowValue(row, [
-        "Perolehan", "Cara Perolehan", "CaraPerolehan", "Asal Usul", "Asal Usul / Cara Perolehan", "Asal-Usul / Cara Perolehan", "Asal Usul Perolehan"
+        "Cara Perolehan", "Perolehan", "CaraPerolehan", "Asal Usul", "Asal Usul / Cara Perolehan", "Asal-Usul / Cara Perolehan", "Asal Usul Perolehan", "Asal/Cara Perolehan", "Asal Usul/Cara Perolehan", "Cara Pembuatan / Perolehan", "Cara Pembuatan/Perolehan", "Perolehan Aset", "Cara Obtention"
       ])) || null;
 
       // Harga

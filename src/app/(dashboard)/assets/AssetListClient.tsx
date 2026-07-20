@@ -365,7 +365,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
               </Link>
               {userRole !== Role.MANAGER && (
                 <>
-                  <Link href={`/assets/${asset.id}/edit`} prefetch={false} title="Edit Aset">
+                  <Link href={`/assets/${asset.id}/edit`} target="_blank" rel="noopener noreferrer" prefetch={false} title="Edit Aset (Buka Tab Baru)">
                     <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-amber-50 dark:hover:bg-amber-950/20 text-amber-600 dark:text-amber-400 active:scale-90 transition-transform">
                       <Edit3 className="h-4 w-4" />
                     </Button>
