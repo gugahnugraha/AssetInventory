@@ -954,7 +954,6 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
                 qrCodes={previewQrCodes}
                 logoUrl={typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : ""}
                 isDemo={userRole === Role.DEMO}
-                governmentName={asset.opd?.nama}
               />
             </PDFViewer>
           )}
