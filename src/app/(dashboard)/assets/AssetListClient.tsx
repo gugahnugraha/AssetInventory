@@ -16,7 +16,8 @@ import {
   Check,
   Upload,
   Printer,
-  X
+  X,
+  FileText
 } from "lucide-react";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { 
@@ -45,6 +46,7 @@ import { ImportDialog } from "@/components/ImportDialog";
 import dynamic from 'next/dynamic';
 const PDFViewer = dynamic(() => import('@react-pdf/renderer').then(mod => mod.PDFViewer), { ssr: false, loading: () => <div className="p-8 text-center text-zinc-400 animate-pulse">Memuat Viewer PDF...</div> });
 import { AssetStickerDocument } from "@/components/pdf/AssetStickerDocument";
+import { AssetTableDocument } from "@/components/pdf/AssetTableDocument";
 interface AssetListClientProps {
   initialAssets: any[];
   distributions: any[];
@@ -97,6 +99,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = React.useState(false);
+  const [pdfMode, setPdfMode] = React.useState<"LABEL" | "TABLE">("LABEL");
   const [previewAssets, setPreviewAssets] = React.useState<any[]>([]);
   const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
   const [previewQrCodes, setPreviewQrCodes] = React.useState<Record<string, string>>({});
@@ -486,6 +489,15 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
   const handleBulkPrint = () => {
     const selectedAssets = assets.filter(asset => rowSelection[asset.id] === true);
     if (selectedAssets.length === 0) return;
+    setPdfMode("LABEL");
+    setPreviewAssets(selectedAssets);
+    setIsPdfPreviewOpen(true);
+  };
+
+  const handleBulkPrintTable = () => {
+    const selectedAssets = assets.filter(asset => rowSelection[asset.id] === true);
+    if (selectedAssets.length === 0) return;
+    setPdfMode("TABLE");
     setPreviewAssets(selectedAssets);
     setIsPdfPreviewOpen(true);
   };
@@ -494,29 +506,36 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
     if (previewAssets.length === 0) return;
     setIsGeneratingPdf(true);
     try {
-      const QRCode = (await import('qrcode')).default;
       const { pdf } = await import('@react-pdf/renderer');
-      const { AssetStickerDocument } = await import('@/components/pdf/AssetStickerDocument');
-
-      const qrCodes: Record<string, string> = {};
-      for (const asset of previewAssets) {
-        qrCodes[asset.id] = await QRCode.toDataURL(
-          `${window.location.origin}/assets/${asset.id}`,
-          { margin: 1, width: 120 }
-        );
-      }
-      
       const logoUrl = typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : "";
 
-      const pdfBlob = await pdf(
-        <AssetStickerDocument assets={previewAssets} qrCodes={qrCodes} logoUrl={logoUrl} isDemo={userRole === Role.DEMO} />
-      ).toBlob();
-      
+      let pdfDocument: any;
+      let filename: string;
+
+      if (pdfMode === "TABLE") {
+        const { AssetTableDocument } = await import('@/components/pdf/AssetTableDocument');
+        pdfDocument = <AssetTableDocument assets={previewAssets} logoUrl={logoUrl} isDemo={userRole === Role.DEMO} />;
+        filename = `Tabel_Aset_Terpilih_${Date.now()}.pdf`;
+      } else {
+        const QRCode = (await import('qrcode')).default;
+        const { AssetStickerDocument } = await import('@/components/pdf/AssetStickerDocument');
+        const qrCodes: Record<string, string> = {};
+        for (const asset of previewAssets) {
+          qrCodes[asset.id] = await QRCode.toDataURL(
+            `${window.location.origin}/assets/${asset.id}`,
+            { margin: 1, width: 120 }
+          );
+        }
+        pdfDocument = <AssetStickerDocument assets={previewAssets} qrCodes={qrCodes} logoUrl={logoUrl} isDemo={userRole === Role.DEMO} />;
+        filename = `Label_BMD_${Date.now()}.pdf`;
+      }
+
+      const pdfBlob = await pdf(pdfDocument).toBlob();
       const blobWithMime = new Blob([pdfBlob], { type: 'application/pdf' });
       const url = URL.createObjectURL(blobWithMime);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Label_BMD_${Date.now()}.pdf`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       
@@ -611,8 +630,8 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
 
       {/* Action Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-        {/* Left: Cetak Label — always enabled */}
-        <div className="flex items-center gap-3">
+        {/* Left: Cetak Label & Cetak Tabel PDF */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button
             onClick={() => {
               if (selectedCount === 0) {
@@ -621,12 +640,31 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
                 handleBulkPrint();
               }
             }}
-            className="group inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-sky-500 text-sky-600 dark:text-sky-400 dark:border-sky-500 bg-transparent hover:bg-sky-50 dark:hover:bg-sky-950/30 active:scale-95 font-semibold text-sm transition-all duration-150 shadow-sm cursor-pointer"
+            className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-sky-500 text-sky-600 dark:text-sky-400 dark:border-sky-500 bg-transparent hover:bg-sky-50 dark:hover:bg-sky-950/30 active:scale-95 font-semibold text-sm transition-all duration-150 shadow-xs cursor-pointer"
           >
             <Printer className="h-4 w-4 transition-transform group-hover:scale-110" />
             Cetak Label
             {selectedCount > 0 && (
               <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300 text-xs font-bold animate-in fade-in zoom-in duration-150">
+                {selectedCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => {
+              if (selectedCount === 0) {
+                setIsPrintWarningOpen(true);
+              } else {
+                handleBulkPrintTable();
+              }
+            }}
+            className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-emerald-500 text-emerald-600 dark:text-emerald-400 dark:border-emerald-500 bg-transparent hover:bg-emerald-50 dark:hover:bg-emerald-950/30 active:scale-95 font-semibold text-sm transition-all duration-150 shadow-xs cursor-pointer"
+          >
+            <FileText className="h-4 w-4 transition-transform group-hover:scale-110" />
+            Cetak Tabel PDF
+            {selectedCount > 0 && (
+              <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 text-xs font-bold animate-in fade-in zoom-in duration-150">
                 {selectedCount}
               </span>
             )}
@@ -887,12 +925,20 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
             </div>
           ) : (
             <PDFViewer width="100%" height="100%" className="border-0 bg-transparent flex-1" showToolbar={true}>
-              <AssetStickerDocument
-                assets={previewAssets}
-                qrCodes={previewQrCodes}
-                logoUrl={typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : ""}
-                isDemo={userRole === Role.DEMO}
-              />
+              {pdfMode === "TABLE" ? (
+                <AssetTableDocument
+                  assets={previewAssets}
+                  logoUrl={typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : ""}
+                  isDemo={userRole === Role.DEMO}
+                />
+              ) : (
+                <AssetStickerDocument
+                  assets={previewAssets}
+                  qrCodes={previewQrCodes}
+                  logoUrl={typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : ""}
+                  isDemo={userRole === Role.DEMO}
+                />
+              )}
             </PDFViewer>
           )}
         </div>

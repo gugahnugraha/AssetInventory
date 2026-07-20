@@ -411,14 +411,42 @@ export async function importAssetsBatch(
         tahunPembelian = parseInt(String(rawTahun).replace(/\D/g, ""), 10) || tahunPembelian;
       }
 
-      // Pemegang Barang (Holder)
-      let rowHolderId: string | null = null;
-      let matchedHolderDistributionId: string | null = null;
-      const holderInput = cleanString(getRowValue(row, [
-        "Pemegang", "Nama Pemegang", "Pemegang Barang", "PJB", "Penanggung Jawab", "Pemegang/PJB", "Nama PJB", "NIP Pemegang", "NIP"
+      // Bidang Distribusi
+      let rowDistributionId = defaultDistributionId;
+      const bidangInput = cleanString(getRowValue(row, [
+        "Bidang Distribusi", "Bidang", "Distribusi", "Unit Kerja", "Unit", "Bidang Kerja", "Lokasi", "Bidang/Unit"
       ]));
 
-      if (holderInput) {
+      if (bidangInput) {
+        const bLower = bidangInput.toLowerCase().trim();
+        const match = distributions.find(d => {
+          const dLower = d.nama.toLowerCase().trim();
+          return dLower === bLower || bLower.includes(dLower) || dLower.includes(bLower);
+        });
+        if (match) {
+          rowDistributionId = match.id;
+        }
+      } else if (isUpdate && existingAssetData) {
+        rowDistributionId = existingAssetData.distributionId;
+      } else {
+        const matchSekretariat = distributions.find(d => d.nama.toLowerCase() === "sekretariat");
+        if (matchSekretariat) {
+          rowDistributionId = matchSekretariat.id;
+        }
+      }
+
+      // Pemegang Barang (Holder) — Auto-match existing or dynamically create new Holder if not found
+      let rowHolderId: string | null = null;
+      const holderInput = cleanString(getRowValue(row, [
+        "Pemegang Barang", "Pemegang Aset", "Pemegang", "Nama Pemegang", "PJB", "Penanggung Jawab", "Pemegang/PJB", "Nama PJB", "NIP Pemegang", "NIP"
+      ]));
+
+      const isInvalidHolderName = (name: string) => {
+        const s = name.trim().toLowerCase();
+        return !s || s === "-" || s === "--" || s === "---" || s === "tidak ada" || s === "kosong" || s === "n/a" || s === "none";
+      };
+
+      if (holderInput && !isInvalidHolderName(holderInput)) {
         const cleanDigits = holderInput.replace(/\D/g, "");
         let matchHolder: any = null;
 
@@ -436,36 +464,22 @@ export async function importAssetsBatch(
 
         if (matchHolder) {
           rowHolderId = matchHolder.id;
-          matchedHolderDistributionId = matchHolder.distributionId;
-        }
-      }
-
-      // Bidang Distribusi
-      let rowDistributionId = defaultDistributionId;
-      const bidangInput = cleanString(getRowValue(row, [
-        "Bidang Distribusi", "Bidang", "Distribusi", "Unit Kerja", "Unit", "Bidang Kerja", "Lokasi", "Bidang/Unit"
-      ]));
-
-      if (bidangInput) {
-        const bLower = bidangInput.toLowerCase().trim();
-        const match = distributions.find(d => {
-          const dLower = d.nama.toLowerCase().trim();
-          return dLower === bLower || bLower.includes(dLower) || dLower.includes(bLower);
-        });
-        if (match) {
-          rowDistributionId = match.id;
-        } else if (matchedHolderDistributionId) {
-          rowDistributionId = matchedHolderDistributionId;
-        }
-      } else if (matchedHolderDistributionId) {
-        // Inherit Bidang from Pemegang if Bidang cell is empty
-        rowDistributionId = matchedHolderDistributionId;
-      } else if (isUpdate && existingAssetData) {
-        rowDistributionId = existingAssetData.distributionId;
-      } else {
-        const matchSekretariat = distributions.find(d => d.nama.toLowerCase() === "sekretariat");
-        if (matchSekretariat) {
-          rowDistributionId = matchSekretariat.id;
+          if (!bidangInput && matchHolder.distributionId) {
+            rowDistributionId = matchHolder.distributionId;
+          }
+        } else {
+          // Dynamic Auto-Creation of Holder in DB if not found in Master Data
+          const newHolder = await tx.holder.create({
+            data: {
+              id: randomUUID(),
+              nama: holderInput,
+              nip: `- AUTO-${randomUUID().substring(0, 8).toUpperCase()}`,
+              jabatan: "-",
+              distributionId: rowDistributionId,
+            },
+          });
+          holders.push(newHolder); // Add to cache for subsequent rows in this batch
+          rowHolderId = newHolder.id;
         }
       }
 
