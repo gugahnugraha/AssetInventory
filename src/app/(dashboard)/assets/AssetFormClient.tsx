@@ -998,26 +998,36 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
               <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-3">
                 <h4 className="text-sm font-bold text-emerald-700 uppercase tracking-wider">Atribut Tambahan ({selectedCategory?.nama})</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {categoryAttributes.map((attr: any, index: number) => (
-                    <div key={`${attr.id}-${index}`} className="space-y-1.5">
-                      <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
-                        {attr.nama} {attr.required && <span className="text-rose-500">*</span>}
-                      </label>
-                      <Input
-                        type={attr.fieldType === "NUMBER" ? "number" : "text"}
-                        placeholder={`Masukkan ${attr.nama}`}
-                        className="h-9 text-sm max-w-md"
-                        {...register(`dynamicAttributes.${attr.id}`, {
-                          required: attr.required ? `${attr.nama} wajib diisi` : false
-                        })}
-                      />
-                      {errors.dynamicAttributes?.[attr.id] && (
-                        <p className="text-xs text-rose-500 mt-1">
-                          {(errors.dynamicAttributes as any)[attr.id]?.message}
-                        </p>
-                      )}
-                    </div>
-                  ))}
+                  {categoryAttributes.map((attr: any, index: number) => {
+                    const isNoPolisi = attr.nama.toLowerCase().includes("polisi");
+                    return (
+                      <div key={`${attr.id}-${index}`} className="space-y-1.5">
+                        <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
+                          {attr.nama} {attr.required && <span className="text-rose-500">*</span>}
+                          {isNoPolisi && <span className="text-[10px] text-zinc-500 font-normal lowercase">(tanpa spasi)</span>}
+                        </label>
+                        <Input
+                          type={attr.fieldType === "NUMBER" ? "number" : "text"}
+                          placeholder={isNoPolisi ? "Contoh: D1234ABC" : `Masukkan ${attr.nama}`}
+                          className="h-9 text-sm max-w-md"
+                          {...register(`dynamicAttributes.${attr.id}`, {
+                            required: attr.required ? `${attr.nama} wajib diisi` : false,
+                            onChange: (e) => {
+                              if (isNoPolisi) {
+                                const clean = e.target.value.replace(/\s+/g, "").toUpperCase();
+                                setValue(`dynamicAttributes.${attr.id}`, clean, { shouldValidate: true });
+                              }
+                            }
+                          })}
+                        />
+                        {errors.dynamicAttributes?.[attr.id] && (
+                          <p className="text-xs text-rose-500 mt-1">
+                            {(errors.dynamicAttributes as any)[attr.id]?.message}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

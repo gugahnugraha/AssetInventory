@@ -298,13 +298,25 @@ export async function createAsset(data: CreateAssetInput, userId: string) {
 
       // 3. Create Dynamic Attributes
       if (data.dynamicAttributes) {
+        const categoryAttributes = await tx.categoryAttribute.findMany({
+          where: { id: { in: Object.keys(data.dynamicAttributes) } }
+        });
+        const attrMap = new Map(categoryAttributes.map(a => [a.id, a.nama]));
+
         const attrData = Object.entries(data.dynamicAttributes)
           .filter(([_, val]) => val !== undefined && val !== null && val.trim() !== "")
-          .map(([attrId, val]) => ({
-            assetId: asset.id,
-            categoryAttributeId: attrId,
-            value: val.trim()
-          }));
+          .map(([attrId, val]) => {
+            const attrName = attrMap.get(attrId) || "";
+            let cleanVal = val.trim();
+            if (attrName.toLowerCase().includes("polisi")) {
+              cleanVal = cleanVal.replace(/\s+/g, "").toUpperCase();
+            }
+            return {
+              assetId: asset.id,
+              categoryAttributeId: attrId,
+              value: cleanVal
+            };
+          });
         if (attrData.length > 0) {
           await tx.assetAttribute.createMany({
             data: attrData
@@ -491,13 +503,25 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
         await tx.assetAttribute.deleteMany({
           where: { assetId: id }
         });
+        const categoryAttributes = await tx.categoryAttribute.findMany({
+          where: { id: { in: Object.keys(data.dynamicAttributes) } }
+        });
+        const attrMap = new Map(categoryAttributes.map(a => [a.id, a.nama]));
+
         const attrData = Object.entries(data.dynamicAttributes)
           .filter(([_, val]) => val !== undefined && val !== null && val.trim() !== "")
-          .map(([attrId, val]) => ({
-            assetId: id,
-            categoryAttributeId: attrId,
-            value: val.trim()
-          }));
+          .map(([attrId, val]) => {
+            const attrName = attrMap.get(attrId) || "";
+            let cleanVal = val.trim();
+            if (attrName.toLowerCase().includes("polisi")) {
+              cleanVal = cleanVal.replace(/\s+/g, "").toUpperCase();
+            }
+            return {
+              assetId: id,
+              categoryAttributeId: attrId,
+              value: cleanVal
+            };
+          });
         if (attrData.length > 0) {
           await tx.assetAttribute.createMany({
             data: attrData

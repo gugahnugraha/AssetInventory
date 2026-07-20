@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { importAssetsBatchAction } from "@/actions/asset";
 import { ExcelAssetRow } from "@/services/import";
+import { getRowValue } from "@/lib/utils";
 
 interface ImportDialogProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
   const [processedCount, setProcessedCount] = React.useState(0);
   const [importSummary, setImportSummary] = React.useState<{
     successCount: number;
+    updatedCount: number;
     skippedCount: number;
     duplicates: string[];
     errors: string[];
@@ -90,20 +92,21 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
 
         // Filter out empty rows (where "Nama Aset" is undefined or empty string)
         const validRows = rawJson.filter(row => {
-          const name = row["Nama Aset"] || (row as any)["Nama"] || (row as any)["nama"];
+          const name = getRowValue(row as any, ["Nama Aset", "Nama Barang", "Nama", "Barang"]);
           return name && String(name).trim() !== "";
         });
 
         if (validRows.length === 0) {
-          setParseError("Berkas Excel tidak memiliki baris data yang valid (Nama Aset kosong semua).");
+          setParseError("Berkas Excel tidak memiliki baris data yang valid (Nama Aset / Nama Barang kosong semua).");
           setIsParsing(false);
           return;
         }
 
         // Check if has header columns we expect
         const firstRow = validRows[0];
-        if (!("Nama Aset" in firstRow) && !("Nama" in (firstRow as any) || "nama" in (firstRow as any))) {
-          setParseError("Judul kolom 'Nama Aset' tidak ditemukan. Pastikan format kolom sesuai panduan.");
+        const nameCheck = getRowValue(firstRow as any, ["Nama Aset", "Nama Barang", "Nama", "Barang"]);
+        if (!nameCheck) {
+          setParseError("Judul kolom 'Nama Aset' / 'Nama Barang' tidak ditemukan. Pastikan format kolom sesuai panduan.");
           setIsParsing(false);
           return;
         }
@@ -146,6 +149,7 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
     const totalBatches = Math.ceil(plainRows.length / BATCH_SIZE);
     
     let totalSuccess = 0;
+    let totalUpdated = 0;
     let totalSkipped = 0;
     
     try {
@@ -157,6 +161,7 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
           throw new Error(`Batch ${i + 1} gagal: ${res.error}`);
         } else if (res.result) {
           totalSuccess += res.result.successCount;
+          totalUpdated += res.result.updatedCount || 0;
           totalSkipped += res.result.skippedCount;
           
           const currentProcessed = Math.min((i + 1) * BATCH_SIZE, plainRows.length);
@@ -167,6 +172,7 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
       
       setImportSummary({
         successCount: totalSuccess,
+        updatedCount: totalUpdated,
         skippedCount: totalSkipped,
         duplicates: [],
         errors: [],
@@ -349,9 +355,16 @@ export function ImportDialog({ isOpen, onClose, distributions, onSuccess }: Impo
               <div>
                 <h4 className="font-bold text-emerald-900 text-sm">Proses Import Selesai</h4>
                 <div className="mt-1 space-y-1 text-xs text-emerald-800">
-                  <p>
-                    ✓ Berhasil menyimpan **{importSummary.successCount}** aset baru ke database.
-                  </p>
+                  {importSummary.successCount > 0 && (
+                    <p>
+                      ✓ Berhasil menyimpan **{importSummary.successCount}** aset baru ke database.
+                    </p>
+                  )}
+                  {importSummary.updatedCount > 0 && (
+                    <p>
+                      ✓ Berhasil memperbarui **{importSummary.updatedCount}** aset lama di database.
+                    </p>
+                  )}
                   {importSummary.skippedCount > 0 && (
                     <p className="text-zinc-600">
                       ⚠ Melewati **{importSummary.skippedCount}** baris data (duplikat / kesalahan format).

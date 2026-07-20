@@ -1,9 +1,14 @@
+require("dotenv").config();
 const { PrismaClient } = require("@prisma/client");
+const { PrismaPg } = require("@prisma/adapter-pg");
+const { Pool } = require("pg");
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log("Starting database cleanup for Assets...");
+  console.log("=== STARTING ASSET TABLE CLEANUP ===");
   try {
     const deletedAttributes = await prisma.assetAttribute.deleteMany();
     console.log(`- Deleted ${deletedAttributes.count} asset attributes.`);
@@ -20,10 +25,28 @@ async function main() {
     const deletedAssets = await prisma.asset.deleteMany();
     console.log(`- Deleted ${deletedAssets.count} assets.`);
 
-    console.log("Database cleanup completed successfully.");
+    console.log("\n=== VERIFYING MASTER DATA (MUST BE INTACT) ===");
+    const remainingAssets = await prisma.asset.count();
+    const opdCount = await prisma.opd.count();
+    const userCount = await prisma.user.count();
+    const distCount = await prisma.distribution.count();
+    const holderCount = await prisma.holder.count();
+    const kibCount = await prisma.kib.count();
+    const categoryCount = await prisma.category.count();
+
+    console.log(`- Assets remaining: ${remainingAssets} (Expected: 0)`);
+    console.log(`- OPD remaining: ${opdCount}`);
+    console.log(`- Users remaining: ${userCount}`);
+    console.log(`- Distributions remaining: ${distCount}`);
+    console.log(`- Holders remaining: ${holderCount}`);
+    console.log(`- KIBs remaining: ${kibCount}`);
+    console.log(`- Categories remaining: ${categoryCount}`);
+
+    console.log("\nAsset table successfully cleared!");
   } catch (error) {
-    console.error("Error cleaning database:", error);
+    console.error("Error cleaning asset table:", error);
   } finally {
+    await pool.end();
     await prisma.$disconnect();
   }
 }
