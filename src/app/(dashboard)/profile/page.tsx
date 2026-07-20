@@ -3,10 +3,11 @@ import { redirect } from "next/navigation";
 import prisma from "@/services/db";
 import { ProfileClient } from "./ProfileClient";
 import { Role } from "@prisma/client";
+import { getPageTitle } from "@/lib/constants";
 
 export const metadata = {
-  title: "Profil Saya - SIM Inventaris Aset SKPD",
-  description: "Kelola profil pribadi Anda dan ubah password login.",
+  title: getPageTitle("Profil Saya"),
+  description: "Pengaturan akun dan profil pengguna.",
 };
 
 export default async function ProfilePage() {

@@ -35,6 +35,7 @@ function LinkedinIcon({ className }: { className?: string }) {
     </svg>
   );
 }
+import { APP_NAME, APP_FULL_NAME, DEFAULT_REGION_NAME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 /* ─────────────────────────────────── */
@@ -42,7 +43,6 @@ import { cn } from "@/lib/utils";
 /* ─────────────────────────────────── */
 
 const APP_VERSION = "1.0.0";
-const APP_NAME = "Sistem Informasi Inventarisasi Aset";
 const BUILD_DATE = "Juli 2026";
 
 const techStack = [
@@ -181,7 +181,7 @@ export default function AboutPage() {
                 </span>
               </div>
               <p className="mt-2 text-emerald-200 text-sm sm:text-base leading-relaxed max-w-xl">
-                Platform manajemen inventarisasi aset pemerintah daerah yang modern, aman, dan efisien. Dirancang untuk membantu pengelolaan aset SKPD Kabupaten Bandung secara digital.
+                Platform manajemen inventarisasi aset pemerintah daerah yang modern, aman, dan efisien. Dirancang untuk membantu pengelolaan aset SKPD {DEFAULT_REGION_NAME} secara digital.
               </p>
               <div className="mt-4 flex flex-wrap gap-3 text-xs text-emerald-300">
                 <span className="flex items-center gap-1.5">
@@ -325,7 +325,7 @@ export default function AboutPage() {
             >
               Gugah Nugraha
             </a>{" "}
-            untuk Kabupaten Bandung
+            untuk {DEFAULT_REGION_NAME}
           </p>
         </div>
 

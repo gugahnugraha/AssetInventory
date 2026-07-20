@@ -5,10 +5,11 @@ import { DocumentService } from "@/services/document";
 import { getAllDistributions } from "@/services/distribution";
 import { AssetListClient } from "./AssetListClient";
 import { Role } from "@prisma/client";
+import { getPageTitle } from "@/lib/constants";
 
 export const metadata = {
-  title: "Data Aset - SIM Inventaris Aset SKPD",
-  description: "Kelola daftar inventaris aset Pemerintah Daerah Kabupaten Bandung.",
+  title: getPageTitle("Data Aset"),
+  description: "Daftar inventarisasi aset dan barang milik daerah SKPD.",
 };
 
 export default async function AssetsPage() {

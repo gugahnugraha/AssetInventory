@@ -4,9 +4,10 @@ import { getAllHolders } from "@/services/holder";
 import { getAllDistributions } from "@/services/distribution";
 import { HolderClient } from "./HolderClient";
 import { Role } from "@prisma/client";
+import { getPageTitle } from "@/lib/constants";
 
 export const metadata = {
-  title: "Pemegang Barang - SIM Inventaris Aset SKPD",
+  title: getPageTitle("Pemegang Barang"),
   description: "Kelola data aparatur penanggung jawab pemegang barang inventaris.",
 };
 

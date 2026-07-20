@@ -4,10 +4,11 @@ import { getDashboardStats } from "@/services/asset";
 import { getRecentAuditLogs } from "@/services/auditLog";
 import { getRecentHistories } from "@/services/history";
 import { DashboardClient } from "./DashboardClient";
+import { getPageTitle } from "@/lib/constants";
 
 export const metadata = {
-  title: "Dashboard - SIM Inventaris Aset SKPD",
-  description: "Halaman dashboard analisis kondisi, jenis, dan pemegang aset SKPD Kabupaten Bandung.",
+  title: getPageTitle("Dashboard"),
+  description: "Ringkasan statistik dan statistik aset SKPD.",
 };
 
 export default async function DashboardPage() {

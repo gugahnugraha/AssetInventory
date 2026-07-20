@@ -4,10 +4,11 @@ import { Role } from "@prisma/client";
 import { getAllCategories } from "@/services/category";
 import { getAllKibs } from "@/services/kib";
 import { KategoriClient } from "./KategoriClient";
+import { getPageTitle } from "@/lib/constants";
 
 export const metadata = {
-  title: "Master Kategori - SIM Inventaris Aset SKPD",
-  description: "Kelola master kategori aset dan definisi atribut dinamis.",
+  title: getPageTitle("Master Kategori"),
+  description: "Kelola klasifikasi jenis kategori aset SKPD.",
 };
 
 export default async function KategoriPage() {

@@ -3,10 +3,11 @@ import { redirect } from "next/navigation";
 import { getAllDistributions } from "@/services/distribution";
 import { DistribusiClient } from "./DistribusiClient";
 import { Role } from "@prisma/client";
+import { getPageTitle } from "@/lib/constants";
 
 export const metadata = {
-  title: "Bidang Distribusi - SIM Inventaris Aset SKPD",
-  description: "Kelola data bidang dan unit penempatan barang milik daerah.",
+  title: getPageTitle("Bidang Distribusi"),
+  description: "Struktur penempatan lokasi aset di unit kerja SKPD.",
 };
 
 export default async function DistribusiPage() {

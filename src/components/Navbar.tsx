@@ -7,6 +7,7 @@ import { Badge } from "./ui/badge"
 import { ConfirmDialog } from "./ui/confirm-dialog"
 import { Role } from "@prisma/client"
 import { logoutAction } from "@/actions/auth"
+import { APP_NAME, DEFAULT_OPD_NAME } from "@/lib/constants"
 
 interface NavbarProps {
   user: {
@@ -57,8 +58,8 @@ export function Navbar({ user, onMobileMenuToggle }: NavbarProps) {
         </button>
         
         <div className="hidden sm:flex flex-col">
-          <span className="text-xs text-zinc-800 font-semibold">Sistem Informasi Inventarisasi</span>
-          <span className="font-semibold text-sm text-zinc-900">{user.opdName || "SKPD Kabupaten Bandung"}</span>
+          <span className="text-xs text-emerald-700 dark:text-emerald-400 font-bold tracking-wide">{APP_NAME}</span>
+          <span className="font-semibold text-xs text-zinc-600 dark:text-zinc-400">{user.opdName || DEFAULT_OPD_NAME}</span>
         </div>
       </div>
 

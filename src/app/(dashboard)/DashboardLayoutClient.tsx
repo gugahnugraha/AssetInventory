@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { Navbar } from "@/components/Navbar";
 import { Role } from "@prisma/client";
 import { usePathname } from "next/navigation";
+import { APP_NAME } from "@/lib/constants";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -80,7 +81,7 @@ export function DashboardLayoutClient({ children, user }: ClientLayoutProps) {
             {children}
           </div>
           <footer className="mt-8 py-4 border-t border-zinc-200/80 text-center text-xs text-zinc-700 font-semibold">
-            &copy; {new Date().getFullYear()} Sistem Informasi Inventarisasi Aset.
+            &copy; {new Date().getFullYear()} {APP_NAME}.
           </footer>
         </main>
       </div>

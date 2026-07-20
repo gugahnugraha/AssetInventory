@@ -1,5 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { DEFAULT_GOVERNMENT_NAME } from '@/lib/constants';
 
 // A4: 297mm tall. Usable = 297 - 10 - 10 = 277mm
 // Each sticker: 29mm height + 2mm marginBottom = 31mm per row
@@ -137,9 +138,10 @@ interface AssetStickerDocumentProps {
   qrCodes: Record<string, string>;
   logoUrl: string;
   isDemo?: boolean;
+  governmentName?: string;
 }
 
-export const AssetStickerDocument = ({ assets, qrCodes, logoUrl, isDemo }: AssetStickerDocumentProps) => {
+export const AssetStickerDocument = ({ assets, qrCodes, logoUrl, isDemo, governmentName }: AssetStickerDocumentProps) => {
   // Sort assets by kode aset then nomor register ascending
   const sortedAssets = [...assets].sort((a, b) => {
     const partsA = (a.kodeLengkap || "").split(".");
@@ -176,7 +178,7 @@ export const AssetStickerDocument = ({ assets, qrCodes, logoUrl, isDemo }: Asset
 
     return (
       <View key={`${asset.id}-${globalIdx}`} style={styles.sticker}>
-        <Text style={styles.header}>PEMERINTAH KABUPATEN BANDUNG</Text>
+        <Text style={styles.header}>{governmentName || DEFAULT_GOVERNMENT_NAME}</Text>
         <View style={styles.body}>
           <View style={styles.logoBox}>
             {logoUrl && <Image src={logoUrl} style={styles.logo} />}

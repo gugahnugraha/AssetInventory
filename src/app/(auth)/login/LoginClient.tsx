@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { loginAction } from "@/actions/auth";
+import { APP_NAME, APP_FULL_NAME } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -79,7 +80,7 @@ export function LoginClient() {
             <Shield className="h-6 w-6" />
           </div>
           <span className="font-extrabold text-xl tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-emerald-200">
-            ASET INVENTARIS
+            {APP_NAME}
           </span>
         </div>
 
@@ -87,13 +88,13 @@ export function LoginClient() {
         <div className="space-y-6 my-auto relative z-10 max-w-sm">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
             <Sparkles className="h-3 w-3" />
-            <span>Versi Prototype 2026</span>
+            <span>{APP_FULL_NAME}</span>
           </div>
           <h2 className="text-4xl font-extrabold tracking-tight leading-tight text-zinc-50">
             Kelola Aset SKPD Lebih Cerdas &amp; Akurat.
           </h2>
           <p className="text-zinc-400 text-sm leading-relaxed">
-            Sistem terintegrasi untuk penatausahaan, mutasi, pelaporan, dan rekonsiliasi kondisi fisik barang milik daerah secara real-time.
+            {APP_FULL_NAME} terintegrasi untuk penatausahaan, mutasi, pelaporan, dan rekonsiliasi barang milik daerah secara real-time.
           </p>
 
           {/* Glowing Mock Stats Card */}
@@ -136,8 +137,8 @@ export function LoginClient() {
             <div className="p-3 bg-emerald-600/10 text-emerald-400 rounded-2xl border border-emerald-500/20 shadow-lg">
               <Shield className="h-7 w-7" />
             </div>
-            <h1 className="text-xl font-black tracking-wider text-emerald-400">ASET INVENTARIS</h1>
-            <p className="text-xs text-zinc-550">Aplikasi Manajemen &amp; Inventarisasi Aset</p>
+            <h1 className="text-xl font-black tracking-wider text-emerald-400">{APP_NAME}</h1>
+            <p className="text-xs text-zinc-550">{APP_FULL_NAME}</p>
           </div>
 
           <Card className="w-full border-zinc-800/80 bg-zinc-900/40 backdrop-blur-md shadow-2xl rounded-2xl overflow-hidden">

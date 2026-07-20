@@ -1,5 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
+import { APP_NAME, DEFAULT_OPD_NAME } from '@/lib/constants';
 
 const styles = StyleSheet.create({
   page: {
@@ -200,9 +201,10 @@ interface AssetTableDocumentProps {
   assets: any[];
   logoUrl?: string;
   isDemo?: boolean;
+  opdName?: string;
 }
 
-export const AssetTableDocument = ({ assets, logoUrl, isDemo }: AssetTableDocumentProps) => {
+export const AssetTableDocument = ({ assets, logoUrl, isDemo, opdName }: AssetTableDocumentProps) => {
   // Sort assets ONLY by year descending (tahun terbesar ke terkecil)
   const sortedAssets = [...assets].sort((a, b) => {
     const tahunA = Number(a.tahunPembelian) || 0;
@@ -231,7 +233,7 @@ export const AssetTableDocument = ({ assets, logoUrl, isDemo }: AssetTableDocume
             {logoUrl ? <Image src={logoUrl} style={styles.logo} /> : null}
             <View style={styles.titleGroup}>
               <Text style={styles.mainTitle}>Laporan Inventarisasi Data Aset SKPD</Text>
-              <Text style={styles.subTitle}>Diskominfo Kabupaten Bandung — SIM Aset SKPD</Text>
+              <Text style={styles.subTitle}>{opdName || DEFAULT_OPD_NAME} — {APP_NAME}</Text>
             </View>
           </View>
 
@@ -299,7 +301,7 @@ export const AssetTableDocument = ({ assets, logoUrl, isDemo }: AssetTableDocume
 
         {/* Page Footer */}
         <View style={styles.footer} fixed>
-          <Text>Sistem Informasi Inventarisasi Aset SKPD — Diskominfo Kab. Bandung</Text>
+          <Text>{APP_NAME} — {opdName || DEFAULT_OPD_NAME}</Text>
           <Text
             render={({ pageNumber, totalPages }) => `Halaman ${pageNumber} dari ${totalPages}`}
           />

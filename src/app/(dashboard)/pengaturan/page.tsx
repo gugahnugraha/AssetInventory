@@ -3,10 +3,11 @@ import { redirect } from "next/navigation";
 import prisma from "@/services/db";
 import { SettingsClient } from "./SettingsClient";
 import { Role } from "@prisma/client";
+import { getPageTitle } from "@/lib/constants";
 
 export const metadata = {
-  title: "Pengaturan Sistem - SIM Inventaris Aset SKPD",
-  description: "Diagnostik server, status runtime instansi, dan konfigurasi database.",
+  title: getPageTitle("Pengaturan Sistem"),
+  description: "Kelola identitas OPD dan konfigurasi sistem.",
 };
 
 export default async function SettingsPage() {

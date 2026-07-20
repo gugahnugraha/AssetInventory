@@ -5,10 +5,11 @@ import { DocumentService } from "@/services/document";
 import { getAssetReconciliationHistory } from "@/services/reconciliation";
 import { AssetDetailClient } from "./AssetDetailClient";
 import { Role } from "@prisma/client";
+import { getPageTitle } from "@/lib/constants";
 
 export const metadata = {
-  title: "Detail Aset - SIM Inventaris Aset SKPD",
-  description: "Informasi spesifikasi lengkap dan riwayat audit perubahan barang.",
+  title: getPageTitle("Detail Aset"),
+  description: "Rincian informasi spesifikasi dan riwayat aset SKPD.",
 };
 
 interface AssetDetailPageProps {

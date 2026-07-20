@@ -526,7 +526,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
     });
     worksheet["!cols"] = maxLens.map(w => ({ wch: w }));
 
-    XLSX.writeFile(workbook, `Aset_Inventaris_DISKOMINFO_${Date.now()}.xlsx`);
+    XLSX.writeFile(workbook, `Aset_Inventaris_${Date.now()}.xlsx`);
   };
 
   const handleBulkPrint = () => {

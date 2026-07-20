@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { DashboardLayoutClient } from "./DashboardLayoutClient";
 import { Role } from "@prisma/client";
 import prisma from "@/services/db";
+import { DEFAULT_OPD_KODE, DEFAULT_OPD_NAME } from "@/lib/constants";
 
 export default async function DashboardLayout({
   children,
@@ -20,15 +21,14 @@ export default async function DashboardLayout({
     where: { id: session.user.opdId },
   });
 
-  const rawKode = rawOpd?.kode || session.user.opdKode || "DISKOMINFO";
-  const opdShort = rawKode.charAt(0).toUpperCase() + rawKode.slice(1).toLowerCase();
-  const opdNameFormatted = `${opdShort} Kab. Bandung`;
+  const rawKode = rawOpd?.kode || session.user.opdKode || DEFAULT_OPD_KODE;
+  const opdName = rawOpd?.nama || session.user.opdName || DEFAULT_OPD_NAME;
 
   const user = {
     nama: session.user.nama || session.user.name || "User",
     username: session.user.username || "",
     role: session.user.role as Role,
-    opdName: opdNameFormatted,
+    opdName: opdName,
     opdKode: rawKode,
   };
 

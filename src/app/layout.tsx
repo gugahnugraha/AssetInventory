@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
+import { APP_NAME, APP_DESCRIPTION } from "@/lib/constants";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-plus-jakarta",
+});
 
 export const metadata: Metadata = {
-  title: "Inventaris Aset SKPD - Kabupaten Bandung",
-  description: "Aplikasi pengelolaan dan penatausahaan barang milik daerah SKPD Kabupaten Bandung.",
+  title: APP_NAME,
+  description: APP_DESCRIPTION,
 };
 
 export default function RootLayout({
@@ -15,10 +20,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className="h-full">
-      <body className={`${inter.className} min-h-full bg-background font-sans antialiased text-foreground`}>
+    <html lang="id" className={`h-full ${plusJakartaSans.variable}`}>
+      <body className={`${plusJakartaSans.className} min-h-full bg-background font-sans antialiased text-foreground`}>
         {children}
       </body>
     </html>
   );
 }
+

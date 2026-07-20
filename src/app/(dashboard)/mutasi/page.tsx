@@ -7,10 +7,11 @@ import { getAllDistributions } from "@/services/distribution";
 import { getAllHolders } from "@/services/holder";
 import { MutasiClient } from "./MutasiClient";
 import { Role } from "@prisma/client";
+import { getPageTitle } from "@/lib/constants";
 
 export const metadata = {
-  title: "Mutasi Aset - SIM Inventaris Aset SKPD",
-  description: "Kelola mutasi penempatan bidang kerja, pemegang barang, dan kondisi aset.",
+  title: getPageTitle("Mutasi Aset"),
+  description: "Riwayat perpindahan dan mutasi penanggung jawab aset SKPD.",
 };
 
 interface MutasiPageProps {

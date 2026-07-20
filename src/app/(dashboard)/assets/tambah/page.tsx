@@ -6,10 +6,11 @@ import { getAllCategories } from "@/services/category";
 import { getAllKibs } from "@/services/kib";
 import { AssetFormClient } from "../AssetFormClient";
 import { Role } from "@prisma/client";
+import { getPageTitle } from "@/lib/constants";
 
 export const metadata = {
-  title: "Tambah Aset - SIM Inventaris Aset SKPD",
-  description: "Formulir pendaftaran barang inventaris baru.",
+  title: getPageTitle("Tambah Aset"),
+  description: "Formulir pendaftaran barang milik daerah baru.",
 };
 
 export default async function AddAssetPage() {

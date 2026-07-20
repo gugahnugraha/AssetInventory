@@ -3,9 +3,10 @@ import { redirect } from "next/navigation";
 import { Role } from "@prisma/client";
 import { getAllKibs } from "@/services/kib";
 import { KibClient } from "./KibClient";
+import { getPageTitle } from "@/lib/constants";
 
 export const metadata = {
-  title: "Master KIB - SIM Inventaris Aset SKPD",
+  title: getPageTitle("Master KIB"),
   description: "Kelola klasifikasi Kartu Inventaris Barang (KIB) A-F.",
 };
 

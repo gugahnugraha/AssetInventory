@@ -3,10 +3,11 @@ import { redirect } from "next/navigation";
 import { getAllUsers } from "@/services/user";
 import { UserClient } from "./UserClient";
 import { Role } from "@prisma/client";
+import { getPageTitle } from "@/lib/constants";
 
 export const metadata = {
-  title: "Kelola Pengguna - SIM Inventaris Aset SKPD",
-  description: "Daftar pegawai SKPD yang memiliki kredensial akses SIM Inventaris.",
+  title: getPageTitle("Kelola Pengguna"),
+  description: "Daftar pegawai SKPD yang memiliki kredensial akses SIM Aset SKPD.",
 };
 
 export default async function UsersPage() {
