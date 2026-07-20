@@ -91,7 +91,7 @@ export function LoginClient() {
             <span>{APP_FULL_NAME}</span>
           </div>
           <h2 className="text-4xl font-extrabold tracking-tight leading-tight text-zinc-50">
-            Kelola Aset SKPD Lebih Cerdas &amp; Akurat.
+            Kelola Aset SKPD Lebih Cepat &amp; Akurat.
           </h2>
           <p className="text-zinc-400 text-sm leading-relaxed">
             {APP_FULL_NAME} terintegrasi untuk penatausahaan, mutasi, pelaporan, dan rekonsiliasi barang milik daerah secara real-time.
@@ -120,9 +120,9 @@ export function LoginClient() {
         </div>
 
         {/* Footer info */}
-        <div className="text-xs text-zinc-500 relative z-10 font-medium">
+        {/* <div className="text-xs text-zinc-500 relative z-10 font-medium">
           Made with ♥ by <span className="text-emerald-400 font-semibold">Gugah Nugraha</span>
-        </div>
+        </div> */}
       </div>
 
       {/* RIGHT PANEL - LOGIN CARD FORM */}
