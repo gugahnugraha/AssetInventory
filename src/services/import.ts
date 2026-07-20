@@ -318,6 +318,8 @@ export async function importAssetsBatch(
       const noMesin = cleanString(getRowValue(row, ["Nomor Mesin", "No Mesin", "No. Mesin", "Nomesin", "No.Mesin"]));
       const rawNoPolisi = getRowValue(row, ["Nomor Polisi", "No Polisi", "No. Polisi", "Nopol", "No.Polisi", "NomorPolisi"]);
       const noPolisi = cleanString(rawNoPolisi).replace(/\s+/g, "").toUpperCase();
+      const noSerial = cleanString(getRowValue(row, ["Nomor Serial", "No Serial", "No. Serial", "Serial Number", "Serial", "S/N", "SN", "No Seri", "Nomor Seri"]));
+      const ipAddress = cleanString(getRowValue(row, ["IP Address", "IP", "Alamat IP", "IPAddr"]));
       const hasVehicleInfo = !!(noRangka || noMesin || noPolisi);
 
       // Determine category name
@@ -483,6 +485,51 @@ export async function importAssetsBatch(
         }
       }
 
+      // Helper to process and link category attributes (for all categories)
+      const processRowAttributes = async (targetAssetId: string, isUpdateMode: boolean) => {
+        if (!category.attributes || category.attributes.length === 0) return;
+
+        const attrValueMap = new Map<string, string>();
+        if (noPolisi) attrValueMap.set("Nomor Polisi", noPolisi);
+        if (noMesin) attrValueMap.set("Nomor Mesin", noMesin);
+        if (noRangka) attrValueMap.set("Nomor Rangka", noRangka);
+        if (noSerial) attrValueMap.set("Nomor Serial", noSerial);
+        if (ipAddress) attrValueMap.set("IP Address", ipAddress);
+
+        for (const ca of category.attributes) {
+          let val = attrValueMap.get(ca.nama);
+          if (!val) {
+            val = cleanString(getRowValue(row, [ca.nama]));
+          }
+          if (val) {
+            if (isUpdateMode) {
+              await tx.assetAttribute.upsert({
+                where: {
+                  assetId_categoryAttributeId: {
+                    assetId: targetAssetId,
+                    categoryAttributeId: ca.id,
+                  },
+                },
+                update: { value: val },
+                create: {
+                  id: randomUUID(),
+                  assetId: targetAssetId,
+                  categoryAttributeId: ca.id,
+                  value: val,
+                },
+              });
+            } else {
+              attributesToInsert.push({
+                id: randomUUID(),
+                assetId: targetAssetId,
+                categoryAttributeId: ca.id,
+                value: val,
+              });
+            }
+          }
+        }
+      };
+
       if (isUpdate && existingAssetId && existingAssetData) {
         // Perform UPDATE immediately
         await tx.asset.update({
@@ -503,34 +550,8 @@ export async function importAssetsBatch(
           },
         });
 
-        // Update Vehicle Attributes if it is a vehicle
-        if (category.nama === "Kendaraan" && hasVehicleInfo) {
-          const attrMap = new Map<string, string>();
-          if (noPolisi) attrMap.set("Nomor Polisi", noPolisi);
-          if (noMesin) attrMap.set("Nomor Mesin", noMesin);
-          if (noRangka) attrMap.set("Nomor Rangka", noRangka);
-
-          for (const [name, val] of attrMap.entries()) {
-            const catAttr = category.attributes.find((a: any) => a.nama === name);
-            if (catAttr) {
-              await tx.assetAttribute.upsert({
-                where: {
-                  assetId_categoryAttributeId: {
-                    assetId: existingAssetId,
-                    categoryAttributeId: catAttr.id,
-                  },
-                },
-                update: { value: val },
-                create: {
-                  id: randomUUID(),
-                  assetId: existingAssetId,
-                  categoryAttributeId: catAttr.id,
-                  value: val,
-                },
-              });
-            }
-          }
-        }
+        // Update Dynamic Category Attributes
+        await processRowAttributes(existingAssetId, true);
 
         // Write Audit Log for UPDATE
         await tx.auditLog.create({
@@ -583,25 +604,8 @@ export async function importAssetsBatch(
           opdId,
         });
 
-        // Insert Vehicle Attributes if it is a vehicle
-        if (category.nama === "Kendaraan" && hasVehicleInfo) {
-          const attrMap = new Map<string, string>();
-          if (noPolisi) attrMap.set("Nomor Polisi", noPolisi);
-          if (noMesin) attrMap.set("Nomor Mesin", noMesin);
-          if (noRangka) attrMap.set("Nomor Rangka", noRangka);
-
-          for (const [name, val] of attrMap.entries()) {
-            const catAttr = category.attributes.find((a: any) => a.nama === name);
-            if (catAttr) {
-              attributesToInsert.push({
-                id: randomUUID(),
-                assetId,
-                categoryAttributeId: catAttr.id,
-                value: val,
-              });
-            }
-          }
-        }
+        // Insert Dynamic Category Attributes
+        await processRowAttributes(assetId, false);
 
         // Write Audit Log for CREATE
         auditLogsToInsert.push({
