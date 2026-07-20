@@ -201,7 +201,7 @@ export function Sidebar({ user }: SidebarProps) {
           {!collapsed && (
             <div className="flex flex-col select-none">
               <span className="font-extrabold text-sm leading-tight tracking-wider text-emerald-100">{APP_NAME}</span>
-              <span className="text-[11px] text-emerald-300/90 font-medium">{user.opdName || DEFAULT_OPD_NAME}</span>
+              <span className="text-[11px] text-emerald-300/90 font-medium">{user.opdKode || DEFAULT_OPD_NAME}</span>
             </div>
           )}
         </div>
