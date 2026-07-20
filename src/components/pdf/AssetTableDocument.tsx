@@ -3,10 +3,10 @@ import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/render
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: '10mm',
+    paddingTop: '7mm',
     paddingLeft: '10mm',
     paddingRight: '10mm',
-    paddingBottom: '12mm',
+    paddingBottom: '10mm',
     fontSize: 8,
     fontFamily: 'Helvetica',
     color: '#18181b',
@@ -38,8 +38,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1.5,
     borderBottomColor: '#059669',
     borderBottomStyle: 'solid',
-    paddingBottom: 6,
-    marginBottom: 10,
+    paddingBottom: 4,
+    marginBottom: 6,
   },
   headerLeft: {
     display: 'flex',
@@ -48,8 +48,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   logo: {
-    width: 28,
-    height: 28,
+    width: 26,
+    height: 26,
     objectFit: 'contain',
   },
   titleGroup: {
@@ -58,13 +58,13 @@ const styles = StyleSheet.create({
   },
   mainTitle: {
     fontFamily: 'Helvetica-Bold',
-    fontSize: 12,
+    fontSize: 11,
     color: '#064e3b',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   subTitle: {
-    fontSize: 8,
+    fontSize: 7.5,
     color: '#4b5563',
     marginTop: 1,
   },
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     fontSize: 7.5,
     fontFamily: 'Helvetica-Bold',
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 1.5,
     borderRadius: 3,
     marginTop: 2,
   },
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontFamily: 'Helvetica-Bold',
     fontSize: 7.5,
-    paddingVertical: 5,
+    paddingVertical: 4.5,
     alignItems: 'center',
   },
   tableRow: {
@@ -111,21 +111,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: '#f4f4f5',
-    paddingVertical: 4.5,
+    paddingVertical: 3.8,
     alignItems: 'center',
   },
   tableRowEven: {
     backgroundColor: '#f9fafb',
   },
-  cellNo: { width: '3.5%', textAlign: 'center' },
+  cellNo: { width: '3%', textAlign: 'center' },
   cellKode: { width: '17%', paddingLeft: 3, fontFamily: 'Helvetica-Bold' },
   cellNama: { width: '16%', paddingLeft: 3, fontFamily: 'Helvetica-Bold' },
-  cellKategori: { width: '11%', paddingLeft: 3 },
-  cellMerk: { width: '15%', paddingLeft: 3 },
-  cellBidang: { width: '11%', paddingLeft: 3 },
-  cellTahun: { width: '5.5%', textAlign: 'center' },
-  cellHarga: { width: '11%', textAlign: 'right', paddingRight: 3, fontFamily: 'Helvetica-Bold' },
-  cellKondisi: { width: '7%', textAlign: 'center' },
+  cellMerk: { width: '17%', paddingLeft: 3 },
+  cellBidang: { width: '12%', paddingLeft: 3 },
+  cellPemegang: { width: '14%', paddingLeft: 3 },
+  cellTahun: { width: '5%', textAlign: 'center' },
+  cellHarga: { width: '10%', textAlign: 'right', paddingRight: 3, fontFamily: 'Helvetica-Bold' },
+  cellKondisi: { width: '6%', textAlign: 'center' },
 
   kondisiNormal: { color: '#047857', fontFamily: 'Helvetica-Bold' },
   kondisiRusakRingan: { color: '#d97706', fontFamily: 'Helvetica-Bold' },
@@ -138,11 +138,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#ecfdf5',
     borderTopWidth: 1.5,
     borderTopColor: '#059669',
-    paddingVertical: 6,
+    paddingVertical: 5,
     alignItems: 'center',
   },
   summaryLabel: {
-    width: '79%',
+    width: '84%',
     textAlign: 'right',
     paddingRight: 8,
     fontFamily: 'Helvetica-Bold',
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     color: '#064e3b',
   },
   summaryValue: {
-    width: '14%',
+    width: '10%',
     textAlign: 'right',
     paddingRight: 3,
     fontFamily: 'Helvetica-Bold',
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
 
   footer: {
     position: 'absolute',
-    bottom: '6mm',
+    bottom: '5mm',
     left: '10mm',
     right: '10mm',
     display: 'flex',
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
     borderTopWidth: 0.5,
     borderTopColor: '#e5e7eb',
-    paddingTop: 4,
+    paddingTop: 3,
   },
 });
 
@@ -200,20 +200,13 @@ interface AssetTableDocumentProps {
 }
 
 export const AssetTableDocument = ({ assets, logoUrl, isDemo }: AssetTableDocumentProps) => {
-  // Sort assets by: 1. Bidang (distribution name) ASC, 2. Tahun (tahunPembelian) ASC, 3. Kode Aset (kodeLengkap) ASC
+  // Sort assets ONLY by year descending (tahun terbesar ke terkecil)
   const sortedAssets = [...assets].sort((a, b) => {
-    // 1. Primary sort: Bidang / Unit
-    const bidangA = (a.distribution?.nama || a.distributionName || '').toLowerCase();
-    const bidangB = (b.distribution?.nama || b.distributionName || '').toLowerCase();
-    const cmpBidang = bidangA.localeCompare(bidangB);
-    if (cmpBidang !== 0) return cmpBidang;
-
-    // 2. Secondary sort: Tahun Pembelian (terkecil -> terbesar)
-    const tahunA = Number(a.tahunPembelian) || 9999;
-    const tahunB = Number(b.tahunPembelian) || 9999;
-    if (tahunA !== tahunB) return tahunA - tahunB;
-
-    // 3. Tertiary sort: Kode Aset (kodeLengkap)
+    const tahunA = Number(a.tahunPembelian) || 0;
+    const tahunB = Number(b.tahunPembelian) || 0;
+    if (tahunB !== tahunA) {
+      return tahunB - tahunA; // Terbesar ke terkecil (Descending)
+    }
     const kodeA = a.kodeLengkap || '';
     const kodeB = b.kodeLengkap || '';
     return kodeA.localeCompare(kodeB);
@@ -251,26 +244,27 @@ export const AssetTableDocument = ({ assets, logoUrl, isDemo }: AssetTableDocume
           </View>
         </View>
 
-        {/* Table Header */}
+        {/* Table Header & Rows */}
         <View style={styles.table}>
           <View style={styles.tableHeader} fixed>
             <Text style={styles.cellNo}>No.</Text>
             <Text style={styles.cellKode}>Kode Klasifikasi Aset</Text>
             <Text style={styles.cellNama}>Nama Barang / Aset</Text>
-            <Text style={styles.cellKategori}>Kategori</Text>
             <Text style={styles.cellMerk}>Merk / Type</Text>
             <Text style={styles.cellBidang}>Bidang / Unit</Text>
+            <Text style={styles.cellPemegang}>Pemegang Barang</Text>
             <Text style={styles.cellTahun}>Tahun</Text>
             <Text style={styles.cellHarga}>Harga (Rp)</Text>
             <Text style={styles.cellKondisi}>Kondisi</Text>
           </View>
 
-          {/* Table Rows */}
+          {/* Table Rows with Orphan Summary Protection & Text Wrapping */}
           {sortedAssets.map((asset, index) => {
             const kondisiInfo = formatKondisiText(asset.kondisi);
             const isEven = index % 2 === 1;
+            const isLast = index === sortedAssets.length - 1;
 
-            return (
+            const rowElement = (
               <View
                 key={asset.id || index}
                 style={[styles.tableRow, isEven ? styles.tableRowEven : {}]}
@@ -279,22 +273,31 @@ export const AssetTableDocument = ({ assets, logoUrl, isDemo }: AssetTableDocume
                 <Text style={styles.cellNo}>{index + 1}</Text>
                 <Text style={styles.cellKode}>{asset.kodeLengkap || '-'}</Text>
                 <Text style={styles.cellNama}>{asset.namaAset || '-'}</Text>
-                <Text style={styles.cellKategori}>{asset.category?.nama || asset.categoryName || '-'}</Text>
                 <Text style={styles.cellMerk}>{asset.merkType || '-'}</Text>
                 <Text style={styles.cellBidang}>{asset.distribution?.nama || asset.distributionName || '-'}</Text>
+                <Text style={styles.cellPemegang}>{asset.holder?.nama || asset.holderName || '-'}</Text>
                 <Text style={styles.cellTahun}>{asset.tahunPembelian || '-'}</Text>
                 <Text style={styles.cellHarga}>Rp {formatCurrency(asset.harga)}</Text>
                 <Text style={[styles.cellKondisi, kondisiInfo.style]}>{kondisiInfo.label}</Text>
               </View>
             );
-          })}
 
-          {/* Table Summary Footer */}
-          <View style={styles.summaryRow} wrap={false}>
-            <Text style={styles.summaryLabel}>TOTAL NILAI ASET TERPILIH:</Text>
-            <Text style={styles.summaryValue}>Rp {formatCurrency(totalHarga)}</Text>
-            <Text style={{ width: '7%' }} />
-          </View>
+            // Bind the last data row together with the summary row so the summary never appears alone on a page!
+            if (isLast) {
+              return (
+                <View key={asset.id || index} wrap={false}>
+                  {rowElement}
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>TOTAL NILAI ASET TERPILIH:</Text>
+                    <Text style={styles.summaryValue}>Rp {formatCurrency(totalHarga)}</Text>
+                    <Text style={{ width: '6%' }} />
+                  </View>
+                </View>
+              );
+            }
+
+            return rowElement;
+          })}
         </View>
 
         {/* Page Footer */}
