@@ -20,14 +20,14 @@ const styles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 99,
+    zIndex: 9999,
   },
   watermarkText: {
     fontFamily: 'Helvetica-Bold',
-    fontSize: 32,
+    fontSize: 100,
     color: '#ef4444',
-    opacity: 0.25,
-    transform: 'rotate(-15deg)',
+    opacity: 0.32,
+    transform: 'rotate(-25deg)',
     textTransform: 'uppercase',
   },
   headerBanner: {
@@ -222,12 +222,6 @@ export const AssetTableDocument = ({ assets, logoUrl, isDemo }: AssetTableDocume
   return (
     <Document title="Laporan Tabel Aset Inventaris SKPD">
       <Page size="A4" orientation="landscape" style={styles.page}>
-        {isDemo && (
-          <View style={styles.watermarkContainer} fixed>
-            <Text style={styles.watermarkText}>DEMO VERSION</Text>
-          </View>
-        )}
-
         {/* Header Banner */}
         <View style={styles.headerBanner} fixed>
           <View style={styles.headerLeft}>
@@ -307,6 +301,13 @@ export const AssetTableDocument = ({ assets, logoUrl, isDemo }: AssetTableDocume
             render={({ pageNumber, totalPages }) => `Halaman ${pageNumber} dari ${totalPages}`}
           />
         </View>
+
+        {/* Watermark (Rendered last so it sits on top of table rows and backgrounds) */}
+        {isDemo && (
+          <View style={styles.watermarkContainer} fixed>
+            <Text style={styles.watermarkText}>Protected</Text>
+          </View>
+        )}
       </Page>
     </Document>
   );

@@ -222,7 +222,7 @@ export const AssetStickerDocument = ({ assets, qrCodes, logoUrl, isDemo }: Asset
         </View>
         {isDemo && (
           <View style={styles.watermarkContainer}>
-            <Text style={styles.watermarkText}>Speciment</Text>
+            <Text style={styles.watermarkText}>Protected</Text>
           </View>
         )}
       </View>
