@@ -7,6 +7,9 @@ import { AssetListClient } from "./AssetListClient";
 import { Role } from "@prisma/client";
 import { getPageTitle } from "@/lib/constants";
 
+import prisma from "@/services/db";
+import { DEFAULT_OPD_NAME } from "@/lib/constants";
+
 export const metadata = {
   title: getPageTitle("Data Aset"),
   description: "Daftar inventarisasi aset dan barang milik daerah SKPD.",
@@ -23,6 +26,11 @@ export default async function AssetsPage() {
   const userRole = session.user.role as Role;
 
   try {
+    const opd = await prisma.opd.findUnique({
+      where: { id: opdId },
+    });
+    const opdName = opd?.nama || session.user.opdName || DEFAULT_OPD_NAME;
+
     const assets = await getAllAssets(opdId);
     const distributions = await getAllDistributions(opdId);
 
@@ -97,6 +105,7 @@ export default async function AssetsPage() {
         initialAssets={serializedAssets}
         distributions={serializedDistributions}
         userRole={userRole}
+        opdName={opdName}
       />
     );
   } catch (error) {

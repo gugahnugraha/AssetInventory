@@ -115,7 +115,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
       const logoUrl = typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : "";
 
       const pdfBlob = await pdf(
-        <AssetStickerDocument assets={[asset]} qrCodes={qrCodes} logoUrl={logoUrl} isDemo={userRole === Role.DEMO} />
+        <AssetStickerDocument assets={[asset]} qrCodes={qrCodes} logoUrl={logoUrl} isDemo={userRole === Role.DEMO} governmentName={asset.opd?.nama} />
       ).toBlob();
       
       const blobWithMime = new Blob([pdfBlob], { type: 'application/pdf' });
@@ -954,6 +954,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
                 qrCodes={previewQrCodes}
                 logoUrl={typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : ""}
                 isDemo={userRole === Role.DEMO}
+                governmentName={asset.opd?.nama}
               />
             </PDFViewer>
           )}

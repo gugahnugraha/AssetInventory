@@ -95,9 +95,10 @@ interface AssetListClientProps {
   initialAssets: any[];
   distributions: any[];
   userRole: Role;
+  opdName?: string;
 }
 
-export function AssetListClient({ initialAssets, distributions, userRole }: AssetListClientProps) {
+export function AssetListClient({ initialAssets, distributions, userRole, opdName }: AssetListClientProps) {
   const router = useRouter();
   const [assets, setAssets] = React.useState(initialAssets);
   const [globalFilter, setGlobalFilter] = React.useState("");
@@ -557,7 +558,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
 
       if (pdfMode === "TABLE") {
         const { AssetTableDocument } = await import('@/components/pdf/AssetTableDocument');
-        pdfDocument = <AssetTableDocument assets={previewAssets} logoUrl={logoUrl} isDemo={userRole === Role.DEMO} />;
+        pdfDocument = <AssetTableDocument assets={previewAssets} logoUrl={logoUrl} isDemo={userRole === Role.DEMO} opdName={opdName} />;
         filename = `Tabel_Aset_Terpilih_${Date.now()}.pdf`;
       } else {
         const QRCode = (await import('qrcode')).default;
@@ -569,7 +570,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
             { margin: 1, width: 120 }
           );
         }
-        pdfDocument = <AssetStickerDocument assets={previewAssets} qrCodes={qrCodes} logoUrl={logoUrl} isDemo={userRole === Role.DEMO} />;
+        pdfDocument = <AssetStickerDocument assets={previewAssets} qrCodes={qrCodes} logoUrl={logoUrl} isDemo={userRole === Role.DEMO} governmentName={opdName} />;
         filename = `Label_BMD_${Date.now()}.pdf`;
       }
 
@@ -1030,6 +1031,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
                   assets={previewAssets}
                   logoUrl={typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : ""}
                   isDemo={userRole === Role.DEMO}
+                  opdName={opdName}
                 />
               ) : (
                 <AssetStickerDocument
@@ -1037,6 +1039,7 @@ export function AssetListClient({ initialAssets, distributions, userRole }: Asse
                   qrCodes={previewQrCodes}
                   logoUrl={typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : ""}
                   isDemo={userRole === Role.DEMO}
+                  governmentName={opdName}
                 />
               )}
             </PDFViewer>
