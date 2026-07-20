@@ -178,7 +178,7 @@ export const AssetStickerDocument = ({ assets, qrCodes, logoUrl, isDemo, governm
 
     return (
       <View key={`${asset.id}-${globalIdx}`} style={styles.sticker}>
-        <Text style={styles.header}>{governmentName || DEFAULT_GOVERNMENT_NAME}</Text>
+        <Text style={styles.header}>{DEFAULT_GOVERNMENT_NAME}</Text>
         <View style={styles.body}>
           <View style={styles.logoBox}>
             {logoUrl && <Image src={logoUrl} style={styles.logo} />}

@@ -570,7 +570,7 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
             { margin: 1, width: 120 }
           );
         }
-        pdfDocument = <AssetStickerDocument assets={previewAssets} qrCodes={qrCodes} logoUrl={logoUrl} isDemo={userRole === Role.DEMO} governmentName={opdName} />;
+        pdfDocument = <AssetStickerDocument assets={previewAssets} qrCodes={qrCodes} logoUrl={logoUrl} isDemo={userRole === Role.DEMO} />;
         filename = `Label_BMD_${Date.now()}.pdf`;
       }
 
@@ -1039,7 +1039,6 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
                   qrCodes={previewQrCodes}
                   logoUrl={typeof window !== "undefined" ? `${window.location.origin}/uploads/logo.png` : ""}
                   isDemo={userRole === Role.DEMO}
-                  governmentName={opdName}
                 />
               )}
             </PDFViewer>
