@@ -313,7 +313,7 @@ export function Sidebar({ user }: SidebarProps) {
       </nav>
 
       {/* Sidebar Footer */}
-      <div className="p-4 border-t border-emerald-700/50 text-center text-xs text-emerald-350">
+      <div className="p-4 border-t border-emerald-700/50 text-center text-xs text-emerald-100">
         {!collapsed ? (
           <span>
             Made with ♥ by{" "}
@@ -321,7 +321,7 @@ export function Sidebar({ user }: SidebarProps) {
               href="https://github.com/gugahnugraha"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-white hover:underline font-semibold"
+              className="text-emerald-100 text-xs hover:underline"
             >
               Gugah Nugraha
             </a>
