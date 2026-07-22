@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Shield, AlertCircle, Loader2, User, Lock, Sparkles, Database, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username wajib diisi"),
@@ -24,6 +25,7 @@ export function LoginClient() {
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
+  const [turnstileToken, setTurnstileToken] = React.useState<string | null>(null);
 
   const {
     register,
@@ -41,9 +43,16 @@ export function LoginClient() {
     setError(null);
     setLoading(true);
 
+    if (!turnstileToken) {
+      setError("Harap selesaikan verifikasi keamanan (CAPTCHA).");
+      setLoading(false);
+      return;
+    }
+
     const formData = new FormData();
     formData.append("username", values.username);
     formData.append("password", values.password);
+    formData.append("turnstileToken", turnstileToken);
 
     try {
       const response = await loginAction(formData);
@@ -213,6 +222,30 @@ export function LoginClient() {
                   {errors.password && (
                     <p className="text-xs text-rose-400 font-medium mt-1">{errors.password.message}</p>
                   )}
+                </div>
+
+                {/* Turnstile */}
+                <div className="flex justify-center my-4 min-h-[65px] w-full">
+                  <Turnstile 
+                    siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
+                    onSuccess={(token) => {
+                      console.log("Turnstile success token received");
+                      setTurnstileToken(token);
+                    }}
+                    onError={() => {
+                      console.error("Turnstile error");
+                      setError("Verifikasi keamanan gagal, silakan muat ulang halaman.");
+                    }}
+                    onExpire={() => {
+                      console.warn("Turnstile expired");
+                      setTurnstileToken(null);
+                    }}
+                    onLoad={() => console.log("Turnstile widget loaded successfully")}
+                    options={{
+                      theme: "dark",
+                      size: "normal",
+                    }}
+                  />
                 </div>
 
                 {/* Submit button */}
