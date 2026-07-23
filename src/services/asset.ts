@@ -94,6 +94,17 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
           searchConditions.push({ nomorRegister: regNum });
         }
 
+        // Map text search to Kondisi enum, but only if the search query is reasonably long to avoid false positives
+        const searchLower = trimmedSearch.toLowerCase();
+        if (searchLower.length >= 4) {
+          if ("normal".includes(searchLower)) searchConditions.push({ kondisi: "NORMAL" });
+          if ("rusak ringan".includes(searchLower)) searchConditions.push({ kondisi: "RUSAK_RINGAN" });
+          if ("rusak berat".includes(searchLower)) searchConditions.push({ kondisi: "RUSAK_BERAT" });
+          if ("hilang".includes(searchLower)) searchConditions.push({ kondisi: "HILANG" });
+          if ("dalam perbaikan".includes(searchLower)) searchConditions.push({ kondisi: "DALAM_PERBAIKAN" });
+          if ("dipinjam".includes(searchLower)) searchConditions.push({ kondisi: "DIPINJAM" });
+        }
+
         // Add year search if it looks like a year
         const yearNum = parseInt(search);
         if (!isNaN(yearNum) && yearNum >= 1900 && yearNum <= 2100) {

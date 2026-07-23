@@ -461,11 +461,11 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     globalFilterFn: (row, columnId, filterValue) => {
-      const search = filterValue.toLowerCase().trim();
+      const search = filterValue?.toLowerCase()?.trim();
+      if (!search) return true;
+
       const rawKode = String(row.getValue("kodeLengkap") || "").toLowerCase();
       
-      // Normalize to ignore leading zeros in code:
-      // "01.002.3" -> ".1.2.3."
       const normalizedKode = "." + rawKode.replace(/(^|\.)0+(?=\d)/g, '$1') + ".";
       const normalizedSearch = search.includes(".") || /^[0-9]+$/.test(search) 
         ? "." + search.replace(/(^|\.)0+(?=\d)/g, '$1') + (search.includes(".") ? "." : "")
@@ -480,13 +480,40 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
       const merk = String(row.original.merkType || "").toLowerCase();
       const bidang = String(row.original.distribution?.nama || "").toLowerCase();
       const pemegang = String(row.original.holder?.nama || "").toLowerCase();
-      const tahun = String(row.getValue("tahunPembelian") || "");
+      const tahun = String(row.original.tahunPembelian || "");
+
+      const rawKondisi = row.original.kondisi;
+      let kondisi = String(rawKondisi || "").toLowerCase();
+      if (rawKondisi === Kondisi.NORMAL) kondisi = "normal";
+      if (rawKondisi === Kondisi.RUSAK_RINGAN) kondisi = "rusak ringan";
+      if (rawKondisi === Kondisi.RUSAK_BERAT) kondisi = "rusak berat";
+      if (rawKondisi === Kondisi.HILANG) kondisi = "hilang";
+      if (rawKondisi === Kondisi.DALAM_PERBAIKAN) kondisi = "dalam perbaikan";
+      if (rawKondisi === Kondisi.DIPINJAM) kondisi = "dipinjam";
 
       const matchAttribute = row.original.attributes?.some((attr: any) => {
         const attrName = String(attr.categoryAttribute?.nama || "").toLowerCase();
         const attrVal = String(attr.value || "").toLowerCase();
         return attrName.includes(search) || attrVal.includes(search);
       });
+      
+      const matchKondisi = search.length >= 4 && kondisi.includes(search);
+
+      // Search all other fields from database even if not in table
+      const caraPerolehan = String(row.original.caraPerolehan || "").toLowerCase();
+      const catatan = String(row.original.catatan || "").toLowerCase();
+      const keterangan = String(row.original.keterangan || "").toLowerCase();
+      const noPolisi = String(row.original.noPolisi || "").toLowerCase();
+      const noRangka = String(row.original.noRangka || "").toLowerCase();
+      const noMesin = String(row.original.noMesin || "").toLowerCase();
+      const noBpkb = String(row.original.noBpkb || "").toLowerCase();
+      const bahan = String(row.original.bahan || "").toLowerCase();
+      const ukuran = String(row.original.ukuran || "").toLowerCase();
+      const lokasi = String(row.original.lokasi || "").toLowerCase();
+      const asalUsul = String(row.original.asalUsul || "").toLowerCase();
+      const pencipta = String(row.original.pencipta || "").toLowerCase();
+      const spesifikasi = String(row.original.spesifikasi || "").toLowerCase();
+      const kib = String(row.original.category?.kib?.kode || "").toLowerCase() + " " + String(row.original.category?.kib?.nama || "").toLowerCase();
 
       return (
         kodeMatches ||
@@ -496,7 +523,22 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
         bidang.includes(search) ||
         pemegang.includes(search) ||
         tahun.includes(search) ||
-        matchAttribute
+        matchKondisi ||
+        matchAttribute ||
+        caraPerolehan.includes(search) ||
+        catatan.includes(search) ||
+        keterangan.includes(search) ||
+        noPolisi.includes(search) ||
+        noRangka.includes(search) ||
+        noMesin.includes(search) ||
+        noBpkb.includes(search) ||
+        bahan.includes(search) ||
+        ukuran.includes(search) ||
+        lokasi.includes(search) ||
+        asalUsul.includes(search) ||
+        pencipta.includes(search) ||
+        spesifikasi.includes(search) ||
+        kib.includes(search)
       );
     },
   });
