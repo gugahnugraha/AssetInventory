@@ -54,8 +54,43 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
           }
         ];
 
+        // Custom logic to handle dotted numeric search (ignore leading zeros)
+        const trimmedSearch = search.trim();
+        const isDottedNumeric = /^[0-9]+(\.[0-9]+)+$/.test(trimmedSearch);
+        
+        if (isDottedNumeric) {
+          const numParts = trimmedSearch.split('.').map(p => parseInt(p, 10));
+          let seq = numParts;
+          // Ignore fixed prefix 1.3
+          if (seq.length >= 2 && seq[0] === 1 && seq[1] === 3) {
+            seq = seq.slice(2);
+          }
+          if (seq.length > 0) {
+            const fields = ['kode1', 'kode2', 'kode3', 'kode4', 'kode5', 'nomorRegister'] as const;
+            for (let i = 0; i <= fields.length - seq.length; i++) {
+              const condition: any = {};
+              for (let j = 0; j < seq.length; j++) {
+                condition[fields[i + j]] = seq[j];
+              }
+              searchConditions.push(condition);
+            }
+          }
+        } else {
+          // Single number match across all numeric fields to ignore leading zeros
+          const singleNum = parseInt(trimmedSearch, 10);
+          if (!isNaN(singleNum) && /^[0-9]+$/.test(trimmedSearch)) {
+            searchConditions.push({ kode1: singleNum });
+            searchConditions.push({ kode2: singleNum });
+            searchConditions.push({ kode3: singleNum });
+            searchConditions.push({ kode4: singleNum });
+            searchConditions.push({ kode5: singleNum });
+            searchConditions.push({ nomorRegister: singleNum });
+          }
+        }
+
+        // We already pushed nomorRegister in singleNum check, but to keep existing behavior:
         const regNum = parseInt(search);
-        if (!isNaN(regNum)) {
+        if (!isNaN(regNum) && !/^[0-9]+$/.test(trimmedSearch)) {
           searchConditions.push({ nomorRegister: regNum });
         }
 

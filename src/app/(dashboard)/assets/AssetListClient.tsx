@@ -461,8 +461,20 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     globalFilterFn: (row, columnId, filterValue) => {
-      const search = filterValue.toLowerCase();
-      const kode = String(row.getValue("kodeLengkap") || "").toLowerCase();
+      const search = filterValue.toLowerCase().trim();
+      const rawKode = String(row.getValue("kodeLengkap") || "").toLowerCase();
+      
+      // Normalize to ignore leading zeros in code:
+      // "01.002.3" -> ".1.2.3."
+      const normalizedKode = "." + rawKode.replace(/(^|\.)0+(?=\d)/g, '$1') + ".";
+      const normalizedSearch = search.includes(".") || /^[0-9]+$/.test(search) 
+        ? "." + search.replace(/(^|\.)0+(?=\d)/g, '$1') + (search.includes(".") ? "." : "")
+        : search;
+
+      const kodeMatches = search.includes(".") || /^[0-9]+$/.test(search)
+        ? normalizedKode.includes(normalizedSearch)
+        : rawKode.includes(search);
+
       const nama = String(row.original.namaAset || "").toLowerCase();
       const category = String(row.original.category?.nama || "").toLowerCase();
       const merk = String(row.original.merkType || "").toLowerCase();
@@ -477,7 +489,7 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
       });
 
       return (
-        kode.includes(search) ||
+        kodeMatches ||
         nama.includes(search) ||
         category.includes(search) ||
         merk.includes(search) ||
