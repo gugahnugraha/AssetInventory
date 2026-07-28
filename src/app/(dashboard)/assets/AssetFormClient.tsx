@@ -479,43 +479,44 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
     setError(null);
 
     const uploadedUrls: any[] = [];
+    const errors: string[] = [];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-
-      // Client side file check
-      if (file.size > 5 * 1024 * 1024) {
-        setError("Ukuran file maksimal adalah 5 MB.");
-        setUploading(false);
-        return;
-      }
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      try {
-        const response = await uploadAssetPhotoAction(formData);
-        if (response.error) {
-          setError(response.error);
-          setUploading(false);
+    await Promise.all(
+      Array.from(files).map(async (file) => {
+        // Client side file check
+        if (file.size > 5 * 1024 * 1024) {
+          errors.push(`File ${file.name} melebihi 5 MB.`);
           return;
         }
 
-        if (!response.error && "url" in response && "objectKey" in response) {
-          uploadedUrls.push({
-            url: response.url,
-            tempKey: response.objectKey,
-            originalFileName: response.originalFileName,
-            mimeType: response.mimeType,
-            size: response.size,
-          });
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+          const response = await uploadAssetPhotoAction(formData);
+          if (response.error) {
+            errors.push(`Gagal mengunggah ${file.name}: ${response.error}`);
+            return;
+          }
+
+          if (!response.error && "url" in response && "objectKey" in response) {
+            uploadedUrls.push({
+              url: response.url,
+              tempKey: response.objectKey,
+              originalFileName: response.originalFileName,
+              mimeType: response.mimeType,
+              size: response.size,
+            });
+          }
+        } catch (err) {
+          console.error("Upload error for", file.name, err);
+          errors.push(`Gagal mengunggah ${file.name}.`);
         }
-      } catch (err) {
-        console.error("Upload error:", err);
-        setError("Terjadi kesalahan saat mengunggah foto.");
-        setUploading(false);
-        return;
-      }
+      })
+    );
+
+    if (errors.length > 0) {
+      setError(errors.join(" "));
     }
 
     const currentPhotos = [...watchPhotos];
