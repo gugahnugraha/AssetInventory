@@ -15,11 +15,16 @@ export const authConfig = {
       const isLoginRoute = nextUrl.pathname === "/login";
       const isScanRoute = nextUrl.pathname.startsWith("/scan");
 
+      console.log(`[Auth Middleware] Path: ${nextUrl.pathname}, isScan: ${isScanRoute}, isLoggedIn: ${isLoggedIn}`);
+
       // Allow API routes to be handled by authorization headers or public checks if needed
       if (isApiRoute) return true;
       
       // Allow public access to QR scan landing pages
-      if (isScanRoute) return true;
+      if (isScanRoute) {
+        console.log(`[Auth Middleware] Allowing access to scan route: ${nextUrl.pathname}`);
+        return true;
+      }
 
       if (isLoginRoute) {
         if (isLoggedIn) {
