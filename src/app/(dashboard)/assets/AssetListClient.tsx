@@ -160,7 +160,7 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
           const codes: Record<string, string> = {};
           for (const asset of previewAssets) {
             codes[asset.id] = await QRCode.toDataURL(
-              `${window.location.origin}/assets/${asset.id}`,
+              `${window.location.origin}/scan/${asset.id}`,
               { margin: 1, width: 120 }
             );
           }
@@ -620,7 +620,7 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
         const qrCodes: Record<string, string> = {};
         for (const asset of previewAssets) {
           qrCodes[asset.id] = await QRCode.toDataURL(
-            `${window.location.origin}/assets/${asset.id}`,
+            `${window.location.origin}/scan/${asset.id}`,
             { margin: 1, width: 120 }
           );
         }

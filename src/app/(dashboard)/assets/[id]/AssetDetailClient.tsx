@@ -88,7 +88,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
         const generate = async () => {
           const codes: Record<string, string> = {};
           codes[asset.id] = await QRCode.toDataURL(
-            `${window.location.origin}/assets/${asset.id}`,
+            `${window.location.origin}/scan/${asset.id}`,
             { margin: 1, width: 120 }
           );
           setPreviewQrCodes(codes);
@@ -108,7 +108,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
 
       const qrCodes: Record<string, string> = {};
       qrCodes[asset.id] = await QRCode.toDataURL(
-        `${window.location.origin}/assets/${asset.id}`,
+        `${window.location.origin}/scan/${asset.id}`,
         { margin: 1, width: 120 }
       );
       
