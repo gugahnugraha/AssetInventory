@@ -6,6 +6,8 @@ import { Navbar } from "@/components/Navbar";
 import { Role } from "@prisma/client";
 import { usePathname } from "next/navigation";
 import { APP_NAME } from "@/lib/constants";
+import dynamic from "next/dynamic";
+const AiAssistant = dynamic(() => import("@/components/AiAssistant").then(m => m.AiAssistant), { ssr: false });
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -85,6 +87,9 @@ export function DashboardLayoutClient({ children, user }: ClientLayoutProps) {
           </footer>
         </main>
       </div>
+
+      {/* Floating AI Assistant */}
+      <AiAssistant />
     </div>
   );
 }

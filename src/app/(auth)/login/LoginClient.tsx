@@ -227,7 +227,7 @@ export function LoginClient() {
                 {/* Turnstile */}
                 <div className="flex justify-center my-4 min-h-[50px] w-full">
                   <Turnstile
-                    siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                    siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ""}
                     onSuccess={(token) => {
                       console.log("Turnstile success token received");
                       setTurnstileToken(token);

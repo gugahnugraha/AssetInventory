@@ -13,7 +13,7 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const isApiRoute = nextUrl.pathname.startsWith("/api");
       const isLoginRoute = nextUrl.pathname === "/login";
-      const isScanRoute = nextUrl.pathname.startsWith("/scan");
+      const isScanRoute = nextUrl.pathname.startsWith("/scan") || nextUrl.pathname.startsWith("/public-info");
 
       console.log(`[Auth Middleware] Path: ${nextUrl.pathname}, isScan: ${isScanRoute}, isLoggedIn: ${isLoggedIn}`);
 

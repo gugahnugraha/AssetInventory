@@ -18,7 +18,8 @@ import {
   Printer,
   X,
   FileText,
-  Copy
+  Copy,
+  RefreshCw
 } from "lucide-react";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { 
@@ -101,6 +102,22 @@ interface AssetListClientProps {
 export function AssetListClient({ initialAssets, distributions, userRole, opdName }: AssetListClientProps) {
   const router = useRouter();
   const [assets, setAssets] = React.useState(initialAssets);
+  const [isPending, startTransition] = React.useTransition();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
+  React.useEffect(() => {
+    setAssets(initialAssets);
+  }, [initialAssets]);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    startTransition(() => {
+      router.refresh();
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 400);
+    });
+  };
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [selectedKondisi, setSelectedKondisi] = React.useState<string>("ALL");
   const [selectedBidang, setSelectedBidang] = React.useState<string>("ALL");
@@ -160,7 +177,7 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
           const codes: Record<string, string> = {};
           for (const asset of previewAssets) {
             codes[asset.id] = await QRCode.toDataURL(
-              `${window.location.origin}/scan/${asset.id}`,
+              `${window.location.origin}/public-info/${asset.id}`,
               { margin: 1, width: 120 }
             );
           }
@@ -620,7 +637,7 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
         const qrCodes: Record<string, string> = {};
         for (const asset of previewAssets) {
           qrCodes[asset.id] = await QRCode.toDataURL(
-            `${window.location.origin}/scan/${asset.id}`,
+            `${window.location.origin}/public-info/${asset.id}`,
             { margin: 1, width: 120 }
           );
         }
@@ -779,8 +796,17 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
           )}
         </div>
 
-        {/* Right: Export, Import, Tambah */}
+        {/* Right: Refresh, Export, Import, Tambah */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-2">
+          <button
+            onClick={handleRefresh}
+            disabled={isRefreshing || isPending}
+            title="Muat ulang data aset dari server"
+            className="group inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 bg-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-500 active:scale-95 font-semibold text-sm transition-all duration-150 shadow-sm cursor-pointer disabled:opacity-50"
+          >
+            <RefreshCw className={cn("h-4 w-4 text-emerald-600 dark:text-emerald-400 transition-transform", (isRefreshing || isPending) && "animate-spin")} />
+            <span>{isRefreshing || isPending ? "Memuat..." : "Refresh Data"}</span>
+          </button>
           <button
             onClick={exportToExcel}
             className="group inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-200 bg-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-500 active:scale-95 font-semibold text-sm transition-all duration-150 shadow-sm cursor-pointer"

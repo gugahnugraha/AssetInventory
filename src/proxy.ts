@@ -12,7 +12,8 @@ export const config = {
    * - _next/image (image optimization files)
    * - favicon.ico (favicon file)
    * - login (login page itself)
-   * - scan (public scan page)
+   * - scan (old public scan page)
+   * - public-info (new public scan page)
    */
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|login|scan).*)"],
+  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|login|scan|public-info).*)"],
 };
