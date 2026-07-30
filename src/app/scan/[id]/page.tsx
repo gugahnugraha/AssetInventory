@@ -167,14 +167,14 @@ export default async function ScanAssetPage({ params }: ScanAssetPageProps) {
                 </div>
               </div>
 
-              {asset.lokasi && (
+              {(asset as any).lokasi && (
                 <div className="flex items-start gap-3">
                   <div className="mt-0.5 bg-sky-100 p-1.5 rounded text-sky-700">
                     <MapPin className="h-4 w-4" />
                   </div>
                   <div>
                     <p className="text-xs font-medium text-zinc-500 mb-0.5">Detail Lokasi</p>
-                    <p className="text-sm font-semibold text-zinc-900">{asset.lokasi}</p>
+                    <p className="text-sm font-semibold text-zinc-900">{(asset as any).lokasi}</p>
                   </div>
                 </div>
               )}
