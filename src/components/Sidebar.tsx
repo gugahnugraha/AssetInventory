@@ -117,6 +117,11 @@ export function Sidebar({ user }: SidebarProps) {
           href: "/mutasi",
           roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
         },
+        {
+          label: "Penghapusan Aset",
+          href: "/penghapusan",
+          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
+        },
       ]
     },
     {
