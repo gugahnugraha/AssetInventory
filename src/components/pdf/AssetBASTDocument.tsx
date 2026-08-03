@@ -20,9 +20,9 @@ const styles = StyleSheet.create({
   header: {
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     marginBottom: 4,
-    paddingBottom: 5,
+    paddingBottom: 0,
     paddingTop: 0,
     borderBottomWidth: 2,
     borderBottomColor: '#000000',
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   documentTitleContainer: {
-    marginTop: 6,
+    marginTop: 35,
     marginBottom: 20,
     display: 'flex',
     flexDirection: 'column',
