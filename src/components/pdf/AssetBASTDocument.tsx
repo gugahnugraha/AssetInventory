@@ -8,7 +8,7 @@ Font.register({
 
 const styles = StyleSheet.create({
   page: {
-    paddingTop: '20mm',
+    paddingTop: '10mm',
     paddingLeft: '20mm',
     paddingRight: '20mm',
     paddingBottom: '20mm',
