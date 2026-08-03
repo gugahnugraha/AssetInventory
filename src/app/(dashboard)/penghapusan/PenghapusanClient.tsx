@@ -32,9 +32,10 @@ interface PenghapusanClientProps {
   initialAssets: any[];
   userRole: Role;
   opdName?: string;
+  holders?: any[];
 }
 
-export function PenghapusanClient({ initialAssets, userRole, opdName }: PenghapusanClientProps) {
+export function PenghapusanClient({ initialAssets, userRole, opdName, holders = [] }: PenghapusanClientProps) {
   const [assets, setAssets] = React.useState(initialAssets);
   const [globalFilter, setGlobalFilter] = React.useState("");
   
@@ -48,6 +49,13 @@ export function PenghapusanClient({ initialAssets, userRole, opdName }: Penghapu
     return Object.values(rowSelection).filter(Boolean).length;
   }, [rowSelection]);
   
+  const [isFormFilled, setIsFormFilled] = React.useState(false);
+  const [bastData, setBastData] = React.useState({
+    tanggal: new Date().toISOString().split('T')[0],
+    pihakPertamaId: "",
+    pihakKeduaId: ""
+  });
+
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = React.useState(false);
   const [previewAssets, setPreviewAssets] = React.useState<any[]>([]);
   const [isPrintWarningOpen, setIsPrintWarningOpen] = React.useState(false);
@@ -171,6 +179,7 @@ export function PenghapusanClient({ initialAssets, userRole, opdName }: Penghapu
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     onRowSelectionChange: setRowSelection,
+    getRowId: (row) => row.id,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -198,10 +207,83 @@ export function PenghapusanClient({ initialAssets, userRole, opdName }: Penghapu
             Penghapusan Aset
           </h2>
           <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
-            Pilih aset untuk membuat Berita Acara Serah Terima (BAST) Penghapusan.
+            {isFormFilled 
+              ? "Pilih aset untuk membuat Berita Acara Serah Terima (BAST) Penghapusan."
+              : "Lengkapi data BAST sebelum memilih aset yang akan dihapuskan."}
           </p>
         </div>
+        {isFormFilled && (
+          <Button variant="outline" onClick={() => setIsFormFilled(false)} size="sm">
+            Kembali ke Form
+          </Button>
+        )}
       </div>
+
+      {!isFormFilled ? (
+        <Card className="border-0 shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl">
+          <CardHeader>
+            <CardTitle>Data Berita Acara Serah Terima (BAST)</CardTitle>
+            <CardDescription>Masukkan tanggal BAST dan pihak yang bertanda tangan</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tanggal BAST</label>
+                <Input
+                  type="date"
+                  value={bastData.tanggal}
+                  onChange={e => setBastData(prev => ({ ...prev, tanggal: e.target.value }))}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Pihak Pertama (Kepala Bidang)</label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={bastData.pihakPertamaId}
+                  onChange={e => setBastData(prev => ({ ...prev, pihakPertamaId: e.target.value }))}
+                >
+                  <option value="">Pilih Kepala Bidang...</option>
+                  {holders.map(holder => (
+                    <option key={holder.id} value={holder.id}>
+                      {holder.nama} - {holder.jabatan}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Pihak Kedua (Bendahara Barang)</label>
+                <select
+                  className="flex h-10 w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={bastData.pihakKeduaId}
+                  onChange={e => setBastData(prev => ({ ...prev, pihakKeduaId: e.target.value }))}
+                >
+                  <option value="">Pilih Bendahara Barang...</option>
+                  {holders.map(holder => (
+                    <option key={holder.id} value={holder.id}>
+                      {holder.nama} - {holder.jabatan}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="pt-4 flex justify-end">
+              <Button 
+                onClick={() => setIsFormFilled(true)}
+                disabled={!bastData.tanggal || !bastData.pihakPertamaId || !bastData.pihakKeduaId}
+                className="bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                Lanjutkan Pilih Aset
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
 
       <Card className="border-0 shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl">
         <CardContent className="p-4 sm:p-5 flex flex-col gap-4">
@@ -304,6 +386,8 @@ export function PenghapusanClient({ initialAssets, userRole, opdName }: Penghapu
           </div>
         </div>
       </div>
+        </>
+      )}
 
       {isPrintWarningOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
@@ -338,7 +422,11 @@ export function PenghapusanClient({ initialAssets, userRole, opdName }: Penghapu
           </div>
           <div className="flex-1 bg-zinc-900">
             <PDFViewer width="100%" height="100%" className="border-0">
-              <AssetBASTDocument assets={previewAssets} />
+              <AssetBASTDocument 
+                assets={previewAssets} 
+                bastData={bastData}
+                holders={holders}
+              />
             </PDFViewer>
           </div>
         </div>

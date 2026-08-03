@@ -93,11 +93,27 @@ export default async function PenghapusanPage() {
       }))
     }));
 
+    const holders = await prisma.holder.findMany({
+      where: { distribution: { opdId } },
+      include: { distribution: true },
+      orderBy: { nama: 'asc' }
+    });
+
     return (
       <PenghapusanClient
         initialAssets={serializedAssets}
         userRole={userRole}
         opdName={opdName}
+        holders={holders.map(h => ({
+          ...h,
+          createdAt: h.createdAt.toISOString(),
+          updatedAt: h.updatedAt.toISOString(),
+          distribution: h.distribution ? {
+            ...h.distribution,
+            createdAt: h.distribution.createdAt.toISOString(),
+            updatedAt: h.distribution.updatedAt.toISOString(),
+          } : null,
+        }))}
       />
     );
   } catch (error) {

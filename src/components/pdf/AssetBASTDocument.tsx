@@ -20,9 +20,10 @@ const styles = StyleSheet.create({
   header: {
     display: 'flex',
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 5,
-    paddingBottom: 10,
+    alignItems: 'flex-end',
+    marginBottom: 4,
+    paddingBottom: 5,
+    paddingTop: 0,
     borderBottomWidth: 2,
     borderBottomColor: '#000000',
     borderBottomStyle: 'solid',
@@ -32,10 +33,11 @@ const styles = StyleSheet.create({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingLeft: 10,
   },
   logo: {
-    width: 60,
-    height: 75,
+    width: 87,
+    height: 107,
     objectFit: 'contain',
   },
   headerCenter: {
@@ -44,7 +46,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingRight: 10,
+    paddingRight: 0,
   },
   headerTitleTop: {
     fontSize: 14,
@@ -52,7 +54,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   headerTitleMain: {
-    fontSize: 16,
+    fontSize: 13,
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
   },
@@ -63,7 +65,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   documentTitleContainer: {
-    marginTop: 20,
+    marginTop: 6,
     marginBottom: 20,
     display: 'flex',
     flexDirection: 'column',
@@ -91,13 +93,17 @@ const styles = StyleSheet.create({
   formRow: {
     display: 'flex',
     flexDirection: 'row',
-    marginBottom: 3,
+    marginBottom: 5,
+  },
+  formNumber: {
+    width: 15,
   },
   formLabel: {
-    width: 60,
+    width: 50,
   },
   formColon: {
-    width: 10,
+    width: 15,
+    textAlign: 'center',
   },
   formValue: {
     flex: 1,
@@ -147,33 +153,33 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   colNama: {
-    width: '25%',
+    width: '20%',
     padding: 4,
     borderRightWidth: 1,
     borderRightColor: '#000',
   },
   colMerk: {
-    width: '20%',
+    width: '18%',
     padding: 4,
     borderRightWidth: 1,
     borderRightColor: '#000',
   },
   colRegister: {
-    width: '20%',
+    width: '27%',
     padding: 4,
     borderRightWidth: 1,
     borderRightColor: '#000',
     textAlign: 'center',
   },
   colJumlah: {
-    width: '8%',
+    width: '7%',
     padding: 4,
     borderRightWidth: 1,
     borderRightColor: '#000',
     textAlign: 'center',
   },
   colKondisi: {
-    width: '12%',
+    width: '13%',
     padding: 4,
     borderRightWidth: 1,
     borderRightColor: '#000',
@@ -224,12 +230,52 @@ const styles = StyleSheet.create({
 
 interface AssetBASTDocumentProps {
   assets: any[];
+  bastData?: {
+    tanggal: string;
+    pihakPertamaId: string;
+    pihakKeduaId: string;
+  };
+  holders?: any[];
 }
 
-export const AssetBASTDocument = ({ assets }: AssetBASTDocumentProps) => {
+export const AssetBASTDocument = ({ assets, bastData, holders = [] }: AssetBASTDocumentProps) => {
+  const pihakPertama = holders.find(h => h.id === bastData?.pihakPertamaId);
+  const pihakKedua = holders.find(h => h.id === bastData?.pihakKeduaId);
+
+  // Format date
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '........................................................................';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  const formattedDate = formatDate(bastData?.tanggal);
+  const getDay = (dateStr?: string) => {
+    if (!dateStr) return '...................................';
+    return new Date(dateStr).toLocaleDateString('id-ID', { weekday: 'long' });
+  };
+  const getFullDate = (dateStr?: string) => {
+    if (!dateStr) return '........................................................................';
+    return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const formatBidangName = (nama?: string, fallback: string = '') => {
+    if (!nama) return fallback;
+    if (nama.toLowerCase() === 'sekretariat') return 'Sekretariat';
+    if (nama.toLowerCase().startsWith('bidang')) return nama;
+    return `Bidang ${nama}`;
+  };
+
+  const dayName = getDay(bastData?.tanggal);
+  const dateOnly = getFullDate(bastData?.tanggal);
   return (
     <Document title="Berita Acara Serah Terima (BAST) Barang Milik Daerah">
-      <Page size="A4" style={styles.page}>
+      <Page size="LEGAL" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -240,7 +286,10 @@ export const AssetBASTDocument = ({ assets }: AssetBASTDocumentProps) => {
             <Text style={styles.headerTitleTop}>PEMERINTAH KABUPATEN BANDUNG</Text>
             <Text style={styles.headerTitleMain}>DINAS KOMUNIKASI, INFORMATIKA, STATISTIK DAN PERSANDIAN</Text>
             <Text style={styles.headerAddress}>
-              Alamat: Jl. Raya Soreang KM. 17 Soreang 40911 Jawa Barat | Tlp. (022) 5897514 | Website: https://diskominfo.bandungkab.go.id | Email: diskominfo@bandungkab.go.id
+              Alamat: Jl. Raya Soreang KM. 17 Soreang 40911 Jawa Barat | Tlp. (022) 5897514
+            </Text>
+            <Text style={styles.headerAddress}>
+              Website: https://diskominfo.bandungkab.go.id | Email: diskominfo@bandungkab.go.id
             </Text>
           </View>
         </View>
@@ -253,30 +302,93 @@ export const AssetBASTDocument = ({ assets }: AssetBASTDocumentProps) => {
 
         {/* Content */}
         <Text style={styles.paragraph}>
-          Pada hari ini,..................................., tanggal ........................................................................ bertempat di Dinas Komunikasi, Informatika, Statistik dan Persandian Kabupaten Bandung, kami yang bertanda tangan di bawah ini:
+          Pada hari ini {dayName}, tanggal {dateOnly} bertempat di Dinas Komunikasi, Informatika, Statistik dan Persandian Kabupaten Bandung, kami yang bertanda tangan di bawah ini:
         </Text>
 
         <View style={styles.indentedBlock}>
-          <Text style={{ marginBottom: 5 }}>1. Nama               : ......................................................................................</Text>
-          <Text style={{ marginBottom: 5 }}>    NIP                  : ......................................................................................</Text>
-          <Text style={{ marginBottom: 5 }}>    Jabatan           : ......................................................................................</Text>
+          <View style={styles.formRow}>
+            <Text style={styles.formNumber}>1.</Text>
+            <Text style={styles.formLabel}>Nama</Text>
+            <Text style={styles.formColon}>:</Text>
+            <Text style={styles.formValue}>{pihakPertama?.nama}</Text>
+          </View>
+          <View style={styles.formRow}>
+            <Text style={styles.formNumber}></Text>
+            <Text style={styles.formLabel}>NIP</Text>
+            <Text style={styles.formColon}>:</Text>
+            <Text style={styles.formValue}>{pihakPertama?.nip}</Text>
+          </View>
+          <View style={styles.formRow}>
+            <Text style={styles.formNumber}></Text>
+            <Text style={styles.formLabel}>Jabatan</Text>
+            <Text style={styles.formColon}>:</Text>
+            <Text style={styles.formValue}>{pihakPertama?.jabatan}</Text>
+          </View>
         </View>
         <Text style={styles.paragraph}>
-          Dalam hal ini bertindak untuk dan atas nama Bidang Teknologi Informasi dan Komunikasi Dinas Komunikasi, Informatika, Statistik dan Persandian Kabupaten Bandung, selanjutnya disebut sebagai <Text style={styles.bold}>PIHAK PERTAMA</Text> (yang menyerahkan).
+          Dalam hal ini bertindak untuk dan atas nama {formatBidangName(pihakPertama?.distribution?.nama, 'Bidang Teknologi Informasi dan Komunikasi')} Dinas Komunikasi, Informatika, Statistik dan Persandian Kabupaten Bandung, selanjutnya disebut sebagai <Text style={styles.bold}>PIHAK PERTAMA</Text> (yang menyerahkan).
         </Text>
 
         <View style={styles.indentedBlock}>
-          <Text style={{ marginBottom: 5 }}>2. Nama               : Abuy sobur</Text>
-          <Text style={{ marginBottom: 5 }}>    NIP                  : 197108012009011002</Text>
-          <Text style={{ marginBottom: 5 }}>    Jabatan           : Bendahara Barang</Text>
+          <View style={styles.formRow}>
+            <Text style={styles.formNumber}>2.</Text>
+            <Text style={styles.formLabel}>Nama</Text>
+            <Text style={styles.formColon}>:</Text>
+            <Text style={styles.formValue}>{pihakKedua?.nama}</Text>
+          </View>
+          <View style={styles.formRow}>
+            <Text style={styles.formNumber}></Text>
+            <Text style={styles.formLabel}>NIP</Text>
+            <Text style={styles.formColon}>:</Text>
+            <Text style={styles.formValue}>{pihakKedua?.nip}</Text>
+          </View>
+          <View style={styles.formRow}>
+            <Text style={styles.formNumber}></Text>
+            <Text style={styles.formLabel}>Jabatan</Text>
+            <Text style={styles.formColon}>:</Text>
+            <Text style={styles.formValue}>{pihakKedua?.jabatan}</Text>
+          </View>
         </View>
         <Text style={styles.paragraph}>
-          Dalam hal ini bertindak untuk dan atas nama Sekretariat Dinas Komunikasi, Informatika, Statistik dan Persandian Kabupaten Bandung, selanjutnya disebut sebagai <Text style={styles.bold}>PIHAK KEDUA</Text> (yang menerima).
+          Dalam hal ini bertindak untuk dan atas nama {formatBidangName(pihakKedua?.distribution?.nama, 'Sekretariat')} Dinas Komunikasi, Informatika, Statistik dan Persandian Kabupaten Bandung, selanjutnya disebut sebagai <Text style={styles.bold}>PIHAK KEDUA</Text> (yang menerima).
         </Text>
 
         <Text style={styles.paragraph}>
-          Dengan ini menerangkan bahwa <Text style={styles.bold}>PIHAK PERTAMA</Text> telah menyerahkan barang milik daerah dalam kondisi rusak berat kepada <Text style={styles.bold}>PIHAK KEDUA</Text> untuk selanjutnya diproses sesuai dengan ketentuan peraturan perundang-undangan yang berlaku mengenai penghapusan Barang Milik Daerah (BMD), dengan rincian sebagai berikut:
+          Dengan ini menerangkan bahwa <Text style={styles.bold}>PIHAK PERTAMA</Text> telah menyerahkan barang milik daerah dalam kondisi rusak berat kepada <Text style={styles.bold}>PIHAK KEDUA</Text> untuk selanjutnya diproses sesuai dengan ketentuan peraturan perundang-undangan yang berlaku mengenai penghapusan Barang Milik Daerah (BMD), dengan rincian sebagaimana terlampir.
         </Text>
+        <Text style={styles.paragraph}>
+          Barang-barang tersebut dalam kondisi rusak berat dan sudah tidak dapat dipergunakan/dioperasikan sebagaimana mestinya, sehingga diserahkan kepada Sekretariat untuk selanjutnya diusulkan proses penghapusan dari Daftar Barang Milik Daerah sesuai dengan mekanisme dan peraturan yang berlaku.
+        </Text>
+        <Text style={styles.paragraph}>
+          Demikian Berita Acara Serah Terima ini dibuat dengan sebenarnya untuk dapat dipergunakan sebagaimana mestinya.
+        </Text>
+
+        {/* Signatures */}
+        <View style={styles.signatureSection}>
+          <View style={styles.signatureBox}>
+            <Text style={styles.signatureTitle}>PIHAK PERTAMA,{'\n'}{pihakPertama?.jabatan || 'Kepala Bidang Teknologi Informasi dan Komunikasi'}</Text>
+            {pihakPertama ? (
+              <>
+                <Text style={styles.signatureName}>{pihakPertama.nama}</Text>
+                <Text style={styles.signatureNip}>NIP. {pihakPertama.nip}</Text>
+              </>
+            ) : (
+              <Text style={styles.signatureNip}>NIP. ........................................</Text>
+            )}
+          </View>
+          <View style={styles.signatureBox}>
+            <Text style={styles.signatureTitle}>PIHAK KEDUA,{'\n'}{pihakKedua?.jabatan || 'Bendahara Barang'}</Text>
+            <Text style={styles.signatureName}>{pihakKedua?.nama || 'Abuy sobur'}</Text>
+            <Text style={styles.signatureNip}>NIP. {pihakKedua?.nip || '197108012009011002'}</Text>
+          </View>
+        </View>
+
+      </Page>
+
+      <Page size="LEGAL" style={styles.page}>
+        <View style={styles.documentTitleContainer}>
+          <Text style={styles.documentTitle}>LAMPIRAN BERITA ACARA SERAH TERIMA</Text>
+        </View>
 
         {/* Table */}
         <View style={styles.table}>
@@ -290,10 +402,10 @@ export const AssetBASTDocument = ({ assets }: AssetBASTDocumentProps) => {
             <Text style={styles.colTahun}>Tahun</Text>
           </View>
           {assets.map((asset, index) => {
-            const kondisiText = asset.kondisi === 'RUSAK_BERAT' ? 'Rusak Berat' : 
-                               asset.kondisi === 'RUSAK_RINGAN' ? 'Rusak Ringan' :
-                               asset.kondisi === 'HILANG' ? 'Hilang' :
-                               asset.kondisi === 'NORMAL' ? 'Baik' : asset.kondisi;
+            const kondisiText = asset.kondisi === 'RUSAK_BERAT' ? 'Rusak Berat' :
+              asset.kondisi === 'RUSAK_RINGAN' ? 'Rusak Ringan' :
+                asset.kondisi === 'HILANG' ? 'Hilang' :
+                  asset.kondisi === 'NORMAL' ? 'Baik' : asset.kondisi;
             return (
               <View style={styles.tableRow} key={asset.id || index}>
                 <Text style={styles.colNo}>{index + 1}</Text>
@@ -307,29 +419,6 @@ export const AssetBASTDocument = ({ assets }: AssetBASTDocumentProps) => {
             );
           })}
         </View>
-
-        <Text style={styles.paragraph}>
-          Barang-barang tersebut di atas dalam kondisi rusak berat dan sudah tidak dapat dipergunakan/dioperasikan sebagaimana mestinya, sehingga diserahkan kepada Sekretariat untuk selanjutnya diusulkan proses penghapusan dari Daftar Barang Milik Daerah sesuai dengan mekanisme dan peraturan yang berlaku.
-        </Text>
-        <Text style={styles.paragraph}>
-          Demikian Berita Acara Serah Terima ini dibuat dengan sebenarnya untuk dapat dipergunakan sebagaimana mestinya.
-        </Text>
-
-        {/* Signatures */}
-        <View style={styles.signatureSection}>
-          <View style={styles.signatureBox}>
-            <Text style={styles.signatureTitle}>PIHAK PERTAMA,{'\n'}Kepala Bidang Teknologi Informasi dan Komunikasi</Text>
-            <View style={styles.signatureSpace}></View>
-            <Text style={styles.signatureNip}>NIP. ........................................</Text>
-          </View>
-          <View style={styles.signatureBox}>
-            <Text style={styles.signatureTitle}>PIHAK KEDUA,{'\n'}Bendahara Barang</Text>
-            <View style={styles.signatureSpace}></View>
-            <Text style={styles.signatureName}>Abuy sobur</Text>
-            <Text style={styles.signatureNip}>NIP. 197108012009011002</Text>
-          </View>
-        </View>
-
       </Page>
     </Document>
   );
