@@ -14,6 +14,7 @@ import {
   Database,
   BookOpen,
   Info,
+  FileBarChart2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Role } from "@prisma/client"
@@ -162,6 +163,12 @@ export function Sidebar({ user }: SidebarProps) {
       label: "Rekonsiliasi Aset",
       href: "/rekonsiliasi",
       icon: ClipboardCheck,
+      roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
+    },
+    {
+      label: "Laporan",
+      href: "/laporan",
+      icon: FileBarChart2,
       roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
     },
     {
