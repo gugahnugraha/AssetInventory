@@ -72,6 +72,7 @@ const KONDISI_LABELS: Record<string, string> = {
   HILANG: "Hilang",
   DALAM_PERBAIKAN: "Dalam Perbaikan",
   DIPINJAM: "Dipinjam",
+  SUDAH_DIHAPUS: "Sudah Dihapus",
 };
 
 interface FormPemeriksaanClientProps {

@@ -41,6 +41,7 @@ const KONDISI_LABELS: Record<string, string> = {
   HILANG: "Hilang",
   DALAM_PERBAIKAN: "Dalam Perbaikan",
   DIPINJAM: "Dipinjam",
+  SUDAH_DIHAPUS: "Sudah Dihapus",
 };
 
 const KONDISI_COLORS: Record<string, string> = {
@@ -50,6 +51,7 @@ const KONDISI_COLORS: Record<string, string> = {
   HILANG: "bg-rose-600",
   DALAM_PERBAIKAN: "bg-blue-400",
   DIPINJAM: "bg-purple-500",
+  SUDAH_DIHAPUS: "bg-zinc-500",
 };
 
 const KONDISI_BADGE_VARIANTS: Record<string, string> = {
@@ -59,6 +61,7 @@ const KONDISI_BADGE_VARIANTS: Record<string, string> = {
   HILANG: "text-rose-700 bg-rose-50 border-rose-200",
   DALAM_PERBAIKAN: "text-blue-700 bg-blue-50 border-blue-200",
   DIPINJAM: "text-purple-700 bg-purple-50 border-purple-200",
+  SUDAH_DIHAPUS: "text-zinc-700 bg-zinc-50 border-zinc-200",
 };
 
 const KONDISI_ICONS: Record<string, React.ReactNode> = {
@@ -68,6 +71,7 @@ const KONDISI_ICONS: Record<string, React.ReactNode> = {
   HILANG: <Minus className="h-4 w-4" />,
   DALAM_PERBAIKAN: <Wrench className="h-4 w-4" />,
   DIPINJAM: <HandCoins className="h-4 w-4" />,
+  SUDAH_DIHAPUS: <XCircle className="h-4 w-4" />,
 };
 
 const MUTASI_TYPE_LABELS: Record<string, string> = {

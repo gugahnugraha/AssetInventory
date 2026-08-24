@@ -214,6 +214,8 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
         return "Dalam Perbaikan";
       case Kondisi.DIPINJAM:
         return "Dipinjam";
+      case Kondisi.SUDAH_DIHAPUS:
+        return "Sudah Dihapus";
       default:
         return kondisi;
     }
@@ -229,6 +231,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
         return "warning";
       case Kondisi.RUSAK_BERAT:
       case Kondisi.HILANG:
+      case Kondisi.SUDAH_DIHAPUS:
         return "destructive";
       default:
         return "outline";
@@ -664,6 +667,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
                           case Kondisi.HILANG: return "Hilang";
                           case Kondisi.DALAM_PERBAIKAN: return "Perbaikan";
                           case Kondisi.DIPINJAM: return "Dipinjam";
+                          case Kondisi.SUDAH_DIHAPUS: return "Sudah Dihapus";
                           default: return k;
                         }
                       };

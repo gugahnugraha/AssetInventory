@@ -203,6 +203,8 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
         return "Dalam Perbaikan";
       case Kondisi.DIPINJAM:
         return "Dipinjam";
+      case Kondisi.SUDAH_DIHAPUS:
+        return "Sudah Dihapus";
       default:
         return kondisi;
     }
@@ -218,6 +220,7 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
         return "warning";
       case Kondisi.RUSAK_BERAT:
       case Kondisi.HILANG:
+      case Kondisi.SUDAH_DIHAPUS:
         return "destructive";
       default:
         return "outline";
@@ -507,6 +510,7 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
       if (rawKondisi === Kondisi.HILANG) kondisi = "hilang";
       if (rawKondisi === Kondisi.DALAM_PERBAIKAN) kondisi = "dalam perbaikan";
       if (rawKondisi === Kondisi.DIPINJAM) kondisi = "dipinjam";
+      if (rawKondisi === Kondisi.SUDAH_DIHAPUS) kondisi = "sudah dihapus";
 
       const matchAttribute = row.original.attributes?.some((attr: any) => {
         const attrName = String(attr.categoryAttribute?.nama || "").toLowerCase();

@@ -151,6 +151,7 @@ export function MutasiClient({
       case Kondisi.HILANG: return "Hilang";
       case Kondisi.DALAM_PERBAIKAN: return "Dalam Perbaikan";
       case Kondisi.DIPINJAM: return "Dipinjam";
+      case Kondisi.SUDAH_DIHAPUS: return "Sudah Dihapus";
       default: return kondisi;
     }
   };
@@ -597,6 +598,7 @@ export function MutasiClient({
                         <option value={Kondisi.DALAM_PERBAIKAN}>{getKondisiLabel(Kondisi.DALAM_PERBAIKAN)}</option>
                         <option value={Kondisi.DIPINJAM}>{getKondisiLabel(Kondisi.DIPINJAM)}</option>
                         <option value={Kondisi.HILANG}>{getKondisiLabel(Kondisi.HILANG)}</option>
+                        <option value={Kondisi.SUDAH_DIHAPUS}>{getKondisiLabel(Kondisi.SUDAH_DIHAPUS)}</option>
                       </select>
                     </div>
                   </div>

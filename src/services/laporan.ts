@@ -42,6 +42,7 @@ export async function getLaporanSummary(opdId: string) {
     "DALAM_PERBAIKAN",
     "DIPINJAM",
     "HILANG",
+    "SUDAH_DIHAPUS",
   ];
   const byKondisi: Record<string, { count: number; value: number }> = {};
   for (const k of kondisiOrder) {

@@ -18,6 +18,7 @@ const getKondisiLabel = (kondisi: Kondisi) => {
     case Kondisi.HILANG: return { label: "Hilang", color: "bg-zinc-100 text-zinc-800 border-zinc-200" };
     case Kondisi.DALAM_PERBAIKAN: return { label: "Dalam Perbaikan", color: "bg-blue-100 text-blue-800 border-blue-200" };
     case Kondisi.DIPINJAM: return { label: "Dipinjam", color: "bg-indigo-100 text-indigo-800 border-indigo-200" };
+    case Kondisi.SUDAH_DIHAPUS: return { label: "Sudah Dihapus", color: "bg-zinc-100 text-zinc-800 border-zinc-200" };
     default: return { label: kondisi, color: "bg-gray-100 text-gray-800 border-gray-200" };
   }
 };

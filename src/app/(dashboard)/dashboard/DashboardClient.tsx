@@ -97,6 +97,7 @@ export function DashboardClient({ stats, recentLogs, recentMutations }: Dashboar
       case Kondisi.HILANG: return "Hilang";
       case Kondisi.DALAM_PERBAIKAN: return "Dalam Perbaikan";
       case Kondisi.DIPINJAM: return "Dipinjam";
+      case Kondisi.SUDAH_DIHAPUS: return "Sudah Dihapus";
       default: return kondisi;
     }
   };
@@ -108,7 +109,8 @@ export function DashboardClient({ stats, recentLogs, recentMutations }: Dashboar
       case Kondisi.DALAM_PERBAIKAN:
       case Kondisi.DIPINJAM: return "warning";
       case Kondisi.RUSAK_BERAT:
-      case Kondisi.HILANG: return "destructive";
+      case Kondisi.HILANG:
+      case Kondisi.SUDAH_DIHAPUS: return "destructive";
       default: return "outline";
     }
   };

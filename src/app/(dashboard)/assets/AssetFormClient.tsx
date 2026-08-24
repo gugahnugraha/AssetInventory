@@ -1093,12 +1093,13 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
               <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
                 Kondisi Terkini <span className="text-rose-500">*</span>
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-2xl">
                 {[
                   { value: "NORMAL", label: "Baik (B)", color: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400" },
                   { value: "RUSAK_RINGAN", label: "Kurang Baik (KB)", color: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-900/20 dark:text-amber-400" },
                   { value: "RUSAK_BERAT", label: "Rusak Berat (RB)", color: "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/50 dark:bg-rose-900/20 dark:text-rose-400" },
-                  { value: "HILANG", label: "Hilang (H)", color: "border-zinc-300 bg-zinc-50 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-300" }
+                  { value: "HILANG", label: "Hilang (H)", color: "border-zinc-300 bg-zinc-50 text-zinc-700 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-300" },
+                  { value: "SUDAH_DIHAPUS", label: "Sudah Dihapus", color: "border-zinc-400 bg-zinc-100 text-zinc-800 dark:border-zinc-600 dark:bg-zinc-800/40 dark:text-zinc-200" }
                 ].map((kondisi) => (
                   <label
                     key={kondisi.value}

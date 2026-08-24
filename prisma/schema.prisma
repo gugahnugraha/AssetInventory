@@ -20,6 +20,7 @@ enum Kondisi {
   HILANG
   DALAM_PERBAIKAN
   DIPINJAM
+  SUDAH_DIHAPUS
 }
 
 model Opd {

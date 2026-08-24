@@ -103,6 +103,7 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
           if ("hilang".includes(searchLower)) searchConditions.push({ kondisi: "HILANG" });
           if ("dalam perbaikan".includes(searchLower)) searchConditions.push({ kondisi: "DALAM_PERBAIKAN" });
           if ("dipinjam".includes(searchLower)) searchConditions.push({ kondisi: "DIPINJAM" });
+          if ("sudah dihapus".includes(searchLower)) searchConditions.push({ kondisi: "SUDAH_DIHAPUS" });
         }
 
         // Add year search if it looks like a year

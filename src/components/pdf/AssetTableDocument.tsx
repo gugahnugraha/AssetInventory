@@ -192,6 +192,8 @@ const formatKondisiText = (kondisi: string): { label: string; style: any } => {
       return { label: 'Rusak Berat', style: styles.kondisiRusakBerat };
     case 'HILANG':
       return { label: 'Hilang', style: styles.kondisiHilang };
+    case 'SUDAH_DIHAPUS':
+      return { label: 'Sudah Dihapus', style: styles.kondisiHilang };
     default:
       return { label: kondisi || '-', style: {} };
   }

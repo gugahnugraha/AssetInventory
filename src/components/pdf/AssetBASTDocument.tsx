@@ -405,7 +405,8 @@ export const AssetBASTDocument = ({ assets, bastData, holders = [] }: AssetBASTD
             const kondisiText = asset.kondisi === 'RUSAK_BERAT' ? 'Rusak Berat' :
               asset.kondisi === 'RUSAK_RINGAN' ? 'Rusak Ringan' :
                 asset.kondisi === 'HILANG' ? 'Hilang' :
-                  asset.kondisi === 'NORMAL' ? 'Baik' : asset.kondisi;
+                  asset.kondisi === 'NORMAL' ? 'Baik' :
+                    asset.kondisi === 'SUDAH_DIHAPUS' ? 'Sudah Dihapus' : asset.kondisi;
             return (
               <View style={styles.tableRow} key={asset.id || index}>
                 <Text style={styles.colNo}>{index + 1}</Text>

@@ -20,6 +20,7 @@ import * as XLSX from "xlsx";
 const KONDISI_LABELS: Record<string, string> = {
   NORMAL: "Normal", RUSAK_RINGAN: "Rusak Ringan", RUSAK_BERAT: "Rusak Berat",
   HILANG: "Hilang", DALAM_PERBAIKAN: "Dalam Perbaikan", DIPINJAM: "Dipinjam",
+  SUDAH_DIHAPUS: "Sudah Dihapus",
 };
 const FINDING_TYPE_LABELS: Record<string, string> = {
   DATA_PEMEGANG: "Data Pemegang", DATA_DISTRIBUSI: "Data Distribusi", KONDISI: "Kondisi",

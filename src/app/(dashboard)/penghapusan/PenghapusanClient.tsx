@@ -68,6 +68,7 @@ export function PenghapusanClient({ initialAssets, userRole, opdName, holders = 
       case Kondisi.HILANG: return "Hilang";
       case Kondisi.DALAM_PERBAIKAN: return "Dalam Perbaikan";
       case Kondisi.DIPINJAM: return "Dipinjam";
+      case Kondisi.SUDAH_DIHAPUS: return "Sudah Dihapus";
       default: return kondisi;
     }
   };
@@ -79,7 +80,8 @@ export function PenghapusanClient({ initialAssets, userRole, opdName, holders = 
       case Kondisi.DALAM_PERBAIKAN:
       case Kondisi.DIPINJAM: return "warning";
       case Kondisi.RUSAK_BERAT:
-      case Kondisi.HILANG: return "destructive";
+      case Kondisi.HILANG:
+      case Kondisi.SUDAH_DIHAPUS: return "destructive";
       default: return "outline";
     }
   };
@@ -309,6 +311,7 @@ export function PenghapusanClient({ initialAssets, userRole, opdName, holders = 
                 <option value="RUSAK_RINGAN">Rusak Ringan</option>
                 <option value="HILANG">Hilang</option>
                 <option value="NORMAL">Normal</option>
+                <option value="SUDAH_DIHAPUS">Sudah Dihapus</option>
               </select>
 
               <Button 
