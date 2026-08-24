@@ -341,7 +341,12 @@ export async function resolveFinding(findingId: string, userId: string) {
 
 export async function getDashboardStats(periodId: string, opdId: string) {
   const [totalAssets, reconciliations, findings] = await Promise.all([
-    prisma.asset.count({ where: { opdId } }),
+    prisma.asset.count({
+      where: {
+        opdId,
+        kondisi: { not: Kondisi.SUDAH_DIHAPUS }
+      }
+    }),
     prisma.assetReconciliation.findMany({
       where: { periodId },
       select: { status: true },
@@ -466,6 +471,7 @@ export async function generateReportData(periodId: string, opdId: string) {
     where: {
       opdId,
       id: { notIn: reconciledAssetIds },
+      kondisi: { not: Kondisi.SUDAH_DIHAPUS },
     },
     include: {
       distribution: { select: { nama: true } },
@@ -521,7 +527,10 @@ export async function getAllFindings(opdId: string, periodId?: string) {
 
 export async function getAssetsWithRekonStatus(periodId: string, opdId: string) {
   const assets = await prisma.asset.findMany({
-    where: { opdId },
+    where: {
+      opdId,
+      kondisi: { not: Kondisi.SUDAH_DIHAPUS }
+    },
     select: {
       id: true,
       reconciliations: {

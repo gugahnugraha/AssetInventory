@@ -22,7 +22,10 @@ export default async function PemeriksaanPage() {
 
   if (activePeriod) {
     assets = await prisma.asset.findMany({
-      where: { opdId },
+      where: {
+        opdId,
+        kondisi: { not: "SUDAH_DIHAPUS" }
+      },
       include: {
         category: { select: { nama: true } },
         distribution: { select: { nama: true } },

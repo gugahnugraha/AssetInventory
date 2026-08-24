@@ -231,8 +231,9 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
         return "warning";
       case Kondisi.RUSAK_BERAT:
       case Kondisi.HILANG:
-      case Kondisi.SUDAH_DIHAPUS:
         return "destructive";
+      case Kondisi.SUDAH_DIHAPUS:
+        return "secondary";
       default:
         return "outline";
     }

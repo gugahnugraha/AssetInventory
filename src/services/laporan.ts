@@ -12,7 +12,10 @@ import { Kondisi } from "@prisma/client";
 export async function getLaporanSummary(opdId: string) {
   const [assets, kibList] = await Promise.all([
     prisma.asset.findMany({
-      where: { opdId },
+      where: {
+        opdId,
+        kondisi: { not: Kondisi.SUDAH_DIHAPUS }
+      },
       select: {
         kondisi: true,
         harga: true,
@@ -42,7 +45,6 @@ export async function getLaporanSummary(opdId: string) {
     "DALAM_PERBAIKAN",
     "DIPINJAM",
     "HILANG",
-    "SUDAH_DIHAPUS",
   ];
   const byKondisi: Record<string, { count: number; value: number }> = {};
   for (const k of kondisiOrder) {
@@ -77,11 +79,14 @@ export async function getLaporanSummary(opdId: string) {
 }
 
 /**
- * Get all assets for the Daftar Aset report, with full relations.
+ * Get all active assets for the Daftar Aset report, with full relations.
  */
 export async function getLaporanAssets(opdId: string) {
   return prisma.asset.findMany({
-    where: { opdId },
+    where: {
+      opdId,
+      kondisi: { not: Kondisi.SUDAH_DIHAPUS }
+    },
     select: {
       id: true,
       kodeLengkap: true,
@@ -108,11 +113,14 @@ export async function getLaporanAssets(opdId: string) {
 }
 
 /**
- * Get asset value breakdown per KIB and per Distribution.
+ * Get active asset value breakdown per KIB and per Distribution.
  */
 export async function getLaporanNilaiAset(opdId: string) {
   const assets = await prisma.asset.findMany({
-    where: { opdId },
+    where: {
+      opdId,
+      kondisi: { not: Kondisi.SUDAH_DIHAPUS }
+    },
     select: {
       harga: true,
       tahunPembelian: true,
@@ -199,11 +207,15 @@ export async function getLaporanAuditLog(opdId: string, limit = 200) {
 }
 
 /**
- * Get assets that do not have a primary photo document.
+ * Get active assets that do not have a primary photo document.
  */
 export async function getAssetsWithoutPhoto(opdId: string) {
   const allAssets = await prisma.asset.findMany({
-    where: { opdId, fotoUtama: null },
+    where: {
+      opdId,
+      fotoUtama: null,
+      kondisi: { not: Kondisi.SUDAH_DIHAPUS }
+    },
     select: {
       id: true,
       kodeLengkap: true,

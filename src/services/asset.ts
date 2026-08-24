@@ -641,11 +641,19 @@ export async function deleteAsset(id: string, userId: string) {
 export async function getDashboardStats(opdId: string) {
   try {
     // Total assets
-    const total = await prisma.asset.count({ where: { opdId } });
+    const total = await prisma.asset.count({
+      where: {
+        opdId,
+        kondisi: { not: Kondisi.SUDAH_DIHAPUS }
+      }
+    });
 
     // Total value of assets
     const totalValueResult = await prisma.asset.aggregate({
-      where: { opdId },
+      where: {
+        opdId,
+        kondisi: { not: Kondisi.SUDAH_DIHAPUS }
+      },
       _sum: {
         harga: true
       }
@@ -672,7 +680,11 @@ export async function getDashboardStats(opdId: string) {
       select: {
         nama: true,
         _count: {
-          select: { assets: true },
+          select: {
+            assets: {
+              where: { kondisi: { not: Kondisi.SUDAH_DIHAPUS } }
+            }
+          },
         },
       },
     });
@@ -685,7 +697,10 @@ export async function getDashboardStats(opdId: string) {
     // Asset per namaAset (Top 5 + Others)
     const assetsByNama = await prisma.asset.groupBy({
       by: ["namaAset"],
-      where: { opdId },
+      where: {
+        opdId,
+        kondisi: { not: Kondisi.SUDAH_DIHAPUS }
+      },
       _count: {
         id: true,
       },
@@ -705,7 +720,10 @@ export async function getDashboardStats(opdId: string) {
     // Trend by Year (Tahun Pembelian)
     const assetsByTahun = await prisma.asset.groupBy({
       by: ["tahunPembelian"],
-      where: { opdId },
+      where: {
+        opdId,
+        kondisi: { not: Kondisi.SUDAH_DIHAPUS }
+      },
       _count: {
         id: true,
       },
@@ -722,7 +740,10 @@ export async function getDashboardStats(opdId: string) {
 
     // Latest assets
     const latestAssets = await prisma.asset.findMany({
-      where: { opdId },
+      where: {
+        opdId,
+        kondisi: { not: Kondisi.SUDAH_DIHAPUS }
+      },
       include: {
         distribution: true,
         holder: true,
@@ -742,7 +763,14 @@ export async function getDashboardStats(opdId: string) {
         categories: {
           include: {
             _count: {
-              select: { assets: { where: { opdId } } }
+              select: {
+                assets: {
+                  where: {
+                    opdId,
+                    kondisi: { not: Kondisi.SUDAH_DIHAPUS }
+                  }
+                }
+              }
             }
           }
         }

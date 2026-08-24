@@ -18,8 +18,13 @@ export default async function PeriodeDetailPage({ params }: Props) {
 
   const stats = await getDashboardStats(id, session.user.opdId);
 
-  // Get total assets for this SKPD
-  const totalAssets = await prisma.asset.count({ where: { opdId: session.user.opdId } });
+  // Get total assets for this SKPD (excluding deleted assets)
+  const totalAssets = await prisma.asset.count({
+    where: {
+      opdId: session.user.opdId,
+      kondisi: { not: "SUDAH_DIHAPUS" }
+    }
+  });
 
   const serialized = {
     ...period,
