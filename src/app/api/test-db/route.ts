@@ -2,64 +2,55 @@ import { NextResponse } from "next/server";
 import prisma from "@/services/db";
 import { getDashboardStats, getAllAssets } from "@/services/asset";
 import { getLaporanSummary } from "@/services/laporan";
-import { getRecentAuditLogs } from "@/services/auditLog";
-import { getRecentHistories } from "@/services/history";
 
 export async function GET() {
-  const opdId = "0f2495ea-6a3c-4235-9f5b-1c5fae46ea20"; // Any valid opdId from seed or database
+  const log: string[] = ["Starting diagnostic..."];
   
   try {
-    // 1. Get first OPD ID dynamically from database to make sure it's valid
     const firstOpd = await prisma.opd.findFirst();
-    const testOpdId = firstOpd ? firstOpd.id : opdId;
-
-    const results: any = {
-      testOpdId,
-    };
-
-    // Test getDashboardStats
-    try {
-      results.dashboardStats = await getDashboardStats(testOpdId);
-      results.dashboardStats_status = "success";
-    } catch (e: any) {
-      results.dashboardStats_error = {
-        message: e.message || String(e),
-        stack: e.stack,
-      };
+    if (!firstOpd) {
+      return new Response("No OPD found in database", { status: 200 });
     }
+    const testOpdId = firstOpd.id;
+    log.push(`Found test OPD: ${firstOpd.nama} (${testOpdId})`);
 
-    // Test getAllAssets
+    // 1. Test getAllAssets
+    log.push("Testing getAllAssets...");
     try {
       const assets = await getAllAssets(testOpdId);
-      results.assetsCount = assets.length;
-      results.getAllAssets_status = "success";
+      log.push(`getAllAssets success: found ${assets.length} assets`);
     } catch (e: any) {
-      results.getAllAssets_error = {
-        message: e.message || String(e),
-        stack: e.stack,
-      };
+      log.push(`getAllAssets FAILED: ${e.message}\nStack: ${e.stack}`);
     }
 
-    // Test getLaporanSummary
+    // 2. Test getDashboardStats
+    log.push("Testing getDashboardStats...");
     try {
-      results.laporanSummary = await getLaporanSummary(testOpdId);
-      results.laporanSummary_status = "success";
+      const stats = await getDashboardStats(testOpdId);
+      log.push(`getDashboardStats success: total active=${stats.metrics.total}, total value=${stats.metrics.totalValue}`);
     } catch (e: any) {
-      results.laporanSummary_error = {
-        message: e.message || String(e),
-        stack: e.stack,
-      };
+      log.push(`getDashboardStats FAILED: ${e.message}\nStack: ${e.stack}`);
     }
 
-    return NextResponse.json({
-      success: true,
-      results,
+    // 3. Test getLaporanSummary
+    log.push("Testing getLaporanSummary...");
+    try {
+      const summary = await getLaporanSummary(testOpdId);
+      log.push(`getLaporanSummary success: total assets=${summary.totalAssets}, total value=${summary.totalValue}`);
+    } catch (e: any) {
+      log.push(`getLaporanSummary FAILED: ${e.message}\nStack: ${e.stack}`);
+    }
+
+    return new Response(log.join("\n"), {
+      status: 200,
+      headers: { "Content-Type": "text/plain" },
     });
   } catch (error: any) {
-    return NextResponse.json({
-      success: false,
-      error: error.message || String(error),
-      stack: error.stack,
-    }, { status: 500 });
+    log.push(`Top-level FAILED: ${error.message}\nStack: ${error.stack}`);
+    return new Response(log.join("\n"), {
+      status: 500,
+      headers: { "Content-Type": "text/plain" },
+    });
   }
 }
+export const dynamic = "force-dynamic";
