@@ -42,8 +42,8 @@ import { cn } from "@/lib/utils";
 /*  Data                               */
 /* ─────────────────────────────────── */
 
-const APP_VERSION = "1.0.0";
-const BUILD_DATE = "Juli 2026";
+const APP_VERSION = "1.1.0";
+const BUILD_DATE = "Agustus 2026";
 
 const techStack = [
   {
@@ -115,7 +115,7 @@ const techStack = [
     items: [
       { name: "@react-pdf/renderer", desc: "Generate PDF langsung dari komponen React" },
       { name: "xlsx", desc: "Export data ke format Excel" },
-      { name: "AWS S3 SDK", desc: "Penyimpanan file & dokumen aset di cloud" },
+      { name: "AWS S3 SDK / Cloudflare R2", desc: "Penyimpanan dokumen/foto aset di cloud" },
     ],
   },
   {
@@ -127,7 +127,7 @@ const techStack = [
     items: [
       { name: "Vercel / Node.js", desc: "Deployment platform & runtime environment" },
       { name: "pg (node-postgres)", desc: "Native PostgreSQL driver untuk Node.js" },
-      { name: "Sharp", desc: "Optimasi & pemrosesan gambar server-side" },
+      { name: "Sharp (Dynamic Import)", desc: "Optimasi gambar serverless dengan raw buffer fallback" },
     ],
   },
   {
@@ -138,19 +138,19 @@ const techStack = [
     border: "border-orange-400/20",
     items: [
       { name: "clsx + tailwind-merge", desc: "Manajemen class CSS yang dinamis" },
-      { name: "QRCode", desc: "Generate QR Code untuk pelabelan aset" },
+      { name: "QRCode (Dynamic Domain)", desc: "Generate QR Code dinamis dengan basis domain terkonfigurasi" },
       { name: "html2pdf.js", desc: "Konversi halaman HTML menjadi dokumen PDF" },
     ],
   },
 ];
 
 const features = [
-  { icon: Box, label: "Manajemen Aset", desc: "Data aset & mutasi lengkap" },
-  { icon: BarChart3, label: "Dashboard Analitik", desc: "Visualisasi data real-time" },
-  { icon: Shield, label: "Multi-Role Access", desc: "Admin, Operator & Manager" },
-  { icon: FileText, label: "Laporan PDF & Excel", desc: "Ekspor data fleksibel" },
-  { icon: Database, label: "Master Data", desc: "KIB, kategori & distribusi" },
-  { icon: Sparkles, label: "Rekonsiliasi Aset", desc: "Sinkronisasi & validasi data" },
+  { icon: Box, label: "Manajemen Aset", desc: "Inventarisasi aset, foto & riwayat mutasi lengkap" },
+  { icon: BarChart3, label: "Dashboard Real-Time", desc: "Visualisasi data analitik & metrik keuangan terfilter" },
+  { icon: Shield, label: "Multi-Role RBAC", desc: "Izin akses sesuai peran: Admin, Operator & Manager" },
+  { icon: FileText, label: "Dokumen & BAST Dinamis", desc: "Ekspor KIB (Excel/PDF) & BAST dengan kop instansi dinamis" },
+  { icon: Database, label: "Keuangan & Buku Bersih", desc: "Akurasi nilai total aset dengan eliminasi aset terhapus" },
+  { icon: Sparkles, label: "Rekonsiliasi Lapangan", desc: "Pemeriksaan fisik silang sistem berbasis QR Code & Temuan" },
 ];
 
 /* ─────────────────────────────────── */

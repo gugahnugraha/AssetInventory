@@ -10,6 +10,8 @@ import {
   Users,
   Tag,
   FileStack,
+  FileText,
+  Globe,
   ClipboardCheck,
   Settings,
   User,
@@ -595,6 +597,21 @@ export default function DokumentasiPage() {
               </div>
             </div>
 
+            <div className="bg-amber-50/50 border border-amber-200/60 rounded-2xl p-5 space-y-3">
+              <h4 className="font-bold text-zinc-950 flex items-center gap-2 text-sm">
+                <Info className="h-4 w-4 text-amber-600" />
+                Fitur Khusus: Status "Sudah Dihapus" &amp; Cetak QR Code Dinamis
+              </h4>
+              <div className="space-y-2.5 text-sm text-zinc-700 leading-relaxed">
+                <p>
+                  <strong>Kondisi "Sudah Dihapus" (Badge Abu-abu):</strong> Ketika barang dihapus dari daftar aktif (misalnya karena rusak berat total atau dinonaktifkan), status kondisinya diubah menjadi <strong>Sudah Dihapus</strong>. Aset dengan status ini <strong>secara otomatis dikeluarkan dari semua perhitungan nilai total aset</strong> di dashboard, rekap KIB, maupun persentase rekonsiliasi.
+                </p>
+                <p>
+                  <strong>Dinamisasi Label QR Code Fisik:</strong> Setiap aset dilengkapi dengan label stiker QR Code yang mengarah ke halaman verifikasi publik <code>/scan/[id]</code>. Anda dapat mengonfigurasi domain utama instansi pada menu Pengaturan Sistem, sehingga kode QR yang dihasilkan pada berkas PDF akan selalu mengarah ke domain publik instansi, terlepas dari mana PDF diunduh.
+                </p>
+              </div>
+            </div>
+
             <InfoBox type="warning">
               <strong>Hanya Administrator</strong> yang dapat menghapus aset. Operator hanya dapat menambah dan mengubah data.
               Penghapusan aset bersifat <strong>permanen</strong> dan tidak dapat dibatalkan.
@@ -755,17 +772,50 @@ export default function DokumentasiPage() {
 
         {/* REKONSILIASI */}
         <section id="rekonsiliasi">
-          <SectionTitle icon={ClipboardCheck} title="Rekonsiliasi Aset" subtitle="Pemeriksaan silang fisik vs. catatan sistem" color="rose" />
-          <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-rose-200 rounded-2xl bg-rose-50/30">
-            <div className="p-4 bg-rose-100 rounded-full mb-4">
-              <ClipboardCheck className="h-10 w-10 text-rose-500" />
-            </div>
-            <h3 className="font-black text-zinc-900 text-lg mb-2">Fitur Segera Hadir</h3>
-            <p className="text-zinc-500 text-sm max-w-md leading-relaxed">
-              Rekonsiliasi Aset sedang dalam pengembangan. Fitur ini akan memungkinkan pemeriksaan silang antara
-              kondisi fisik aset di lapangan dengan data yang tercatat dalam sistem, lengkap dengan laporan perbedaan.
+          <SectionTitle icon={ClipboardCheck} title="Rekonsiliasi Aset" subtitle="Pemeriksaan silang kondisi fisik aset di lapangan dengan data sistem" color="rose" />
+          
+          <div className="space-y-5">
+            <p className="text-sm text-zinc-600 leading-relaxed">
+              Fitur Rekonsiliasi Aset dirancang untuk memvalidasi keberadaan dan kondisi fisik barang milik daerah secara periodik. 
+              Sistem ini memfasilitasi pencocokan data di atas kertas dengan fakta riil di lapangan.
             </p>
-            <Badge color="rose" >Dalam Pengembangan</Badge>
+
+            <div className="bg-white border border-zinc-200 rounded-2xl overflow-hidden">
+              <div className="px-5 py-3 bg-zinc-50 border-b border-zinc-200">
+                <span className="font-bold text-zinc-900 text-sm">Alur Kerja Rekonsiliasi</span>
+              </div>
+              <div className="p-5 space-y-0">
+                <StepCard step={1} icon={<Plus className="h-4 w-4 text-emerald-600" />} title="Buat Periode Rekonsiliasi" desc="Administrator membuat periode pemeriksaan baru (misal: Semester I 2026) dengan menetapkan tanggal mulai dan selesai." />
+                <StepCard step={2} icon={<Search className="h-4 w-4 text-blue-500" />} title="Lakukan Pemeriksaan Fisik" desc="Petugas lapangan memindai QR Code barang menggunakan ponsel atau mencari nama aset di menu Pemeriksaan, lalu memverifikasi kondisi lapangan." />
+                <StepCard step={3} icon={<AlertTriangle className="h-4 w-4 text-amber-500" />} title="Catat Temuan Masalah" desc="Jika aset tidak ditemukan, berada di lokasi yang salah, atau rusak berat, petugas menandai status kesesuaian dan mencatat keterangan temuan." />
+                <StepCard step={4} icon={<FileStack className="h-4 w-4 text-teal-500" />} title="Tinjau Laporan &amp; Tutup Periode" desc="Administrator memantau kemajuan pemeriksaan lewat Dasbor Rekonsiliasi, mengunduh rekapitulasi temuan, lalu menutup periode setelah selesai." />
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="border border-zinc-200 rounded-2xl p-5 bg-white">
+                <h4 className="font-bold text-zinc-900 mb-3 flex items-center gap-2">
+                  <LayoutDashboard className="h-4 w-4 text-rose-500" />
+                  Dasbor Rekonsiliasi
+                </h4>
+                <ul className="space-y-2 text-sm text-zinc-600">
+                  <li className="flex items-start gap-2"><CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-emerald-500 shrink-0" />Melihat persentase progress penyelesaian pemeriksaan</li>
+                  <li className="flex items-start gap-2"><Info className="h-3.5 w-3.5 mt-0.5 text-blue-500 shrink-0" />Metrik total kesesuaian (Sesuai, Tidak Sesuai, Belum Diperiksa)</li>
+                  <li className="flex items-start gap-2"><AlertTriangle className="h-3.5 w-3.5 mt-0.5 text-amber-500 shrink-0" />Daftar temuan kritis teratas untuk tindak lanjut cepat</li>
+                </ul>
+              </div>
+              <div className="border border-zinc-200 rounded-2xl p-5 bg-white">
+                <h4 className="font-bold text-zinc-900 mb-3 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-teal-500" />
+                  Laporan Temuan &amp; Rekap
+                </h4>
+                <ul className="space-y-2 text-sm text-zinc-600">
+                  <li className="flex items-start gap-2"><Search className="h-3.5 w-3.5 mt-0.5 text-zinc-400 shrink-0" />Pencarian dan penyaringan data temuan berdasarkan status atau unit kerja</li>
+                  <li className="flex items-start gap-2"><Download className="h-3.5 w-3.5 mt-0.5 text-zinc-400 shrink-0" />Unduh laporan rekapitulasi pemeriksaan dalam format PDF/Excel</li>
+                  <li className="flex items-start gap-2"><Info className="h-3.5 w-3.5 mt-0.5 text-emerald-500 shrink-0" />Aset berstatus "Sudah Dihapus" secara otomatis dikeluarkan dari daftar pemeriksaan aktif</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -779,13 +829,18 @@ export default function DokumentasiPage() {
             {[
               {
                 title: "Manajemen OPD",
-                desc: "Konfigurasi nama OPD, kode, dan informasi organisasi yang ditampilkan di seluruh sistem.",
+                desc: "Konfigurasi nama OPD, kode, informasi organisasi, serta URL Basis QR Code (Domain Utama) untuk dinamisasi pelabelan fisik.",
                 icon: Database,
               },
               {
                 title: "Manajemen Pengguna",
                 desc: "Tambah, edit, dan nonaktifkan akun pengguna. Tetapkan peran dan reset password.",
                 icon: Users,
+              },
+              {
+                title: "Domain QR Code & Pengalihan",
+                desc: "Konfigurasi domain publik (misal: https://domain.com) untuk disematkan pada stiker QR Code. Rute lama /public-info/:id secara otomatis dialihkan ke /scan/:id.",
+                icon: Globe,
               },
               {
                 title: "Diagnostik Server",

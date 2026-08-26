@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
         destination: "/scan/:id",
         permanent: true,
       },
+      {
+        source: "/rekonsiliasi",
+        destination: "/rekonsiliasi/dashboard",
+        permanent: true,
+      },
     ];
   },
 };

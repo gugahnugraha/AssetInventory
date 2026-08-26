@@ -161,7 +161,7 @@ export function Sidebar({ user }: SidebarProps) {
     },
     {
       label: "Rekonsiliasi Aset",
-      href: "/rekonsiliasi",
+      href: "/rekonsiliasi/dashboard",
       icon: ClipboardCheck,
       roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
     },
