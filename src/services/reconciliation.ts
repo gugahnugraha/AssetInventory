@@ -5,6 +5,7 @@ import {
   FindingType,
   FindingSeverity,
   FindingRecommendation,
+  Kondisi,
 } from "@prisma/client";
 
 // 9 Default checklist items
@@ -433,7 +434,10 @@ export async function generateReportData(periodId: string, opdId: string) {
     }),
     getDashboardStats(periodId, opdId),
     prisma.assetReconciliation.findMany({
-      where: { periodId },
+      where: {
+        periodId,
+        asset: { kondisi: { not: Kondisi.SUDAH_DIHAPUS } }
+      },
       include: {
         asset: {
           include: {
@@ -455,12 +459,22 @@ export async function generateReportData(periodId: string, opdId: string) {
     // Findings grouped by distribution
     prisma.reconciliationFinding.groupBy({
       by: ["findingType"],
-      where: { reconciliation: { periodId } },
+      where: {
+        reconciliation: {
+          periodId,
+          asset: { kondisi: { not: Kondisi.SUDAH_DIHAPUS } }
+        }
+      },
       _count: true,
     }),
     prisma.reconciliationFinding.groupBy({
       by: ["severity"],
-      where: { reconciliation: { periodId } },
+      where: {
+        reconciliation: {
+          periodId,
+          asset: { kondisi: { not: Kondisi.SUDAH_DIHAPUS } }
+        }
+      },
       _count: true,
     }),
   ]);
