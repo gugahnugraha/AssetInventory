@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import prisma from "@/services/db";
 import { Role } from "@prisma/client";
 
-export async function updateOpdAction(id: string, name: string, code: string, numericCode?: string) {
+export async function updateOpdAction(id: string, name: string, code: string, numericCode?: string, qrCodeBaseUrl?: string) {
   const session = await auth();
   if (!session) {
     return { error: "Anda harus masuk terlebih dahulu." };
@@ -20,6 +20,7 @@ export async function updateOpdAction(id: string, name: string, code: string, nu
   const cleanName = name.trim();
   const cleanCode = code.trim().toUpperCase();
   const cleanNumericCode = numericCode ? numericCode.trim() : "";
+  const cleanQrCodeBaseUrl = qrCodeBaseUrl ? qrCodeBaseUrl.trim() : "";
 
   if (!cleanName || !cleanCode) {
     return { error: "Nama dan kode instansi wajib diisi." };
@@ -32,6 +33,7 @@ export async function updateOpdAction(id: string, name: string, code: string, nu
         nama: cleanName,
         kode: cleanCode,
         kodeNumeric: cleanNumericCode || null,
+        qrCodeBaseUrl: cleanQrCodeBaseUrl || null,
       },
     });
 

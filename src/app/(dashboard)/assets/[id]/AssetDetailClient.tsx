@@ -79,6 +79,11 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
   const [isGeneratingPdf, setIsGeneratingPdf] = React.useState(false);
   const [previewQrCodes, setPreviewQrCodes] = React.useState<Record<string, string>>({});
   const [isPreviewLoading, setIsPreviewLoading] = React.useState(false);
+  const getQrUrl = React.useCallback((assetItem: typeof asset) => {
+    const baseUrl = assetItem.opd?.qrCodeBaseUrl?.trim() || window.location.origin;
+    const cleanBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+    return `${cleanBaseUrl}/scan/${assetItem.id}`;
+  }, []);
 
   React.useEffect(() => {
     if (isPrintModalOpen) {
@@ -88,7 +93,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
         const generate = async () => {
           const codes: Record<string, string> = {};
           codes[asset.id] = await QRCode.toDataURL(
-            `${window.location.origin}/public-info/${asset.id}`,
+            getQrUrl(asset),
             { margin: 1, width: 120 }
           );
           setPreviewQrCodes(codes);
@@ -97,7 +102,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
         generate();
       });
     }
-  }, [isPrintModalOpen, asset.id]);
+  }, [isPrintModalOpen, asset.id, asset, getQrUrl]);
 
   const handleDownloadPdf = async () => {
     setIsGeneratingPdf(true);
@@ -108,7 +113,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
 
       const qrCodes: Record<string, string> = {};
       qrCodes[asset.id] = await QRCode.toDataURL(
-        `${window.location.origin}/public-info/${asset.id}`,
+        getQrUrl(asset),
         { margin: 1, width: 120 }
       );
       

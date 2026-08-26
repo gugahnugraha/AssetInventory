@@ -6,6 +6,15 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "50mb",
     },
   },
+  async redirects() {
+    return [
+      {
+        source: "/public-info/:id",
+        destination: "/scan/:id",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

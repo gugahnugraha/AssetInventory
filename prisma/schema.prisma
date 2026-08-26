@@ -28,6 +28,7 @@ model Opd {
   nama          String
   kode          String         @unique // e.g. "DISKOMINFO"
   kodeNumeric   String?        // e.g. "21.02.01.01"
+  qrCodeBaseUrl String?
   users         User[]
   distributions Distribution[]
   assets        Asset[]

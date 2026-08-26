@@ -168,6 +168,12 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
   const [isPreviewLoading, setIsPreviewLoading] = React.useState(false);
   const [isPrintWarningOpen, setIsPrintWarningOpen] = React.useState(false);
 
+  const getQrUrl = React.useCallback((assetItem: any) => {
+    const baseUrl = assetItem.opd?.qrCodeBaseUrl?.trim() || window.location.origin;
+    const cleanBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+    return `${cleanBaseUrl}/scan/${assetItem.id}`;
+  }, []);
+
   React.useEffect(() => {
     if (isPdfPreviewOpen && previewAssets.length > 0) {
       setIsPreviewLoading(true);
@@ -177,7 +183,7 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
           const codes: Record<string, string> = {};
           for (const asset of previewAssets) {
             codes[asset.id] = await QRCode.toDataURL(
-              `${window.location.origin}/public-info/${asset.id}`,
+              getQrUrl(asset),
               { margin: 1, width: 120 }
             );
           }
@@ -187,7 +193,7 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
         generate();
       });
     }
-  }, [isPdfPreviewOpen, previewAssets]);
+  }, [isPdfPreviewOpen, previewAssets, getQrUrl]);
 
   const getKondisiLabel = (kondisi: Kondisi) => {
     switch (kondisi) {
@@ -642,7 +648,7 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
         const qrCodes: Record<string, string> = {};
         for (const asset of previewAssets) {
           qrCodes[asset.id] = await QRCode.toDataURL(
-            `${window.location.origin}/public-info/${asset.id}`,
+            getQrUrl(asset),
             { margin: 1, width: 120 }
           );
         }

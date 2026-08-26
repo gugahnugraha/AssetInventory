@@ -44,6 +44,7 @@ export default async function SettingsPage() {
           nama: opd.nama,
           kode: opd.kode,
           kodeNumeric: opd.kodeNumeric || "",
+          qrCodeBaseUrl: opd.qrCodeBaseUrl || "",
         }}
         isR2Configured={isR2Configured}
         userRole={userRole}
