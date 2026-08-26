@@ -1,7 +1,6 @@
 import { S3Client, PutObjectCommand, CopyObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import prisma from "./db";
 import { EntityType, DocumentType } from "@prisma/client";
-import sharp from "sharp";
 
 // Verify environment variables for R2
 const isR2Configured =
@@ -54,6 +53,20 @@ export class DocumentService {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // Try dynamic import of sharp for optional compression
+    let sharpModule;
+    try {
+      sharpModule = await import("sharp");
+    } catch (importError) {
+      console.warn("Sharp image library is not available in this environment. Uploading original image raw without compression:", importError);
+      return {
+        buffer,
+        size: file.size,
+      };
+    }
+
+    const sharp = sharpModule.default || sharpModule;
+
     try {
       const processedBuffer = await sharp(buffer)
         .rotate() // preserves EXIF orientation
@@ -71,8 +84,11 @@ export class DocumentService {
         size: processedBuffer.length,
       };
     } catch (error) {
-      console.error("Error processing image with sharp:", error);
-      throw new Error("Gagal memproses dan mengompresi gambar.");
+      console.error("Error processing image with sharp, falling back to raw upload:", error);
+      return {
+        buffer,
+        size: file.size,
+      };
     }
   }
 
