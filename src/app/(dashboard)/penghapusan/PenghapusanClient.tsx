@@ -429,6 +429,7 @@ export function PenghapusanClient({ initialAssets, userRole, opdName, holders = 
                 assets={previewAssets} 
                 bastData={bastData}
                 holders={holders}
+                opdName={opdName}
               />
             </PDFViewer>
           </div>

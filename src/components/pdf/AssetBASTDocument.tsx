@@ -1,5 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
+import { DEFAULT_GOVERNMENT_NAME, DEFAULT_OPD_NAME } from '@/lib/constants';
 
 Font.register({
   family: 'Helvetica-Bold',
@@ -49,51 +50,54 @@ const styles = StyleSheet.create({
     paddingRight: 0,
   },
   headerTitleTop: {
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
+    marginBottom: 2,
   },
   headerTitleMain: {
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
+    marginBottom: 4,
   },
   headerAddress: {
-    fontSize: 9,
+    fontSize: 7,
     textAlign: 'center',
-    marginTop: 2,
-    fontStyle: 'italic',
+    marginBottom: 1,
   },
   documentTitleContainer: {
-    marginTop: 35,
-    marginBottom: 20,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 15,
   },
   documentTitle: {
-    fontSize: 12,
     fontFamily: 'Helvetica-Bold',
-    textDecoration: 'underline',
+    fontSize: 11,
     textAlign: 'center',
+    textDecoration: 'underline',
   },
   documentNumber: {
-    fontSize: 11,
-    marginTop: 2,
+    fontSize: 10,
     textAlign: 'center',
+    marginTop: 2,
   },
   paragraph: {
+    fontSize: 10,
     marginBottom: 10,
     textAlign: 'justify',
+    textIndent: 30,
   },
   indentedBlock: {
-    marginLeft: 20,
+    paddingLeft: 20,
     marginBottom: 10,
   },
   formRow: {
     display: 'flex',
     flexDirection: 'row',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   formNumber: {
     width: 15,
@@ -236,9 +240,11 @@ interface AssetBASTDocumentProps {
     pihakKeduaId: string;
   };
   holders?: any[];
+  opdName?: string;
+  governmentName?: string;
 }
 
-export const AssetBASTDocument = ({ assets, bastData, holders = [] }: AssetBASTDocumentProps) => {
+export const AssetBASTDocument = ({ assets, bastData, holders = [], opdName, governmentName }: AssetBASTDocumentProps) => {
   const pihakPertama = holders.find(h => h.id === bastData?.pihakPertamaId);
   const pihakKedua = holders.find(h => h.id === bastData?.pihakKeduaId);
 
@@ -273,6 +279,18 @@ export const AssetBASTDocument = ({ assets, bastData, holders = [] }: AssetBASTD
 
   const dayName = getDay(bastData?.tanggal);
   const dateOnly = getFullDate(bastData?.tanggal);
+  
+  const resolvedGovName = governmentName || DEFAULT_GOVERNMENT_NAME;
+  const resolvedOpdName = opdName || DEFAULT_OPD_NAME;
+  const isDiskominfo = resolvedOpdName.toLowerCase().includes("komunikasi") || resolvedOpdName.toLowerCase().includes("diskominfo");
+  
+  const addressText = isDiskominfo 
+    ? "Alamat: Jl. Raya Soreang KM. 17 Soreang 40911 Jawa Barat | Tlp. (022) 5897514"
+    : "";
+  const websiteEmailText = isDiskominfo 
+    ? "Website: https://diskominfo.bandungkab.go.id | Email: diskominfo@bandungkab.go.id"
+    : "";
+
   return (
     <Document title="Berita Acara Serah Terima (BAST) Barang Milik Daerah">
       <Page size="LEGAL" style={styles.page}>
@@ -283,14 +301,10 @@ export const AssetBASTDocument = ({ assets, bastData, holders = [] }: AssetBASTD
             <Image src="/logo.png" style={styles.logo} />
           </View>
           <View style={styles.headerCenter}>
-            <Text style={styles.headerTitleTop}>PEMERINTAH KABUPATEN BANDUNG</Text>
-            <Text style={styles.headerTitleMain}>DINAS KOMUNIKASI, INFORMATIKA, STATISTIK DAN PERSANDIAN</Text>
-            <Text style={styles.headerAddress}>
-              Alamat: Jl. Raya Soreang KM. 17 Soreang 40911 Jawa Barat | Tlp. (022) 5897514
-            </Text>
-            <Text style={styles.headerAddress}>
-              Website: https://diskominfo.bandungkab.go.id | Email: diskominfo@bandungkab.go.id
-            </Text>
+            <Text style={styles.headerTitleTop}>{resolvedGovName.toUpperCase()}</Text>
+            <Text style={styles.headerTitleMain}>{resolvedOpdName.toUpperCase()}</Text>
+            {addressText ? <Text style={styles.headerAddress}>{addressText}</Text> : null}
+            {websiteEmailText ? <Text style={styles.headerAddress}>{websiteEmailText}</Text> : null}
           </View>
         </View>
 
@@ -302,7 +316,7 @@ export const AssetBASTDocument = ({ assets, bastData, holders = [] }: AssetBASTD
 
         {/* Content */}
         <Text style={styles.paragraph}>
-          Pada hari ini {dayName}, tanggal {dateOnly} bertempat di Dinas Komunikasi, Informatika, Statistik dan Persandian Kabupaten Bandung, kami yang bertanda tangan di bawah ini:
+          Pada hari ini {dayName}, tanggal {dateOnly} bertempat di {resolvedOpdName}, kami yang bertanda tangan di bawah ini:
         </Text>
 
         <View style={styles.indentedBlock}>
