@@ -1,25 +1,44 @@
 import { NextResponse } from "next/server";
+import prisma from "@/services/db";
+import { getDashboardStats, getAllAssets } from "@/services/asset";
+import { getLaporanSummary } from "@/services/laporan";
 
 export async function GET() {
-  const log: string[] = ["Starting dynamic import test..."];
+  const log: string[] = ["Starting diagnostic..."];
   
   try {
-    log.push("Attempting dynamic import of sharp...");
+    const firstOpd = await prisma.opd.findFirst();
+    if (!firstOpd) {
+      return new Response("No OPD found in database", { status: 200 });
+    }
+    const testOpdId = firstOpd.id;
+    log.push(`Found test OPD: ${firstOpd.nama} (${testOpdId})`);
+
+    // 1. Test getAllAssets
+    log.push("Testing getAllAssets...");
     try {
-      const sharp = await import("sharp");
-      log.push("sharp imported successfully! Type of sharp: " + typeof sharp);
+      const assets = await getAllAssets(testOpdId);
+      log.push(`getAllAssets success: found ${assets.length} assets`);
     } catch (e: any) {
-      log.push(`sharp import FAILED: ${e.message}\nStack: ${e.stack}`);
+      log.push(`getAllAssets FAILED: ${e.message}\nStack: ${e.stack}`);
     }
 
-    log.push("Attempting dynamic import of prisma adapter...");
+    // 2. Test getDashboardStats
+    log.push("Testing getDashboardStats...");
     try {
-      const db = await import("@/services/db");
-      log.push("db imported successfully!");
-      const userCount = await db.default.user.count();
-      log.push(`user.count() succeeded: found ${userCount} users`);
+      const stats = await getDashboardStats(testOpdId);
+      log.push(`getDashboardStats success: total active=${stats.metrics.total}, total value=${stats.metrics.totalValue}`);
     } catch (e: any) {
-      log.push(`db import/query FAILED: ${e.message}\nStack: ${e.stack}`);
+      log.push(`getDashboardStats FAILED: ${e.message}\nStack: ${e.stack}`);
+    }
+
+    // 3. Test getLaporanSummary
+    log.push("Testing getLaporanSummary...");
+    try {
+      const summary = await getLaporanSummary(testOpdId);
+      log.push(`getLaporanSummary success: total assets=${summary.totalAssets}, total value=${summary.totalValue}`);
+    } catch (e: any) {
+      log.push(`getLaporanSummary FAILED: ${e.message}\nStack: ${e.stack}`);
     }
 
     return new Response(log.join("\n"), {
