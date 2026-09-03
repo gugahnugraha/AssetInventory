@@ -17,7 +17,9 @@ import {
   PieChart as PieChartIcon,
   BarChart3,
   ListTodo,
-  History as HistoryIcon
+  History as HistoryIcon,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 import { 
   BarChart, 
@@ -71,6 +73,55 @@ export function DashboardClient({ stats, recentLogs, recentMutations }: Dashboar
   
   // Tab State
   const [activeTab, setActiveTab] = React.useState("ringkasan");
+  
+  // Fullscreen State & Ref
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        const elem = containerRef.current;
+        if (elem) {
+          if (elem.requestFullscreen) {
+            await elem.requestFullscreen();
+          } else if ((elem as any).webkitRequestFullscreen) {
+            await (elem as any).webkitRequestFullscreen();
+          } else if ((elem as any).msRequestFullscreen) {
+            await (elem as any).msRequestFullscreen();
+          }
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        } else if ((document as any).msExitFullscreen) {
+          await (document as any).msExitFullscreen();
+        }
+      }
+    } catch (err) {
+      console.error("Gagal mengubah mode fullscreen:", err);
+    }
+  };
 
   const formatRupiah = (value: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -125,21 +176,54 @@ export function DashboardClient({ stats, recentLogs, recentMutations }: Dashboar
   };
 
   return (
-    <div className="space-y-4 pt-0 pb-8">
+    <div
+      ref={containerRef}
+      className={`space-y-4 pt-0 transition-all ${
+        isFullscreen
+          ? "bg-zinc-100 dark:bg-zinc-950 p-4 sm:p-6 lg:p-8 overflow-y-auto h-screen w-screen"
+          : "pb-8"
+      }`}
+    >
       {/* Hero Header Banner */}
       <div className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 px-4 sm:px-6 py-5 rounded-2xl shadow-sm mb-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex flex-col gap-1">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">Dashboard</h1>
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">Dashboard</h1>
+              {isFullscreen && (
+                <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs font-semibold py-0.5 px-2">
+                  Layar Penuh
+                </Badge>
+              )}
+            </div>
             <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium">
               Ringkasan data inventaris dan aktivitas perubahan aset SKPD.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={toggleFullscreen}
+              className="flex items-center gap-2 border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-800 shadow-xs font-semibold cursor-pointer transition-all"
+              title={isFullscreen ? "Keluar dari Layar Penuh (Esc)" : "Mode Layar Penuh (Fullscreen)"}
+            >
+              {isFullscreen ? (
+                <>
+                  <Minimize2 className="h-4 w-4 text-zinc-600" />
+                  <span>Keluar Layar Penuh</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="h-4 w-4 text-zinc-600" />
+                  <span>Layar Penuh</span>
+                </>
+              )}
+            </Button>
             <Link href="/assets/tambah" prefetch={false}>
               <Button className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer shadow-sm font-bold border-0 transition-all">
                 <Boxes className="h-4 w-4" />
-                Tambah Aset Baru
+                <span>Tambah Aset Baru</span>
               </Button>
             </Link>
           </div>
