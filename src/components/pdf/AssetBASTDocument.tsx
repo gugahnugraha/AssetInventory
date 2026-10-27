@@ -25,10 +25,10 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
-    paddingBottom: 0,
+    marginBottom: 6,
+    paddingBottom: 4,
     paddingTop: 0,
-    borderBottomWidth: 2,
+    borderBottomWidth: 2.5,
     borderBottomColor: '#000000',
     borderBottomStyle: 'solid',
   },
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingRight: 140,
+    paddingRight: 70,
   },
   headerTitleTop: {
     fontSize: 12,
@@ -65,13 +65,13 @@ const styles = StyleSheet.create({
     lineHeight: 1.25,
   },
   headerAddress: {
-    fontSize: 6.8,
+    fontSize: 7.5,
     textAlign: 'center',
     lineHeight: 1.15,
     marginBottom: 0,
   },
   headerAddressSecond: {
-    fontSize: 6.8,
+    fontSize: 7.5,
     textAlign: 'center',
     lineHeight: 1.15,
     marginTop: 1,
@@ -289,14 +289,19 @@ export const AssetBASTDocument = ({ assets, bastData, holders = [], opdName, gov
   const isDiskominfo = resolvedOpdName.toLowerCase().includes("komunikasi") || resolvedOpdName.toLowerCase().includes("diskominfo");
   
   const addressText = isDiskominfo 
-    ? "Alamat: Jl. Raya Soreang KM. 17 Soreang 40911 Jawa Barat | Tlp. (022) 5897514"
+    ? "Jl. Raya Soreang KM.17 Tlp (022) 5897514 Soreang 40911 Jawa Barat"
     : "";
   const websiteEmailText = isDiskominfo 
-    ? "Website: https://diskominfo.bandungkab.go.id | Email: diskominfo@bandungkab.go.id"
+    ? "Email : diskominfo@bandungkab.go.id  Website : www.bandungkab.go.id"
     : "";
 
   const formatKopOpdName = (name: string) => {
-    const upper = name.toUpperCase().trim();
+    let upper = name.toUpperCase().trim();
+
+    // Hapus "KABUPATEN BANDUNG" setelah kata persandian karena sudah diwakili oleh "PEMERINTAH KABUPATEN BANDUNG"
+    upper = upper.replace(/\s+KABUPATEN\s+BANDUNG\s*$/i, "").trim();
+    upper = upper.replace(/\s+KAB\.\s+BANDUNG\s*$/i, "").trim();
+
     if (upper.includes("DAN PERSANDIAN")) {
       const idx = upper.indexOf("DAN PERSANDIAN");
       const line1 = upper.slice(0, idx).trim();
