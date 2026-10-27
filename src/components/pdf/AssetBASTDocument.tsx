@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingRight: 70,
+    paddingRight: 140,
   },
   headerTitleTop: {
     fontSize: 12,
@@ -65,13 +65,13 @@ const styles = StyleSheet.create({
     lineHeight: 1.25,
   },
   headerAddress: {
-    fontSize: 7,
+    fontSize: 6.8,
     textAlign: 'center',
     lineHeight: 1.15,
     marginBottom: 0,
   },
   headerAddressSecond: {
-    fontSize: 7,
+    fontSize: 6.8,
     textAlign: 'center',
     lineHeight: 1.15,
     marginTop: 1,
