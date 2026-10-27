@@ -7,6 +7,9 @@ Font.register({
   src: 'https://fonts.gstatic.com/s/helveticaneue/v70/1Ptsg8zYS_SKggPNyCg4QxlF_8s.ttf'
 });
 
+// Nonaktifkan pemotongan kata (hyphenation) otomatis agar kata seperti KABUPATEN atau PERSANDIAN tidak terpotong
+Font.registerHyphenationCallback((word) => [word]);
+
 const styles = StyleSheet.create({
   page: {
     paddingTop: '10mm',
@@ -60,11 +63,20 @@ const styles = StyleSheet.create({
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
     marginBottom: 4,
+    lineHeight: 1.25,
   },
   headerAddress: {
     fontSize: 7,
     textAlign: 'center',
-    marginBottom: 1,
+    lineHeight: 1.15,
+    marginBottom: 0,
+  },
+  headerAddressSecond: {
+    fontSize: 7,
+    textAlign: 'center',
+    lineHeight: 1.15,
+    marginTop: 1,
+    marginBottom: 2,
   },
   documentTitleContainer: {
     display: 'flex',
@@ -157,33 +169,26 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   colNama: {
-    width: '20%',
+    width: '25%',
     padding: 4,
     borderRightWidth: 1,
     borderRightColor: '#000',
   },
   colMerk: {
-    width: '18%',
+    width: '22%',
     padding: 4,
     borderRightWidth: 1,
     borderRightColor: '#000',
   },
   colRegister: {
-    width: '27%',
+    width: '30%',
     padding: 4,
     borderRightWidth: 1,
     borderRightColor: '#000',
     textAlign: 'center',
   },
   colJumlah: {
-    width: '7%',
-    padding: 4,
-    borderRightWidth: 1,
-    borderRightColor: '#000',
-    textAlign: 'center',
-  },
-  colKondisi: {
-    width: '13%',
+    width: '8%',
     padding: 4,
     borderRightWidth: 1,
     borderRightColor: '#000',
@@ -291,6 +296,23 @@ export const AssetBASTDocument = ({ assets, bastData, holders = [], opdName, gov
     ? "Website: https://diskominfo.bandungkab.go.id | Email: diskominfo@bandungkab.go.id"
     : "";
 
+  const formatKopOpdName = (name: string) => {
+    const upper = name.toUpperCase().trim();
+    if (upper.includes("DAN PERSANDIAN")) {
+      const idx = upper.indexOf("DAN PERSANDIAN");
+      const line1 = upper.slice(0, idx).trim();
+      const line2 = upper.slice(idx).trim();
+      return `${line1}\n${line2}`;
+    }
+    if (upper.length > 45 && upper.includes(" DAN ")) {
+      const idx = upper.indexOf(" DAN ");
+      const line1 = upper.slice(0, idx).trim();
+      const line2 = upper.slice(idx + 1).trim();
+      return `${line1}\n${line2}`;
+    }
+    return upper;
+  };
+
   return (
     <Document title="Berita Acara Serah Terima (BAST) Barang Milik Daerah">
       <Page size="LEGAL" style={styles.page}>
@@ -302,9 +324,9 @@ export const AssetBASTDocument = ({ assets, bastData, holders = [], opdName, gov
           </View>
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitleTop}>{resolvedGovName.toUpperCase()}</Text>
-            <Text style={styles.headerTitleMain}>{resolvedOpdName.toUpperCase()}</Text>
+            <Text style={styles.headerTitleMain}>{formatKopOpdName(resolvedOpdName)}</Text>
             {addressText ? <Text style={styles.headerAddress}>{addressText}</Text> : null}
-            {websiteEmailText ? <Text style={styles.headerAddress}>{websiteEmailText}</Text> : null}
+            {websiteEmailText ? <Text style={styles.headerAddressSecond}>{websiteEmailText}</Text> : null}
           </View>
         </View>
 
@@ -412,15 +434,9 @@ export const AssetBASTDocument = ({ assets, bastData, holders = [], opdName, gov
             <Text style={styles.colMerk}>Merk / Tipe</Text>
             <Text style={styles.colRegister}>No. Register / Kode Aset</Text>
             <Text style={styles.colJumlah}>Jumlah</Text>
-            <Text style={styles.colKondisi}>Kondisi</Text>
             <Text style={styles.colTahun}>Tahun</Text>
           </View>
           {assets.map((asset, index) => {
-            const kondisiText = asset.kondisi === 'RUSAK_BERAT' ? 'Rusak Berat' :
-              asset.kondisi === 'RUSAK_RINGAN' ? 'Rusak Ringan' :
-                asset.kondisi === 'HILANG' ? 'Hilang' :
-                  asset.kondisi === 'NORMAL' ? 'Baik' :
-                    asset.kondisi === 'SUDAH_DIHAPUS' ? 'Sudah Dihapus' : asset.kondisi;
             return (
               <View style={styles.tableRow} key={asset.id || index}>
                 <Text style={styles.colNo}>{index + 1}</Text>
@@ -428,7 +444,6 @@ export const AssetBASTDocument = ({ assets, bastData, holders = [], opdName, gov
                 <Text style={styles.colMerk}>{asset.merkType || '-'}</Text>
                 <Text style={styles.colRegister}>{asset.kodeLengkap}</Text>
                 <Text style={styles.colJumlah}>1</Text>
-                <Text style={styles.colKondisi}>{kondisiText}</Text>
                 <Text style={styles.colTahun}>{asset.tahunPembelian || '-'}</Text>
               </View>
             );
