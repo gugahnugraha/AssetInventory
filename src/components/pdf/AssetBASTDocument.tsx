@@ -52,17 +52,17 @@ const styles = StyleSheet.create({
     paddingRight: 70,
   },
   headerTitleTop: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
     marginBottom: 2,
   },
   headerTitleMain: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
     marginBottom: 4,
-    lineHeight: 1.25,
+    lineHeight: 1.2,
   },
   headerAddress: {
     fontSize: 7.5,
