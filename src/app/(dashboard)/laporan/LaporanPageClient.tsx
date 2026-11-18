@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   FileBarChart2,
   LayoutDashboard,
@@ -24,6 +25,7 @@ import {
   FileText,
   ImageOff,
   BarChart3,
+  DoorClosed,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Role } from "@prisma/client";
@@ -1201,6 +1203,15 @@ export function LaporanPageClient({
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
+            <Link href="/ruangan">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs gap-1.5 cursor-pointer text-teal-700 border-teal-300 hover:bg-teal-50"
+              >
+                <DoorClosed className="h-3.5 w-3.5" /> Kartu Inventaris Ruangan (KIR)
+              </Button>
+            </Link>
             <Button
               variant="outline"
               size="sm"

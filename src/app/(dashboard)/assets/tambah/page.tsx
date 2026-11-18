@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { getAllDistributions } from "@/services/distribution";
+import { getAllRooms } from "@/services/room";
 import { getAllHolders } from "@/services/holder";
 import { getAllCategories } from "@/services/category";
 import { getAllKibs } from "@/services/kib";
@@ -28,8 +29,9 @@ export default async function AddAssetPage() {
   const opdId = session.user.opdId;
 
   try {
-    const [distributions, holders, categories, kibs] = await Promise.all([
+    const [distributions, rooms, holders, categories, kibs] = await Promise.all([
       getAllDistributions(opdId),
+      getAllRooms(opdId),
       getAllHolders(opdId),
       getAllCategories(),
       getAllKibs()
@@ -39,6 +41,13 @@ export default async function AddAssetPage() {
     const serializedDistributions = distributions.map((dist) => ({
       id: dist.id,
       nama: dist.nama,
+    }));
+
+    const serializedRooms = rooms.map((room) => ({
+      id: room.id,
+      nama: room.nama,
+      kode: room.kode,
+      distributionId: room.distributionId,
     }));
 
     const serializedHolders = holders.map((holder) => ({
@@ -70,6 +79,7 @@ export default async function AddAssetPage() {
     return (
       <AssetFormClient
         distributions={serializedDistributions}
+        rooms={serializedRooms}
         holders={serializedHolders}
         categories={serializedCategories}
         kibs={serializedKibs}

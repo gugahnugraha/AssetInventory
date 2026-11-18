@@ -135,13 +135,14 @@ const formatNumberWithSeparator = (value: number | string) => {
 interface AssetFormClientProps {
   initialData?: any; // Pre-filled data if edit mode
   distributions: any[];
+  rooms?: any[];
   holders: any[];
   categories: any[];
   kibs: any[];
   userRole?: string;
 }
 
-export function AssetFormClient({ initialData, distributions, holders, categories, kibs, userRole }: AssetFormClientProps) {
+export function AssetFormClient({ initialData, distributions, rooms = [], holders, categories, kibs, userRole }: AssetFormClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = React.useState<string | null>(null);
@@ -219,6 +220,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
         .min(1900, "Tahun tidak valid")
         .max(new Date().getFullYear(), `Tahun maksimal ${new Date().getFullYear()}`),
       distributionId: z.string().min(1, "Bidang/Distribusi wajib diisi"),
+      roomId: z.string().nullable().optional(),
       holderId: z.string().nullable().optional(),
       kondisi: z.nativeEnum(Kondisi),
       catatan: z.string().nullable().optional(),
@@ -276,6 +278,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
         harga: initialData.harga as number,
         tahunPembelian: initialData.tahunPembelian as number,
         distributionId: initialData.distributionId as string,
+        roomId: (initialData.roomId as string) || null,
         holderId: initialData.holderId as string | null,
         kondisi: initialData.kondisi,
         catatan: initialData.catatan || "",
@@ -303,6 +306,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
         harga: 0,
         tahunPembelian: new Date().getFullYear(),
         distributionId: "",
+        roomId: null,
         holderId: null,
         kondisi: Kondisi.NORMAL,
         catatan: "",
@@ -460,15 +464,25 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
     return holders.filter(h => h.distributionId === watchDistributionId);
   }, [holders, watchDistributionId]);
 
-  // If selected distribution changes, reset holderId if it doesn't belong to the new distribution
+  // Filter rooms based on selected distribution/department
+  const filteredRooms = React.useMemo(() => {
+    if (!watchDistributionId) return [];
+    return (rooms || []).filter((r: any) => r.distributionId === watchDistributionId);
+  }, [rooms, watchDistributionId]);
+
+  // If selected distribution changes, reset holderId & roomId if they don't belong to the new distribution
   React.useEffect(() => {
     if (watchDistributionId) {
       const isHolderValid = filteredHolders.some(h => h.id === watch("holderId"));
       if (!isHolderValid) {
         setValue("holderId", null);
       }
+      const isRoomValid = filteredRooms.some((r: any) => r.id === watch("roomId"));
+      if (!isRoomValid) {
+        setValue("roomId", null);
+      }
     }
-  }, [watchDistributionId, filteredHolders, setValue, watch]);
+  }, [watchDistributionId, filteredHolders, filteredRooms, setValue, watch]);
 
   // Handle Photo Upload
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1052,7 +1066,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
             )}
 
             {/* Penempatan */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider flex items-center gap-1">
                   Bidang / Distribusi <span className="text-rose-500">*</span>
@@ -1060,7 +1074,7 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
                 <select
                   {...register("distributionId")}
                   disabled={disableFields}
-                  className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 max-w-md"
+                  className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
                 >
                   <option value="">Pilih Bidang</option>
                   {distributions.map((d) => (
@@ -1072,14 +1086,33 @@ export function AssetFormClient({ initialData, distributions, holders, categorie
 
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
+                  Ruangan (KIR)
+                </label>
+                <select
+                  {...register("roomId")}
+                  disabled={disableFields}
+                  className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                >
+                  <option value="">-- Belum Ditentukan / Ruangan Umum --</option>
+                  {filteredRooms.map((r: any) => (
+                    <option key={r.id} value={r.id}>
+                      {r.nama} ({r.kode})
+                    </option>
+                  ))}
+                </select>
+                {errors.roomId && <p className="text-xs text-rose-500 mt-1">{errors.roomId.message}</p>}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
                   Pemegang Barang
                 </label>
                 <select
                   {...register("holderId")}
                   disabled={disableFields}
-                  className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 max-w-md"
+                  className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
                 >
-                  <option value="">Disimpan di Gudang / Inventaris Umum</option>
+                  <option value="">Disimpan di Ruangan / Umum</option>
                   {filteredHolders.map((h) => (
                     <option key={h.id} value={h.id}>{h.nama} ({h.nip})</option>
                   ))}

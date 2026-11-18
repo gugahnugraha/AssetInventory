@@ -126,6 +126,7 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
           }
         },
         distribution: true,
+        room: true,
         holder: true,
         attributes: {
           include: {
@@ -160,6 +161,7 @@ export async function getAssetById(id: string) {
           }
         },
         distribution: true,
+        room: true,
         holder: true,
         attributes: {
           include: {
@@ -252,6 +254,7 @@ export interface CreateAssetInput {
   harga: number;
   tahunPembelian: number;
   distributionId: string;
+  roomId?: string | null;
   holderId?: string | null;
   kondisi: Kondisi;
   catatan?: string | null;
@@ -316,6 +319,7 @@ export async function createAsset(data: CreateAssetInput, userId: string) {
           harga: data.harga,
           tahunPembelian: data.tahunPembelian,
           distributionId: data.distributionId,
+          roomId: (data.roomId && data.roomId.trim() !== "" && data.roomId !== "none" && data.roomId !== "null") ? data.roomId : null,
           holderId: (data.holderId && data.holderId.trim() !== "" && data.holderId !== "none" && data.holderId !== "null") ? data.holderId : null,
           kondisi: data.kondisi,
           catatan: data.catatan,
@@ -414,6 +418,7 @@ export interface UpdateAssetInput {
   harga?: number;
   tahunPembelian?: number;
   distributionId?: string;
+  roomId?: string | null;
   holderId?: string | null;
   kondisi?: Kondisi;
   catatan?: string | null;
@@ -541,6 +546,9 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
           harga: data.harga,
           tahunPembelian: data.tahunPembelian,
           distributionId: data.distributionId,
+          roomId: data.roomId !== undefined
+            ? ((data.roomId && data.roomId.trim() !== "" && data.roomId !== "none" && data.roomId !== "null") ? data.roomId : null)
+            : undefined,
           holderId: data.holderId !== undefined
             ? ((data.holderId && data.holderId.trim() !== "" && data.holderId !== "none" && data.holderId !== "null") ? data.holderId : null)
             : undefined,
@@ -746,6 +754,7 @@ export async function getDashboardStats(opdId: string) {
       },
       include: {
         distribution: true,
+        room: true,
         holder: true,
         category: {
           include: {

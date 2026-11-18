@@ -64,6 +64,14 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
         createdAt: asset.distribution.createdAt.toISOString(),
         updatedAt: asset.distribution.updatedAt.toISOString(),
       },
+      room: (asset as any).room
+        ? {
+            id: (asset as any).room.id,
+            nama: (asset as any).room.nama,
+            kode: (asset as any).room.kode,
+            lantai: (asset as any).room.lantai,
+          }
+        : null,
       holder: asset.holder
         ? {
             ...asset.holder,

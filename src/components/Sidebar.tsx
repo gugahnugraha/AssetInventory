@@ -41,7 +41,7 @@ export function Sidebar({ user }: SidebarProps) {
   }, [pathname]);
 
   const isMasterPathActive = React.useMemo(() => {
-    const masterSubPaths = ["/distribusi", "/pemegang", "/kategori", "/kib"];
+    const masterSubPaths = ["/distribusi", "/ruangan", "/pemegang", "/kategori", "/kib"];
     return masterSubPaths.some(path => pathname.startsWith(path));
   }, [pathname]);
 
@@ -135,6 +135,11 @@ export function Sidebar({ user }: SidebarProps) {
         {
           label: "Bidang & Unit Kerja",
           href: "/distribusi",
+          roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
+        },
+        {
+          label: "Ruangan (KIR)",
+          href: "/ruangan",
           roles: [Role.ADMINISTRATOR, Role.OPERATOR, Role.MANAGER, Role.DEMO],
         },
         {

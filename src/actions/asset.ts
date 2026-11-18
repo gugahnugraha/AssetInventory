@@ -59,6 +59,7 @@ export async function createAssetAction(data: Omit<CreateAssetInput, "opdId">) {
     );
 
     revalidatePath("/assets");
+    revalidatePath("/ruangan");
     revalidatePath("/dashboard");
     return { success: true, asset };
   } catch (error: any) {
@@ -96,6 +97,7 @@ export async function deleteAssetAction(id: string) {
     await deleteAsset(id, session.user.id);
 
     revalidatePath("/assets");
+    revalidatePath("/ruangan");
     revalidatePath("/dashboard");
     return { success: true };
   } catch (error: any) {
@@ -132,6 +134,7 @@ export async function setPrimaryPhotoAction(assetId: string, photoId: string) {
 
     revalidatePath(`/assets/${assetId}`);
     revalidatePath("/assets");
+    revalidatePath("/ruangan");
     revalidatePath("/dashboard");
     return { success: true };
   } catch (error: any) {
@@ -151,6 +154,7 @@ export async function deleteAssetPhotoAction(assetId: string, photoId: string) {
 
     revalidatePath(`/assets/${assetId}`);
     revalidatePath("/assets");
+    revalidatePath("/ruangan");
     revalidatePath("/dashboard");
     return { success: true };
   } catch (error: any) {
@@ -168,6 +172,7 @@ export async function importAssetsBatchAction(rows: ExcelAssetRow[], defaultDist
     const result = await importAssetsBatch(rows, session.user.opdId, defaultDistributionId, session.user.id);
     
     revalidatePath("/assets");
+    revalidatePath("/ruangan");
     revalidatePath("/dashboard");
     return { success: true, result };
   } catch (error: any) {

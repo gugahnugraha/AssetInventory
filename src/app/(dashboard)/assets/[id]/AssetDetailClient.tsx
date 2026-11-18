@@ -18,7 +18,8 @@ import {
   ImageIcon,
   ArrowRightLeft,
   Star,
-  Printer
+  Printer,
+  DoorClosed
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -519,6 +520,27 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
                   <div>
                     <p className="font-semibold text-zinc-800 dark:text-zinc-200">Bidang Distribusi</p>
                     <p className="text-zinc-800 dark:text-zinc-400 mt-0.5 font-medium">{asset.distribution.nama}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <DoorClosed className="h-5 w-5 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-zinc-800 dark:text-zinc-200">Ruangan (KIR)</p>
+                    {asset.room ? (
+                      <div className="mt-0.5">
+                        <Link
+                          href={`/ruangan/${asset.room.id}`}
+                          className="text-teal-700 dark:text-teal-400 font-semibold hover:underline inline-flex items-center gap-1"
+                        >
+                          {asset.room.nama} ({asset.room.kode})
+                        </Link>
+                        {asset.room.lantai && (
+                          <p className="text-xs text-zinc-500">{asset.room.lantai}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-zinc-500 italic mt-0.5">Belum dialokasikan ke ruangan (Inventaris Umum)</p>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-start gap-3">

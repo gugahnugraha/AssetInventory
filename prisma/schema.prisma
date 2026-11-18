@@ -62,6 +62,7 @@ model Distribution {
   kode      Int      // e.g. 1, 2, 3
   opdId     String
   opd       Opd      @relation(fields: [opdId], references: [id])
+  rooms         Room[]
   holders       Holder[]
   assets        Asset[]
   fromHistories AssetHistory[] @relation("FromDistributionHistory")
@@ -73,6 +74,25 @@ model Distribution {
   @@unique([kode, opdId])
 }
 
+model Room {
+  id             String         @id @default(uuid())
+  nama           String         // e.g. "Ruang Rapat", "Ruang Staf", "Ruang Server"
+  kode           String         // e.g. "R-01", "01"
+  lantai         String?        // e.g. "Lantai 2"
+  distributionId String
+  distribution   Distribution   @relation(fields: [distributionId], references: [id], onDelete: Cascade)
+  pjHolderId     String?
+  pjHolder       Holder?        @relation("RoomPjHolder", fields: [pjHolderId], references: [id])
+  assets         Asset[]
+  fromHistories  AssetHistory[] @relation("FromRoomHistory")
+  toHistories    AssetHistory[] @relation("ToRoomHistory")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@unique([nama, distributionId])
+  @@unique([kode, distributionId])
+}
+
 model Holder {
   id             String       @id @default(uuid())
   nama           String
@@ -80,6 +100,7 @@ model Holder {
   jabatan        String
   distributionId String
   distribution   Distribution @relation(fields: [distributionId], references: [id])
+  managedRooms   Room[]       @relation("RoomPjHolder")
   assets         Asset[]
   fromHistories  AssetHistory[] @relation("FromHolderHistory")
   toHistories    AssetHistory[] @relation("ToHolderHistory")
@@ -159,6 +180,8 @@ model Asset {
   tahunPembelian Int
   distributionId String
   distribution   Distribution      @relation(fields: [distributionId], references: [id])
+  roomId         String?
+  room           Room?             @relation(fields: [roomId], references: [id])
   holderId       String?
   holder         Holder?           @relation(fields: [holderId], references: [id])
   kondisi        Kondisi           @default(NORMAL)
@@ -190,6 +213,7 @@ model AuditLog {
 enum MutationType {
   HOLDER
   DISTRIBUTION
+  ROOM
   CONDITION
   MULTIPLE
 }
@@ -207,6 +231,10 @@ model AssetHistory {
   fromDistribution   Distribution?          @relation("FromDistributionHistory", fields: [fromDistributionId], references: [id])
   toDistributionId   String?
   toDistribution     Distribution?          @relation("ToDistributionHistory", fields: [toDistributionId], references: [id])
+  fromRoomId         String?
+  fromRoom           Room?                  @relation("FromRoomHistory", fields: [fromRoomId], references: [id])
+  toRoomId           String?
+  toRoom             Room?                  @relation("ToRoomHistory", fields: [toRoomId], references: [id])
   fromCondition      Kondisi?
   toCondition        Kondisi?
   beritaAcaraNumber  String

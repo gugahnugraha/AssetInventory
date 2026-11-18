@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { getAssetById } from "@/services/asset";
 import { DocumentService } from "@/services/document";
 import { getAllDistributions } from "@/services/distribution";
+import { getAllRooms } from "@/services/room";
 import { getAllHolders } from "@/services/holder";
 import { getAllCategories } from "@/services/category";
 import { getAllKibs } from "@/services/kib";
@@ -40,8 +41,9 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
       notFound();
     }
 
-    const [distributions, holders, categories, kibs] = await Promise.all([
+    const [distributions, rooms, holders, categories, kibs] = await Promise.all([
       getAllDistributions(opdId),
+      getAllRooms(opdId),
       getAllHolders(opdId),
       getAllCategories(),
       getAllKibs()
@@ -65,6 +67,7 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
       harga: asset.harga,
       tahunPembelian: asset.tahunPembelian,
       distributionId: asset.distributionId,
+      roomId: asset.roomId || null,
       holderId: asset.holderId,
       kondisi: asset.kondisi,
       catatan: asset.catatan,
@@ -87,6 +90,13 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
     const serializedDistributions = distributions.map((dist) => ({
       id: dist.id,
       nama: dist.nama,
+    }));
+
+    const serializedRooms = rooms.map((room) => ({
+      id: room.id,
+      nama: room.nama,
+      kode: room.kode,
+      distributionId: room.distributionId,
     }));
 
     const serializedHolders = holders.map((holder) => ({
@@ -119,6 +129,7 @@ export default async function EditAssetPage({ params }: EditAssetPageProps) {
       <AssetFormClient
         initialData={serializedAsset}
         distributions={serializedDistributions}
+        rooms={serializedRooms}
         holders={serializedHolders}
         categories={serializedCategories}
         kibs={serializedKibs}
