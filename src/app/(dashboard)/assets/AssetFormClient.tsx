@@ -15,6 +15,7 @@ import { Kondisi } from "@prisma/client";
 import {
   ArrowLeft,
   Upload,
+  Camera,
   Trash2,
   Check,
   Star,
@@ -24,6 +25,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import Link from "next/link";
+import { CameraCaptureModal } from "@/components/CameraCaptureModal";
 
 const BRANDS_BY_CATEGORY: Record<string, string[]> = {
   "Kendaraan": [
@@ -151,6 +153,7 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
   );
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [uploading, setUploading] = React.useState(false);
+  const [isCameraOpen, setIsCameraOpen] = React.useState(false);
   const [deletePhotoIds, setDeletePhotoIds] = React.useState<string[]>([]);
 
   // Dialog state variables
@@ -492,20 +495,18 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
     }
   }, [watchDistributionId, filteredHolders, filteredRooms, setValue, watch]);
 
-  // Handle Photo Upload
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+  // Shared helper to upload one or more image Files (file picker or camera capture)
+  const uploadPhotoFiles = async (files: File[]) => {
     if (!files || files.length === 0) return;
 
     const existingPhotos = (getValues("photos") as any[]) || [];
     const remainingSlots = Math.max(0, 5 - existingPhotos.length);
     if (remainingSlots === 0) {
       setError("Maksimal 5 foto dokumentasi per aset.");
-      e.target.value = "";
       return;
     }
 
-    const selectedFiles = Array.from(files).slice(0, remainingSlots);
+    const selectedFiles = files.slice(0, remainingSlots);
     const skippedCount = files.length - selectedFiles.length;
 
     setUploading(true);
@@ -567,9 +568,15 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
         setValue("fotoUtama", newPhotos[0].url);
       }
     } finally {
-      e.target.value = "";
       setUploading(false);
     }
+  };
+
+  // Handle Photo Upload from file input
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    e.target.value = "";
+    await uploadPhotoFiles(files);
   };
 
   // Remove Photo
@@ -1210,30 +1217,42 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
                 Foto Dokumentasi Aset
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                {/* Column 1: Upload box */}
-                <div className="relative border-2 border-dashed border-zinc-300 dark:border-zinc-800 rounded-lg p-5 flex flex-col items-center justify-center text-center hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors h-[130px]">
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                    onChange={handlePhotoUpload}
-                    disabled={uploading}
-                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer disabled:cursor-not-allowed"
-                  />
-                  {uploading ? (
-                    <div className="flex flex-col items-center gap-1.5">
-                      <Loader2 className="h-6 w-6 text-emerald-600 animate-spin" />
-                      <span className="text-[11px] font-medium text-zinc-500">Mengupload...</span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-1.5">
-                      <Upload className="h-6 w-6 text-emerald-600" />
-                      <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
-                        Klik atau Tarik Foto ke Sini
-                      </span>
-                      <span className="text-[10px] text-zinc-500">JPG, PNG, WEBP s/d 5MB</span>
-                    </div>
-                  )}
+                {/* Column 1: Upload box & Camera button */}
+                <div className="space-y-2">
+                  <div className="relative border-2 border-dashed border-zinc-300 dark:border-zinc-800 rounded-lg p-5 flex flex-col items-center justify-center text-center hover:bg-zinc-50 dark:hover:bg-zinc-900/30 transition-colors h-[130px]">
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handlePhotoUpload}
+                      disabled={uploading || watchPhotos.length >= 5}
+                      className="absolute inset-0 opacity-0 w-full h-full cursor-pointer disabled:cursor-not-allowed"
+                    />
+                    {uploading ? (
+                      <div className="flex flex-col items-center gap-1.5">
+                        <Loader2 className="h-6 w-6 text-emerald-600 animate-spin" />
+                        <span className="text-[11px] font-medium text-zinc-500">Mengupload...</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-1.5">
+                        <Upload className="h-6 w-6 text-emerald-600" />
+                        <span className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                          Klik atau Tarik Foto ke Sini
+                        </span>
+                        <span className="text-[10px] text-zinc-500">JPG, PNG, WEBP s/d 5MB</span>
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsCameraOpen(true)}
+                    disabled={uploading || watchPhotos.length >= 5}
+                    className="w-full h-9 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                  >
+                    <Camera className="h-4 w-4" />
+                    Ambil Foto dari Kamera (Laptop / Android)
+                  </Button>
                 </div>
 
                 {/* Column 2: Uploaded Previews */}
@@ -1333,6 +1352,12 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
           </CardContent>
         </Card>
       </form>
+
+      <CameraCaptureModal
+        isOpen={isCameraOpen}
+        onClose={() => setIsCameraOpen(false)}
+        onCapture={(file) => uploadPhotoFiles([file])}
+      />
 
       {/* Success/Error Dialog Notification */}
       <Dialog 
