@@ -75,12 +75,26 @@ export async function updateAssetAction(id: string, data: UpdateAssetInput) {
   try {
     const session = await requireWriteAccess();
 
-    const asset = await updateAsset(id, data, session.user.id);
+    const { asset, activePhotos } = await updateAsset(id, data, session.user.id);
 
     revalidatePath("/assets");
     revalidatePath(`/assets/${id}`);
+    revalidatePath(`/assets/${id}/edit`);
     revalidatePath("/dashboard");
-    return { success: true, asset };
+    return {
+      success: true,
+      asset,
+      fotoUtama: asset.fotoUtama ? DocumentService.generateFileUrl(asset.fotoUtama) : "",
+      photos: activePhotos.map((photo) => ({
+        id: photo.id,
+        url: DocumentService.generateFileUrl(photo.objectKey),
+        objectKey: photo.objectKey,
+        originalFileName: photo.originalFileName,
+        mimeType: photo.mimeType,
+        size: photo.size,
+        isPrimary: photo.isPrimary,
+      })),
+    };
   } catch (error: any) {
     console.error("Error in updateAssetAction:", error);
     return { error: error.message || "Gagal memperbarui data aset." };

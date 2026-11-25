@@ -299,97 +299,115 @@ export async function createAsset(data: CreateAssetInput, userId: string) {
       throw new Error(`Aset dengan kode lengkap ${kodeLengkap} sudah terdaftar.`);
     }
 
-    const createdAsset = await prisma.$transaction(async (tx) => {
-      // 1. Create the Asset
-      const asset = await tx.asset.create({
-        data: {
-          kode1: k1,
-          kode2: k2,
-          kode3: k3,
-          kode4: k4,
-          kode5: k5,
-          nomorRegister: registerInt,
-          kodeLengkap,
-          categoryId: data.categoryId,
-          namaAset: data.namaAset,
-          merkType: data.merkType,
-          material: data.material || null,
-          caraPerolehan: data.caraPerolehan || null,
-          spesifikasi: data.spesifikasi || null,
-          harga: data.harga,
-          tahunPembelian: data.tahunPembelian,
-          distributionId: data.distributionId,
-          roomId: (data.roomId && data.roomId.trim() !== "" && data.roomId !== "none" && data.roomId !== "null") ? data.roomId : null,
-          holderId: (data.holderId && data.holderId.trim() !== "" && data.holderId !== "none" && data.holderId !== "null") ? data.holderId : null,
-          kondisi: data.kondisi,
-          catatan: data.catatan,
-          fotoUtama: null, // will be updated if primary photo exists
-          opdId: data.opdId,
-        },
-      });
+    const assetId = crypto.randomUUID();
+    const validPhotos = (data.photos || []).filter((p) => !!p.tempKey);
+    const hasPrimaryPhoto = validPhotos.some((p) => p.isPrimary);
+    const normalizedPhotos = validPhotos.map((p, index) => ({
+      ...p,
+      isPrimary: hasPrimaryPhoto ? p.isPrimary : index === 0,
+    }));
 
-      // 2. Commit photos in R2 & DB Document
-      if (data.photos && data.photos.length > 0) {
-        for (const p of data.photos) {
-          if (p.isPrimary) {
-            const targetKey = DocumentService.generateObjectKey(asset.id, "PRIMARY");
-            await DocumentService.commitPrimaryPhoto(p.tempKey, asset.id, userId, {
+    // Copy temporary photos in R2 BEFORE opening the DB transaction so network latency cannot expire Prisma tx
+    const preparedPhotos = await DocumentService.copyTemporaryAssetPhotos(assetId, normalizedPhotos);
+    committedKeys = preparedPhotos.map((p) => p.objectKey);
+    const primaryPrepared = preparedPhotos.find((p) => p.isPrimary) || preparedPhotos[0] || null;
+
+    const createdAsset = await prisma.$transaction(
+      async (tx) => {
+        // 1. Create the Asset
+        const asset = await tx.asset.create({
+          data: {
+            id: assetId,
+            kode1: k1,
+            kode2: k2,
+            kode3: k3,
+            kode4: k4,
+            kode5: k5,
+            nomorRegister: registerInt,
+            kodeLengkap,
+            categoryId: data.categoryId,
+            namaAset: data.namaAset,
+            merkType: data.merkType,
+            material: data.material || null,
+            caraPerolehan: data.caraPerolehan || null,
+            spesifikasi: data.spesifikasi || null,
+            harga: data.harga,
+            tahunPembelian: data.tahunPembelian,
+            distributionId: data.distributionId,
+            roomId: (data.roomId && data.roomId.trim() !== "" && data.roomId !== "none" && data.roomId !== "null") ? data.roomId : null,
+            holderId: (data.holderId && data.holderId.trim() !== "" && data.holderId !== "none" && data.holderId !== "null") ? data.holderId : null,
+            kondisi: data.kondisi,
+            catatan: data.catatan,
+            fotoUtama: primaryPrepared?.objectKey || null,
+            opdId: data.opdId,
+          },
+        });
+
+        // 2. Save Document rows for prepared photos
+        if (preparedPhotos.length > 0) {
+          await tx.document.createMany({
+            data: preparedPhotos.map((p) => ({
+              entityType: EntityType.ASSET,
+              entityId: asset.id,
+              documentType: DocumentType.PHOTO,
+              bucket: p.bucket,
+              objectKey: p.objectKey,
               originalFileName: p.originalFileName,
               mimeType: p.mimeType,
               size: p.size,
-            }, tx);
-            committedKeys.push(targetKey);
-          } else {
-            const doc = await DocumentService.commitDetailPhoto(p.tempKey, asset.id, userId, {
-              originalFileName: p.originalFileName,
-              mimeType: p.mimeType,
-              size: p.size,
-            }, tx);
-            committedKeys.push(doc.objectKey);
+              isPrimary: p.isPrimary,
+              uploadedBy: userId,
+            })),
+          });
+        }
+
+        // 3. Create Dynamic Attributes
+        if (data.dynamicAttributes) {
+          const categoryAttributes = await tx.categoryAttribute.findMany({
+            where: { id: { in: Object.keys(data.dynamicAttributes) } }
+          });
+          const attrMap = new Map(categoryAttributes.map(a => [a.id, a.nama]));
+
+          const attrData = Object.entries(data.dynamicAttributes)
+            .filter(([_, val]) => val !== undefined && val !== null && val.trim() !== "")
+            .map(([attrId, val]) => {
+              const attrName = attrMap.get(attrId) || "";
+              let cleanVal = val.trim();
+              if (attrName.toLowerCase().includes("polisi")) {
+                cleanVal = cleanVal.replace(/\s+/g, "").toUpperCase();
+              }
+              return {
+                assetId: asset.id,
+                categoryAttributeId: attrId,
+                value: cleanVal
+              };
+            });
+          if (attrData.length > 0) {
+            await tx.assetAttribute.createMany({
+              data: attrData
+            });
           }
         }
-      }
 
-      // 3. Create Dynamic Attributes
-      if (data.dynamicAttributes) {
-        const categoryAttributes = await tx.categoryAttribute.findMany({
-          where: { id: { in: Object.keys(data.dynamicAttributes) } }
+        // 4. Create Audit Log
+        await tx.auditLog.create({
+          data: {
+            userId,
+            assetId: asset.id,
+            action: "CREATE",
+            newValue: JSON.stringify(asset),
+          },
         });
-        const attrMap = new Map(categoryAttributes.map(a => [a.id, a.nama]));
 
-        const attrData = Object.entries(data.dynamicAttributes)
-          .filter(([_, val]) => val !== undefined && val !== null && val.trim() !== "")
-          .map(([attrId, val]) => {
-            const attrName = attrMap.get(attrId) || "";
-            let cleanVal = val.trim();
-            if (attrName.toLowerCase().includes("polisi")) {
-              cleanVal = cleanVal.replace(/\s+/g, "").toUpperCase();
-            }
-            return {
-              assetId: asset.id,
-              categoryAttributeId: attrId,
-              value: cleanVal
-            };
-          });
-        if (attrData.length > 0) {
-          await tx.assetAttribute.createMany({
-            data: attrData
-          });
-        }
-      }
+        return asset;
+      },
+      { maxWait: 10000, timeout: 20000 }
+    );
 
-      // 4. Create Audit Log
-      await tx.auditLog.create({
-        data: {
-          userId,
-          assetId: asset.id,
-          action: "CREATE",
-          newValue: JSON.stringify(asset),
-        },
-      });
-
-      return asset;
-    });
+    // 5. Cleanup temporary objects in R2 only after DB transaction commits
+    if (preparedPhotos.length > 0) {
+      await Promise.allSettled(preparedPhotos.map((p) => DocumentService.deleteFromR2(p.tempKey)));
+    }
 
     return createdAsset;
   } catch (error: any) {
@@ -467,143 +485,207 @@ export async function updateAsset(id: string, data: UpdateAssetInput, userId: st
       kodeLengkap = newKodeLengkap;
     }
 
-    const updatedAsset = await prisma.$transaction(async (tx) => {
-      // 1. Process deletePhotoIds
-      if (data.deletePhotoIds && data.deletePhotoIds.length > 0) {
-        for (const docId of data.deletePhotoIds) {
-          await DocumentService.deletePhoto(docId, userId, tx);
+    // Determine next detail index from all historical PHOTO docs and copy new photos in R2 BEFORE DB tx
+    const allHistoricalPhotos = await prisma.document.findMany({
+      where: {
+        entityId: id,
+        entityType: EntityType.ASSET,
+        documentType: DocumentType.PHOTO,
+      },
+      select: { objectKey: true },
+    });
+
+    let maxDetailIdx = 0;
+    for (const doc of allHistoricalPhotos) {
+      const match = doc.objectKey.match(/detail-(\d+)/);
+      if (match) {
+        const idx = parseInt(match[1], 10);
+        if (idx > maxDetailIdx) {
+          maxDetailIdx = idx;
         }
       }
+    }
 
-      // Fetch active photos to find the photo index and old primary photo
-      const activeDocs = await tx.document.findMany({
-        where: {
-          entityId: id,
-          entityType: EntityType.ASSET,
-          documentType: DocumentType.PHOTO,
-          archivedAt: null,
-        },
-      });
+    const validNewPhotos = (data.photos || []).filter((p) => !!p.tempKey);
+    const preparedPhotos = await DocumentService.copyTemporaryAssetPhotos(id, validNewPhotos, maxDetailIdx);
+    committedKeys = preparedPhotos.map((p) => p.objectKey);
 
-      // 2. Commit new photos
-      let primaryKey: string | null = existingAsset.fotoUtama;
-      
-      if (data.photos && data.photos.length > 0) {
-        for (const p of data.photos) {
-          if (p.isPrimary) {
-            const targetKey = DocumentService.generateObjectKey(id, "PRIMARY");
-            await DocumentService.commitPrimaryPhoto(p.tempKey, id, userId, {
+    const requestedPrimaryKey = DocumentService.extractObjectKeyFromUrl(data.fotoUtama);
+
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // 1. Process deletePhotoIds
+        if (data.deletePhotoIds && data.deletePhotoIds.length > 0) {
+          await tx.document.updateMany({
+            where: {
+              id: { in: data.deletePhotoIds },
+              entityId: id,
+              entityType: EntityType.ASSET,
+              documentType: DocumentType.PHOTO,
+              archivedAt: null,
+            },
+            data: { archivedAt: new Date() },
+          });
+        }
+
+        // 2. Insert new Document records for prepared photos
+        if (preparedPhotos.length > 0) {
+          await tx.document.createMany({
+            data: preparedPhotos.map((p) => ({
+              entityType: EntityType.ASSET,
+              entityId: id,
+              documentType: DocumentType.PHOTO,
+              bucket: p.bucket,
+              objectKey: p.objectKey,
               originalFileName: p.originalFileName,
               mimeType: p.mimeType,
               size: p.size,
-            }, tx);
-            committedKeys.push(targetKey);
-            primaryKey = targetKey;
-          } else {
-            const doc = await DocumentService.commitDetailPhoto(p.tempKey, id, userId, {
-              originalFileName: p.originalFileName,
-              mimeType: p.mimeType,
-              size: p.size,
-            }, tx);
-            committedKeys.push(doc.objectKey);
-          }
+              isPrimary: false, // synchronized below across all active photos
+              uploadedBy: userId,
+            })),
+          });
         }
-      }
 
-      // If the current primary photo was deleted and not replaced, set primaryKey to null
-      if (data.deletePhotoIds && data.deletePhotoIds.length > 0 && primaryKey) {
-        const activeDocsAfterDelete = await tx.document.findMany({
+        // 3. Synchronize primary photo across both newly uploaded and existing active photos
+        const activeDocs = await tx.document.findMany({
           where: {
             entityId: id,
             entityType: EntityType.ASSET,
             documentType: DocumentType.PHOTO,
             archivedAt: null,
           },
+          orderBy: { uploadedAt: "asc" },
         });
-        const primaryDoc = activeDocsAfterDelete.find(d => d.isPrimary);
-        if (!primaryDoc) {
-          primaryKey = null;
-        }
-      }
 
-      // 3. Perform the asset update
-      const asset = await tx.asset.update({
-        where: { id },
-        data: {
-          kode1: data.kode1 !== undefined ? parseInt(data.kode1, 10) : undefined,
-          kode2: data.kode2 !== undefined ? parseInt(data.kode2, 10) : undefined,
-          kode3: data.kode3 !== undefined ? parseInt(data.kode3, 10) : undefined,
-          kode4: data.kode4 !== undefined ? parseInt(data.kode4, 10) : undefined,
-          kode5: data.kode5 !== undefined ? parseInt(data.kode5, 10) : undefined,
-          nomorRegister: data.nomorRegister !== undefined ? parseInt(data.nomorRegister, 10) : undefined,
-          kodeLengkap,
-          categoryId: data.categoryId,
-          namaAset: data.namaAset,
-          merkType: data.merkType,
-          material: data.material,
-          caraPerolehan: data.caraPerolehan,
-          spesifikasi: data.spesifikasi,
-          harga: data.harga,
-          tahunPembelian: data.tahunPembelian,
-          distributionId: data.distributionId,
-          roomId: data.roomId !== undefined
-            ? ((data.roomId && data.roomId.trim() !== "" && data.roomId !== "none" && data.roomId !== "null") ? data.roomId : null)
-            : undefined,
-          holderId: data.holderId !== undefined
-            ? ((data.holderId && data.holderId.trim() !== "" && data.holderId !== "none" && data.holderId !== "null") ? data.holderId : null)
-            : undefined,
-          kondisi: data.kondisi,
-          catatan: data.catatan,
-          fotoUtama: primaryKey,
-        },
-      });
+        const newPrimaryPrepared = preparedPhotos.find((p) => p.isPrimary);
+        let targetPrimaryDoc =
+          (newPrimaryPrepared
+            ? activeDocs.find((d) => d.objectKey === newPrimaryPrepared.objectKey)
+            : undefined) ||
+          (requestedPrimaryKey
+            ? activeDocs.find((d) => d.objectKey === requestedPrimaryKey)
+            : undefined) ||
+          activeDocs.find((d) => d.isPrimary) ||
+          activeDocs[0] ||
+          null;
 
-      // 4. Update Dynamic Attributes
-      if (data.dynamicAttributes) {
-        await tx.assetAttribute.deleteMany({
-          where: { assetId: id }
-        });
-        const categoryAttributes = await tx.categoryAttribute.findMany({
-          where: { id: { in: Object.keys(data.dynamicAttributes) } }
-        });
-        const attrMap = new Map(categoryAttributes.map(a => [a.id, a.nama]));
-
-        const attrData = Object.entries(data.dynamicAttributes)
-          .filter(([_, val]) => val !== undefined && val !== null && val.trim() !== "")
-          .map(([attrId, val]) => {
-            const attrName = attrMap.get(attrId) || "";
-            let cleanVal = val.trim();
-            if (attrName.toLowerCase().includes("polisi")) {
-              cleanVal = cleanVal.replace(/\s+/g, "").toUpperCase();
-            }
-            return {
-              assetId: id,
-              categoryAttributeId: attrId,
-              value: cleanVal
-            };
+        let primaryKey: string | null = null;
+        if (targetPrimaryDoc) {
+          await tx.document.updateMany({
+            where: {
+              entityId: id,
+              entityType: EntityType.ASSET,
+              documentType: DocumentType.PHOTO,
+              archivedAt: null,
+              id: { not: targetPrimaryDoc.id },
+              isPrimary: true,
+            },
+            data: { isPrimary: false },
           });
-        if (attrData.length > 0) {
-          await tx.assetAttribute.createMany({
-            data: attrData
-          });
+          if (!targetPrimaryDoc.isPrimary) {
+            await tx.document.update({
+              where: { id: targetPrimaryDoc.id },
+              data: { isPrimary: true },
+            });
+          }
+          primaryKey = targetPrimaryDoc.objectKey;
         }
-      }
 
-      // 5. Create Audit Log
-      await tx.auditLog.create({
-        data: {
-          userId,
-          assetId: id,
-          action: "UPDATE",
-          oldValue: JSON.stringify(existingAsset),
-          newValue: JSON.stringify(asset),
-        },
-      });
+        // 4. Perform the asset update
+        const asset = await tx.asset.update({
+          where: { id },
+          data: {
+            kode1: data.kode1 !== undefined ? parseInt(data.kode1, 10) : undefined,
+            kode2: data.kode2 !== undefined ? parseInt(data.kode2, 10) : undefined,
+            kode3: data.kode3 !== undefined ? parseInt(data.kode3, 10) : undefined,
+            kode4: data.kode4 !== undefined ? parseInt(data.kode4, 10) : undefined,
+            kode5: data.kode5 !== undefined ? parseInt(data.kode5, 10) : undefined,
+            nomorRegister: data.nomorRegister !== undefined ? parseInt(data.nomorRegister, 10) : undefined,
+            kodeLengkap,
+            categoryId: data.categoryId,
+            namaAset: data.namaAset,
+            merkType: data.merkType,
+            material: data.material,
+            caraPerolehan: data.caraPerolehan,
+            spesifikasi: data.spesifikasi,
+            harga: data.harga,
+            tahunPembelian: data.tahunPembelian,
+            distributionId: data.distributionId,
+            roomId: data.roomId !== undefined
+              ? ((data.roomId && data.roomId.trim() !== "" && data.roomId !== "none" && data.roomId !== "null") ? data.roomId : null)
+              : undefined,
+            holderId: data.holderId !== undefined
+              ? ((data.holderId && data.holderId.trim() !== "" && data.holderId !== "none" && data.holderId !== "null") ? data.holderId : null)
+              : undefined,
+            kondisi: data.kondisi,
+            catatan: data.catatan,
+            fotoUtama: primaryKey,
+          },
+        });
 
-      return asset;
-    });
+        // 5. Update Dynamic Attributes
+        if (data.dynamicAttributes) {
+          await tx.assetAttribute.deleteMany({
+            where: { assetId: id }
+          });
+          const categoryAttributes = await tx.categoryAttribute.findMany({
+            where: { id: { in: Object.keys(data.dynamicAttributes) } }
+          });
+          const attrMap = new Map(categoryAttributes.map(a => [a.id, a.nama]));
 
-    return updatedAsset;
+          const attrData = Object.entries(data.dynamicAttributes)
+            .filter(([_, val]) => val !== undefined && val !== null && val.trim() !== "")
+            .map(([attrId, val]) => {
+              const attrName = attrMap.get(attrId) || "";
+              let cleanVal = val.trim();
+              if (attrName.toLowerCase().includes("polisi")) {
+                cleanVal = cleanVal.replace(/\s+/g, "").toUpperCase();
+              }
+              return {
+                assetId: id,
+                categoryAttributeId: attrId,
+                value: cleanVal
+              };
+            });
+          if (attrData.length > 0) {
+            await tx.assetAttribute.createMany({
+              data: attrData
+            });
+          }
+        }
+
+        // 6. Create Audit Log
+        await tx.auditLog.create({
+          data: {
+            userId,
+            assetId: id,
+            action: "UPDATE",
+            oldValue: JSON.stringify(existingAsset),
+            newValue: JSON.stringify(asset),
+          },
+        });
+
+        const activePhotos = await tx.document.findMany({
+          where: {
+            entityId: id,
+            entityType: EntityType.ASSET,
+            documentType: DocumentType.PHOTO,
+            archivedAt: null,
+          },
+          orderBy: { uploadedAt: "desc" },
+        });
+
+        return { asset, activePhotos };
+      },
+      { maxWait: 10000, timeout: 20000 }
+    );
+
+    // 7. Cleanup temporary objects in R2 after DB transaction commits
+    if (preparedPhotos.length > 0) {
+      await Promise.allSettled(preparedPhotos.map((p) => DocumentService.deleteFromR2(p.tempKey)));
+    }
+
+    return result;
   } catch (error: any) {
     console.error("Error in updateAsset:", error);
     // Cleanup committed R2 files if transaction fails

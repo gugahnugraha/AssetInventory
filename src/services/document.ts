@@ -35,6 +35,31 @@ export class DocumentService {
   }
 
   /**
+   * Formats S3/R2 CopySource with URL-encoded path segments
+   */
+  private static formatCopySource(objectKey: string): string {
+    const encodedKey = objectKey.split("/").map(encodeURIComponent).join("/");
+    return `${bucketName}/${encodedKey}`;
+  }
+
+  /**
+   * Extracts raw R2 objectKey from either a `/api/documents?key=...` URL or a raw key
+   */
+  static extractObjectKeyFromUrl(urlOrKey: string | null | undefined): string | null {
+    if (!urlOrKey) return null;
+    if (urlOrKey.includes("key=")) {
+      try {
+        const parsed = new URL(urlOrKey, "http://localhost");
+        const key = parsed.searchParams.get("key");
+        if (key) return key;
+      } catch {
+        // Fallback to raw string
+      }
+    }
+    return urlOrKey;
+  }
+
+  /**
    * Private helper to validate and compress images to WebP with sharp
    */
   private static async processAndValidateImage(file: File): Promise<{ buffer: Buffer; size: number }> {
@@ -124,8 +149,17 @@ export class DocumentService {
       throw new Error("Format file tidak didukung. Gunakan JPG, JPEG, PNG, WEBP, atau PDF.");
     }
 
-    // 3. Generate temporary key
-    const fileExtension = file.name.split(".").pop() || "bin";
+    // 3. Generate temporary key with sanitized extension
+    const rawExt = file.name.includes(".") ? file.name.split(".").pop() : "";
+    const cleanExt = (rawExt || "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+    const mimeFallbackExt: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/jpg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "application/pdf": "pdf",
+    };
+    const fileExtension = cleanExt || mimeFallbackExt[file.type] || "bin";
     const tempUuid = crypto.randomUUID();
     const objectKey = `temporary/${tempUuid}.${fileExtension}`;
 
@@ -195,7 +229,7 @@ export class DocumentService {
     try {
       const copyCommand = new CopyObjectCommand({
         Bucket: bucketName,
-        CopySource: `${bucketName}/${tempKey}`,
+        CopySource: this.formatCopySource(tempKey),
         Key: targetKey,
       });
       await r2Client!.send(copyCommand);
@@ -256,7 +290,7 @@ export class DocumentService {
     try {
       const copyCommand = new CopyObjectCommand({
         Bucket: bucketName,
-        CopySource: `${bucketName}/${tempKey}`,
+        CopySource: this.formatCopySource(tempKey),
         Key: targetKey,
       });
       await r2Client!.send(copyCommand);
@@ -345,7 +379,7 @@ export class DocumentService {
     try {
       const copyCommand = new CopyObjectCommand({
         Bucket: bucketName,
-        CopySource: `${bucketName}/${tempKey}`,
+        CopySource: this.formatCopySource(tempKey),
         Key: targetKey,
       });
       await r2Client!.send(copyCommand);
@@ -443,14 +477,85 @@ export class DocumentService {
   // --- NEW ASSET PHOTO SYSTEM METHODS ---
 
   /**
-   * Generates object key for asset primary/detail photos
+   * Generates unique immutable object key for asset primary/detail photos
    */
   static generateObjectKey(assetId: string, type: "PRIMARY" | "DETAIL", nextIndex?: number): string {
+    const suffix = crypto.randomUUID().slice(0, 8);
     if (type === "PRIMARY") {
-      return `assets/${assetId}/primary.webp`;
+      return `assets/${assetId}/primary-${suffix}.webp`;
     }
     const idx = nextIndex || 1;
-    return `assets/${assetId}/detail-${String(idx).padStart(3, "0")}.webp`;
+    return `assets/${assetId}/detail-${String(idx).padStart(3, "0")}-${suffix}.webp`;
+  }
+
+  /**
+   * Copies temporary asset photos to permanent R2 keys BEFORE DB transaction.
+   * Keeps temporary objects intact until the DB transaction succeeds.
+   */
+  static async copyTemporaryAssetPhotos(
+    assetId: string,
+    photos: { tempKey: string; originalFileName: string; mimeType: string; size: number; isPrimary: boolean }[],
+    startingDetailIndex = 0
+  ): Promise<
+    {
+      tempKey: string;
+      bucket: string;
+      objectKey: string;
+      originalFileName: string;
+      mimeType: string;
+      size: number;
+      isPrimary: boolean;
+    }[]
+  > {
+    if (!photos || photos.length === 0) return [];
+    this.checkConfig();
+
+    let nextDetailIdx = startingDetailIndex;
+    let primaryAssigned = false;
+
+    const copyTasks = photos.map((p) => {
+      const isPrimary = p.isPrimary && !primaryAssigned;
+      if (isPrimary) {
+        primaryAssigned = true;
+      }
+      if (!isPrimary) {
+        nextDetailIdx += 1;
+      }
+      const targetKey = isPrimary
+        ? this.generateObjectKey(assetId, "PRIMARY")
+        : this.generateObjectKey(assetId, "DETAIL", nextDetailIdx);
+
+      return {
+        tempKey: p.tempKey,
+        bucket: bucketName,
+        objectKey: targetKey,
+        originalFileName: p.originalFileName,
+        mimeType: p.mimeType || "image/webp",
+        size: p.size || 0,
+        isPrimary,
+      };
+    });
+
+    const copiedKeys: string[] = [];
+    try {
+      await Promise.all(
+        copyTasks.map(async (item) => {
+          const copyCommand = new CopyObjectCommand({
+            Bucket: bucketName,
+            CopySource: this.formatCopySource(item.tempKey),
+            Key: item.objectKey,
+          });
+          await r2Client!.send(copyCommand);
+          copiedKeys.push(item.objectKey);
+        })
+      );
+      return copyTasks;
+    } catch (error) {
+      console.error("Failed to copy temporary asset photos in R2:", error);
+      // Roll back only newly copied destination keys; keep tempKeys so user can retry
+      await Promise.allSettled(copiedKeys.map((key) => this.deleteFromR2(key)));
+      throw new Error("Gagal menyimpan foto ke server penyimpanan. Silakan coba simpan kembali.");
+    }
   }
 
   /**
@@ -647,7 +752,7 @@ export class DocumentService {
   }
 
   /**
-   * Replaces the primary photo using an existing detail photo (copies in R2, logs in AuditLog)
+   * Replaces the primary photo using an existing detail photo (swaps isPrimary in DB without overwriting R2 objects)
    */
   static async replacePrimaryPhoto(
     sourcePhotoId: string,
@@ -658,7 +763,7 @@ export class DocumentService {
       const sourcePhoto = await tx.document.findUnique({
         where: { id: sourcePhotoId },
       });
-      if (!sourcePhoto || sourcePhoto.entityId !== assetId) {
+      if (!sourcePhoto || sourcePhoto.entityId !== assetId || sourcePhoto.archivedAt !== null) {
         throw new Error("Foto detail tidak ditemukan.");
       }
 
@@ -672,49 +777,28 @@ export class DocumentService {
         },
       });
 
-      const targetKey = this.generateObjectKey(assetId, "PRIMARY");
-
-      // Overwrite / Copy object in R2 to primary.webp
-      try {
-        const copyCommand = new CopyObjectCommand({
-          Bucket: bucketName,
-          CopySource: `${bucketName}/${sourcePhoto.objectKey}`,
-          Key: targetKey,
-        });
-        await r2Client!.send(copyCommand);
-      } catch (error) {
-        console.error("Failed to copy detail photo to primary in R2:", error);
-        throw new Error("Gagal menyalin foto utama di server penyimpanan.");
-      }
-
-      // Soft delete old primary photo record in database
-      if (oldPrimaryDoc) {
-        await tx.document.update({
-          where: { id: oldPrimaryDoc.id },
-          data: { archivedAt: new Date() },
-        });
-      }
-
-      // Create new Document record for primary photo
-      const newPrimaryDoc = await tx.document.create({
-        data: {
-          entityType: EntityType.ASSET,
+      // Demote existing primary photo(s) to detail instead of archiving/losing them
+      await tx.document.updateMany({
+        where: {
           entityId: assetId,
+          entityType: EntityType.ASSET,
           documentType: DocumentType.PHOTO,
-          bucket: bucketName,
-          objectKey: targetKey,
-          originalFileName: sourcePhoto.originalFileName,
-          mimeType: "image/webp",
-          size: sourcePhoto.size,
+          archivedAt: null,
           isPrimary: true,
-          uploadedBy: userId,
         },
+        data: { isPrimary: false },
+      });
+
+      // Promote selected photo to primary
+      const newPrimaryDoc = await tx.document.update({
+        where: { id: sourcePhoto.id },
+        data: { isPrimary: true },
       });
 
       // Update the Asset model's fotoUtama field
       await tx.asset.update({
         where: { id: assetId },
-        data: { fotoUtama: targetKey },
+        data: { fotoUtama: sourcePhoto.objectKey },
       });
 
       // Write to Activity Audit Log
@@ -729,7 +813,7 @@ export class DocumentService {
           }),
           newValue: JSON.stringify({
             message: "Mengganti foto utama menggunakan foto detail",
-            objectKey: targetKey,
+            objectKey: sourcePhoto.objectKey,
             sourceDetailKey: sourcePhoto.objectKey,
           }),
         },

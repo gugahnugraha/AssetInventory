@@ -227,7 +227,14 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
       fotoUtama: z.string().nullable().optional(),
       photos: z.array(
         z.object({
+          id: z.string().optional(),
           url: z.string(),
+          tempKey: z.string().optional(),
+          objectKey: z.string().optional(),
+          originalFileName: z.string().optional(),
+          mimeType: z.string().optional(),
+          size: z.number().optional(),
+          isPrimary: z.boolean().optional(),
           caption: z.string().nullable().optional(),
         })
       ).default([]),
@@ -256,6 +263,7 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
     register,
     handleSubmit,
     watch,
+    getValues,
     setValue,
     formState: { errors },
   } = useForm({
@@ -489,76 +497,96 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    const existingPhotos = (getValues("photos") as any[]) || [];
+    const remainingSlots = Math.max(0, 5 - existingPhotos.length);
+    if (remainingSlots === 0) {
+      setError("Maksimal 5 foto dokumentasi per aset.");
+      e.target.value = "";
+      return;
+    }
+
+    const selectedFiles = Array.from(files).slice(0, remainingSlots);
+    const skippedCount = files.length - selectedFiles.length;
+
     setUploading(true);
     setError(null);
 
     const uploadedUrls: any[] = [];
     const errors: string[] = [];
+    if (skippedCount > 0) {
+      errors.push(`Maksimal 5 foto per aset (${skippedCount} foto tambahan diabaikan).`);
+    }
 
-    await Promise.all(
-      Array.from(files).map(async (file) => {
-        // Client side file check
-        if (file.size > 5 * 1024 * 1024) {
-          errors.push(`File ${file.name} melebihi 5 MB.`);
-          return;
-        }
-
-        const formData = new FormData();
-        formData.append("file", file);
-
-        try {
-          const response = await uploadAssetPhotoAction(formData);
-          if (response.error) {
-            errors.push(`Gagal mengunggah ${file.name}: ${response.error}`);
+    try {
+      await Promise.all(
+        selectedFiles.map(async (file) => {
+          // Client side file check
+          if (file.size > 5 * 1024 * 1024) {
+            errors.push(`File ${file.name} melebihi 5 MB.`);
             return;
           }
 
-          if (!response.error && "url" in response && "objectKey" in response) {
-            uploadedUrls.push({
-              url: response.url,
-              tempKey: response.objectKey,
-              originalFileName: response.originalFileName,
-              mimeType: response.mimeType,
-              size: response.size,
-            });
+          const formData = new FormData();
+          formData.append("file", file);
+
+          try {
+            const response = await uploadAssetPhotoAction(formData);
+            if (response.error) {
+              errors.push(`Gagal mengunggah ${file.name}: ${response.error}`);
+              return;
+            }
+
+            if (!response.error && "url" in response && "objectKey" in response) {
+              uploadedUrls.push({
+                url: response.url,
+                tempKey: response.objectKey,
+                originalFileName: response.originalFileName,
+                mimeType: response.mimeType,
+                size: response.size,
+              });
+            }
+          } catch (err) {
+            console.error("Upload error for", file.name, err);
+            errors.push(`Gagal mengunggah ${file.name}.`);
           }
-        } catch (err) {
-          console.error("Upload error for", file.name, err);
-          errors.push(`Gagal mengunggah ${file.name}.`);
-        }
-      })
-    );
+        })
+      );
 
-    if (errors.length > 0) {
-      setError(errors.join(" "));
+      if (errors.length > 0) {
+        setError(errors.join(" "));
+      }
+
+      const currentPhotos = (getValues("photos") as any[]) || [];
+      const newPhotos = [...currentPhotos, ...uploadedUrls];
+      setValue("photos", newPhotos);
+
+      // Ensure a valid primary photo is selected if none is set or current one is absent
+      const currentMain = getValues("fotoUtama") as string;
+      const hasValidMain = currentMain && newPhotos.some((p) => p.url === currentMain);
+      if (!hasValidMain && newPhotos.length > 0) {
+        setValue("fotoUtama", newPhotos[0].url);
+      }
+    } finally {
+      e.target.value = "";
+      setUploading(false);
     }
-
-    const currentPhotos = [...watchPhotos];
-    const newPhotos = [...currentPhotos, ...uploadedUrls];
-    setValue("photos", newPhotos);
-
-    // If there is no main photo set, select the first upload
-    if (!watchFotoUtama && newPhotos.length > 0) {
-      setValue("fotoUtama", newPhotos[0].url);
-    }
-
-    setUploading(false);
   };
 
   // Remove Photo
   const handleRemovePhoto = async (urlToRemove: string) => {
-    const photoToRemove = watchPhotos.find(p => p.url === urlToRemove);
+    const currentPhotos = (getValues("photos") as any[]) || [];
+    const photoToRemove = currentPhotos.find(p => p.url === urlToRemove);
     if (photoToRemove && photoToRemove.id) {
       setDeletePhotoIds(prev => [...prev, photoToRemove.id]);
     } else if (photoToRemove && photoToRemove.tempKey) {
       await deleteTemporaryPhotoAction(photoToRemove.tempKey);
     }
 
-    const newPhotos = watchPhotos.filter(p => p.url !== urlToRemove);
+    const newPhotos = currentPhotos.filter(p => p.url !== urlToRemove);
     setValue("photos", newPhotos);
 
     // If the main photo is removed, update it
-    if (watchFotoUtama === urlToRemove) {
+    if (getValues("fotoUtama") === urlToRemove) {
       setValue("fotoUtama", newPhotos.length > 0 ? newPhotos[0].url : "");
     }
   };
@@ -592,22 +620,29 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
     setIsSubmitting(true);
     setError(null);
     const { kibId, ...submitValues } = data;
+    const currentPhotos = (getValues("photos") as any[]) || [];
+    const currentMain = getValues("fotoUtama") as string;
+    const effectiveMainUrl =
+      currentPhotos.some((p: any) => p.url === currentMain)
+        ? currentMain
+        : (currentPhotos[0]?.url || "");
 
     try {
       if (isEditMode) {
-        // Map photos and exclude those that are already committed and not deleted
-        const newPhotos = watchPhotos
+        // Map newly uploaded photos and exclude those already committed
+        const newPhotos = currentPhotos
           .filter((p: any) => !!p.tempKey)
           .map((p: any) => ({
             tempKey: p.tempKey,
-            originalFileName: p.originalFileName,
-            mimeType: p.mimeType,
-            size: p.size,
-            isPrimary: p.url === watchFotoUtama,
+            originalFileName: p.originalFileName || "image.webp",
+            mimeType: p.mimeType || "image/webp",
+            size: p.size || 0,
+            isPrimary: p.url === effectiveMainUrl,
           }));
 
         const payload = {
           ...submitValues,
+          fotoUtama: effectiveMainUrl || null,
           photos: newPhotos,
           deletePhotoIds,
         };
@@ -624,6 +659,14 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
           });
           setShowDialog(true);
         } else if (res.success) {
+          // Sync committed photos immediately so subsequent saves don't reuse deleted tempKeys
+          if (Array.isArray(res.photos)) {
+            setValue("photos", res.photos);
+          }
+          if (typeof res.fotoUtama === "string") {
+            setValue("fotoUtama", res.fotoUtama);
+          }
+          setDeletePhotoIds([]);
           setError(null);
           setIsSubmitting(false);
           setDialogConfig({
@@ -635,13 +678,15 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
           router.refresh();
         }
       } else {
-        const photosPayload = watchPhotos.map((p: any) => ({
-          tempKey: p.tempKey || "",
-          originalFileName: p.originalFileName || "image.png",
-          mimeType: p.mimeType || "image/png",
-          size: p.size || 0,
-          isPrimary: p.url === watchFotoUtama,
-        }));
+        const photosPayload = currentPhotos
+          .filter((p: any) => !!p.tempKey)
+          .map((p: any) => ({
+            tempKey: p.tempKey,
+            originalFileName: p.originalFileName || "image.png",
+            mimeType: p.mimeType || "image/png",
+            size: p.size || 0,
+            isPrimary: p.url === effectiveMainUrl,
+          }));
 
         const payload = {
           ...submitValues,
