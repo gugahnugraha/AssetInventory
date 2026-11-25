@@ -125,7 +125,6 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
   const [isImportOpen, setIsImportOpen] = React.useState(false);
   const [selectedReconStatus, setSelectedReconStatus] = React.useState<string>("ALL");
   const [selectedKib, setSelectedKib] = React.useState<string>("ALL");
-  const [selectedKategori, setSelectedKategori] = React.useState<string>("ALL");
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "kodeLengkap", desc: false }]);
   // Hide minor columns on small screens by default — user can still scroll horizontally
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -271,25 +270,6 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
     return Array.from(kibMap.values()).sort((a: any, b: any) => a.kode.localeCompare(b.kode)) as any[];
   }, [assets]);
 
-  // Compute unique sorted Categories from asset data, optionally filtered by selected KIB
-  const availableCategories = React.useMemo(() => {
-    const catMap = new Map();
-    assets.forEach(a => {
-      const cat = a.category;
-      if (cat) {
-        if (selectedKib === "ALL" || cat.kibId === selectedKib) {
-          catMap.set(cat.id, cat);
-        }
-      }
-    });
-    return Array.from(catMap.values()).sort((a: any, b: any) => a.nama.localeCompare(b.nama)) as any[];
-  }, [assets, selectedKib]);
-
-  // Reset selected category if KIB filter changes
-  React.useEffect(() => {
-    setSelectedKategori("ALL");
-  }, [selectedKib]);
-
   // Custom filtering based on dropdowns
   const filteredData = React.useMemo(() => {
     return assets.filter(asset => {
@@ -297,7 +277,6 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
       const matchBidang = selectedBidang === "ALL" || asset.distributionId === selectedBidang;
       const matchTahun = selectedTahun === "ALL" || String(asset.tahunPembelian) === selectedTahun;
       const matchKib = selectedKib === "ALL" || asset.category?.kibId === selectedKib;
-      const matchKategori = selectedKategori === "ALL" || asset.categoryId === selectedKategori;
       
       let matchRecon = true;
       if (selectedReconStatus !== "ALL") {
@@ -313,9 +292,9 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
         }
       }
       
-      return matchKondisi && matchBidang && matchTahun && matchRecon && matchKib && matchKategori;
+      return matchKondisi && matchBidang && matchTahun && matchRecon && matchKib;
     });
-  }, [assets, selectedKondisi, selectedBidang, selectedTahun, selectedReconStatus, selectedKib, selectedKategori]);
+  }, [assets, selectedKondisi, selectedBidang, selectedTahun, selectedReconStatus, selectedKib]);
 
   // Define Columns
   const columns = React.useMemo<ColumnDef<any>[]>(
@@ -394,7 +373,11 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
       },
       {
         accessorKey: "harga",
-        header: "Harga Perolehan",
+        header: ({ column }) => (
+          <Button variant="ghost" className="p-0 font-semibold cursor-pointer" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+            Harga Perolehan <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
         cell: ({ row }) => <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{formatRupiah(row.original.harga || 0)}</span>,
       },
       {
@@ -694,9 +677,9 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
       {/* Filters card */}
       <Card className="border-zinc-200/80 dark:border-zinc-800/80">
         <CardContent className="p-3 sm:p-4 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             {/* Input Search */}
-            <div className="relative lg:col-span-2">
+            <div className="relative sm:col-span-2">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-400" />
               <Input
                 placeholder="Cari kode, jenis, merk, pemegang..."
@@ -704,21 +687,6 @@ export function AssetListClient({ initialAssets, distributions, userRole, opdNam
                 onChange={e => setGlobalFilter(e.target.value)}
                 className="pl-9"
               />
-            </div>
-
-            {/* Filter Kategori */}
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-zinc-400 shrink-0" />
-              <select
-                value={selectedKategori}
-                onChange={e => setSelectedKategori(e.target.value)}
-                className="w-full h-9 rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-xs focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="ALL" className="bg-background text-foreground">Semua Kategori</option>
-                {availableCategories.map(cat => (
-                  <option key={cat.id} value={cat.id} className="bg-background text-foreground">{cat.nama}</option>
-                ))}
-              </select>
             </div>
 
             {/* Filter Bidang */}
