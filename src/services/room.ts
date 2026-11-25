@@ -68,6 +68,7 @@ export async function getRoomById(id: string) {
             category: {
               include: { kib: true },
             },
+            distribution: true,
             holder: true,
           },
           orderBy: { kodeLengkap: "asc" },

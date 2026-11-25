@@ -330,6 +330,7 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
   const watchPhotos = (watch("photos") || []) as any[];
   const watchFotoUtama = watch("fotoUtama") as string;
   const watchDistributionId = watch("distributionId") as string;
+  const watchRoomId = watch("roomId") as string | null | undefined;
   const watchKode1 = (watch("kode1") || "") as string;
   const watchKode2 = (watch("kode2") || "") as string;
   const watchKode3 = (watch("kode3") || "") as string;
@@ -475,25 +476,53 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
     return holders.filter(h => h.distributionId === watchDistributionId);
   }, [holders, watchDistributionId]);
 
-  // Filter rooms based on selected distribution/department
-  const filteredRooms = React.useMemo(() => {
-    if (!watchDistributionId) return [];
-    return (rooms || []).filter((r: any) => r.distributionId === watchDistributionId);
-  }, [rooms, watchDistributionId]);
+  // Group ALL rooms by their owning distribution so cross-bidang placement is supported
+  const groupedRooms = React.useMemo(() => {
+    const groups = new Map<string, { distributionId: string; distributionName: string; rooms: any[] }>();
+    (rooms || []).forEach((r: any) => {
+      const distName =
+        r.distributionName ||
+        distributions.find((d) => d.id === r.distributionId)?.nama ||
+        "Bidang Lainnya";
+      if (!groups.has(r.distributionId)) {
+        groups.set(r.distributionId, {
+          distributionId: r.distributionId,
+          distributionName: distName,
+          rooms: [],
+        });
+      }
+      groups.get(r.distributionId)!.rooms.push(r);
+    });
 
-  // If selected distribution changes, reset holderId & roomId if they don't belong to the new distribution
+    // Put rooms belonging to the asset's registered distribution first
+    return Array.from(groups.values()).sort((a, b) => {
+      if (a.distributionId === watchDistributionId) return -1;
+      if (b.distributionId === watchDistributionId) return 1;
+      return a.distributionName.localeCompare(b.distributionName);
+    });
+  }, [rooms, distributions, watchDistributionId]);
+
+  const selectedRoom = React.useMemo(() => {
+    if (!watchRoomId) return null;
+    return (rooms || []).find((r: any) => r.id === watchRoomId) || null;
+  }, [rooms, watchRoomId]);
+
+  const isCrossBidangRoom = Boolean(
+    selectedRoom &&
+    watchDistributionId &&
+    selectedRoom.distributionId !== watchDistributionId
+  );
+
+  // If selected distribution changes, reset holderId if it doesn't belong to the new distribution
+  // Keep roomId intact so cross-bidang physical placement is preserved
   React.useEffect(() => {
     if (watchDistributionId) {
       const isHolderValid = filteredHolders.some(h => h.id === watch("holderId"));
       if (!isHolderValid) {
         setValue("holderId", null);
       }
-      const isRoomValid = filteredRooms.some((r: any) => r.id === watch("roomId"));
-      if (!isRoomValid) {
-        setValue("roomId", null);
-      }
     }
-  }, [watchDistributionId, filteredHolders, filteredRooms, setValue, watch]);
+  }, [watchDistributionId, filteredHolders, setValue, watch]);
 
   // Shared helper to upload one or more image Files (file picker or camera capture)
   const uploadPhotoFiles = async (files: File[]) => {
@@ -1146,10 +1175,21 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
                   className="w-full h-9 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
                 >
                   <option value="">-- Belum Ditentukan / Ruangan Umum --</option>
-                  {filteredRooms.map((r: any) => (
-                    <option key={r.id} value={r.id}>
-                      {r.nama} ({r.kode})
-                    </option>
+                  {groupedRooms.map((group) => (
+                    <optgroup
+                      key={group.distributionId}
+                      label={
+                        group.distributionId === watchDistributionId
+                          ? `${group.distributionName} (Bidang Terpilih)`
+                          : group.distributionName
+                      }
+                    >
+                      {group.rooms.map((r: any) => (
+                        <option key={r.id} value={r.id}>
+                          {r.nama} ({r.kode})
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
                 {errors.roomId && <p className="text-xs text-rose-500 mt-1">{errors.roomId.message}</p>}
@@ -1172,6 +1212,22 @@ export function AssetFormClient({ initialData, distributions, rooms = [], holder
                 {errors.holderId && <p className="text-xs text-rose-500 mt-1">{errors.holderId.message}</p>}
               </div>
             </div>
+
+            {isCrossBidangRoom && selectedRoom && (
+              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-900/60 text-xs text-sky-900 dark:text-sky-200">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-sky-600 dark:text-sky-400 mt-0.5" />
+                <div>
+                  <span className="font-semibold">Penempatan Lintas Bidang:</span> Aset tetap tercatat secara administratif di{" "}
+                  <strong>{distributions.find((d) => d.id === watchDistributionId)?.nama || "bidang terpilih"}</strong>, namun secara fisik ditempatkan di ruangan milik{" "}
+                  <strong>
+                    {selectedRoom.distributionName ||
+                      distributions.find((d) => d.id === selectedRoom.distributionId)?.nama ||
+                      "bidang lain"}
+                  </strong>{" "}
+                  (akan muncul di KIR ruangan tersebut).
+                </div>
+              </div>
+            )}
 
             {/* Kondisi Terkini */}
             <div className="space-y-1.5 pt-1">

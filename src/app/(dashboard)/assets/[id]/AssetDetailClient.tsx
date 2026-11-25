@@ -527,7 +527,7 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
                   <div>
                     <p className="font-semibold text-zinc-800 dark:text-zinc-200">Ruangan (KIR)</p>
                     {asset.room ? (
-                      <div className="mt-0.5">
+                      <div className="mt-0.5 space-y-1">
                         <Link
                           href={`/ruangan/${asset.room.id}`}
                           className="text-teal-700 dark:text-teal-400 font-semibold hover:underline inline-flex items-center gap-1"
@@ -536,6 +536,13 @@ export function AssetDetailClient({ asset, userRole, reconHistory = [] }: AssetD
                         </Link>
                         {asset.room.lantai && (
                           <p className="text-xs text-zinc-500">{asset.room.lantai}</p>
+                        )}
+                        {asset.room.distribution && asset.room.distribution.id !== asset.distribution.id && (
+                          <div>
+                            <Badge variant="outline" className="text-[10px] bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/30 dark:text-sky-300 dark:border-sky-800">
+                              Lokasi di {asset.room.distribution.nama} (Lintas Bidang)
+                            </Badge>
+                          </div>
                         )}
                       </div>
                     ) : (

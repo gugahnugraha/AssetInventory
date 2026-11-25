@@ -164,6 +164,7 @@ interface KirDocumentProps {
     kode: string;
     lantai?: string | null;
     distribution: {
+      id?: string;
       nama: string;
       opd?: {
         nama: string;
@@ -184,6 +185,10 @@ interface KirDocumentProps {
       harga: number;
       kondisi: string;
       catatan?: string | null;
+      distribution?: {
+        id?: string;
+        nama: string;
+      } | null;
       holder?: {
         nama: string;
       } | null;
@@ -203,6 +208,9 @@ export const KirDocument = ({ room, opdName, isDemo }: KirDocumentProps) => {
   const resolvedOpd = opdName || room.distribution.opd?.nama || "Pemerintah Daerah";
   const assets = room.assets || [];
   const totalValue = assets.reduce((sum, a) => sum + (a.harga || 0), 0);
+  const hasCrossBidangAssets = assets.some(
+    (a) => a.distribution && a.distribution.nama !== room.distribution.nama
+  );
 
   const getKondisiLabel = (k: string) => {
     switch (k) {
@@ -294,7 +302,14 @@ export const KirDocument = ({ room, opdName, isDemo }: KirDocumentProps) => {
               >
                 <Text style={styles.colNo}>{index + 1}</Text>
                 <Text style={styles.colKode}>{asset.kodeLengkap}</Text>
-                <Text style={styles.colNama}>{asset.namaAset}</Text>
+                <View style={styles.colNama}>
+                  <Text>{asset.namaAset}</Text>
+                  {asset.distribution && asset.distribution.nama !== room.distribution.nama && (
+                    <Text style={{ fontSize: 6.2, color: '#0369a1', marginTop: 1 }}>
+                      [Tercatat: {asset.distribution.nama}]
+                    </Text>
+                  )}
+                </View>
                 <Text style={styles.colMerk}>{asset.merkType}</Text>
                 <Text style={styles.colBahan}>{asset.material || '-'}</Text>
                 <Text style={styles.colTahun}>{asset.tahunPembelian}</Text>
@@ -305,6 +320,14 @@ export const KirDocument = ({ room, opdName, isDemo }: KirDocumentProps) => {
             ))
           )}
         </View>
+
+        {hasCrossBidangAssets && (
+          <View style={{ marginBottom: 6 }}>
+            <Text style={{ fontSize: 6.5, color: '#475569', fontStyle: 'italic' }}>
+              * Keterangan [Tercatat: ...]: Aset tercatat secara administratif di bidang tersebut, namun ditempatkan secara fisik di ruangan ini.
+            </Text>
+          </View>
+        )}
 
         {/* PENGESAHAN TANDA TANGAN */}
         <View style={styles.footerSignatures}>

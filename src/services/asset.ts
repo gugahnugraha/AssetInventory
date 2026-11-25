@@ -126,7 +126,11 @@ export async function getAllAssets(opdId: string, filters?: AssetFilterInput) {
           }
         },
         distribution: true,
-        room: true,
+        room: {
+          include: {
+            distribution: true,
+          },
+        },
         holder: true,
         attributes: {
           include: {
@@ -161,7 +165,11 @@ export async function getAssetById(id: string) {
           }
         },
         distribution: true,
-        room: true,
+        room: {
+          include: {
+            distribution: true,
+          },
+        },
         holder: true,
         attributes: {
           include: {
@@ -836,7 +844,11 @@ export async function getDashboardStats(opdId: string) {
       },
       include: {
         distribution: true,
-        room: true,
+        room: {
+          include: {
+            distribution: true,
+          },
+        },
         holder: true,
         category: {
           include: {

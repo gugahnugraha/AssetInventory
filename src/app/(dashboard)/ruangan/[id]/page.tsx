@@ -66,6 +66,9 @@ export default async function RuanganDetailPage({ params }: RuanganDetailPagePro
           nama: asset.category.nama,
           kib: asset.category.kib ? { kode: asset.category.kib.kode, nama: asset.category.kib.nama } : null,
         },
+        distribution: asset.distribution
+          ? { id: asset.distribution.id, nama: asset.distribution.nama, kode: asset.distribution.kode }
+          : null,
         holder: asset.holder ? { id: asset.holder.id, nama: asset.holder.nama } : null,
       })),
     };

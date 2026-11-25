@@ -70,6 +70,12 @@ export default async function AssetDetailPage({ params }: AssetDetailPageProps) 
             nama: (asset as any).room.nama,
             kode: (asset as any).room.kode,
             lantai: (asset as any).room.lantai,
+            distribution: (asset as any).room.distribution
+              ? {
+                  id: (asset as any).room.distribution.id,
+                  nama: (asset as any).room.distribution.nama,
+                }
+              : null,
           }
         : null,
       holder: asset.holder

@@ -44,6 +44,12 @@ export function RuanganDetailClient({
 
   const assets = room.assets || [];
 
+  const crossBidangCount = React.useMemo(() => {
+    return assets.filter(
+      (a: any) => a.distribution && a.distribution.id !== room.distribution.id
+    ).length;
+  }, [assets, room.distribution.id]);
+
   const filteredAssets = React.useMemo(() => {
     if (!searchQuery.trim()) return assets;
     const q = searchQuery.toLowerCase().trim();
@@ -97,18 +103,23 @@ export function RuanganDetailClient({
 
   // Export to Excel
   const handleExportExcel = () => {
-    const data = assets.map((a: any, idx: number) => ({
-      No: idx + 1,
-      "Kode Barang": a.kodeLengkap,
-      "Nama Barang": a.namaAset,
-      "Merk / Tipe": a.merkType,
-      Bahan: a.material || "-",
-      "Tahun Perolehan": a.tahunPembelian,
-      Harga: a.harga,
-      Kondisi: a.kondisi,
-      "Pemegang Barang": a.holder?.nama || "-",
-      Keterangan: a.catatan || "-",
-    }));
+    const data = assets.map((a: any, idx: number) => {
+      const isCrossBidang = a.distribution && a.distribution.id !== room.distribution.id;
+      return {
+        No: idx + 1,
+        "Kode Barang": a.kodeLengkap,
+        "Nama Barang": a.namaAset,
+        "Merk / Tipe": a.merkType,
+        Bahan: a.material || "-",
+        "Tahun Perolehan": a.tahunPembelian,
+        Harga: a.harga,
+        Kondisi: a.kondisi,
+        "Bidang Pemilik / Pencatat": a.distribution?.nama || room.distribution.nama,
+        "Status Penempatan": isCrossBidang ? "Lintas Bidang" : "Sesuai Bidang",
+        "Pemegang Barang": a.holder?.nama || "-",
+        Keterangan: a.catatan || "-",
+      };
+    });
 
     const worksheet = XLSX.utils.json_to_sheet(data);
     const workbook = XLSX.utils.book_new();
@@ -289,6 +300,15 @@ export function RuanganDetailClient({
           </div>
         </div>
 
+        {crossBidangCount > 0 && (
+          <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-900/60 text-xs text-sky-900 dark:text-sky-200">
+            <Building2 className="h-4 w-4 shrink-0 text-sky-600 dark:text-sky-400" />
+            <span>
+              Terdapat <strong>{crossBidangCount} aset</strong> yang tercatat secara administratif di bidang lain namun ditempatkan fisik di ruangan ini (penempatan lintas bidang).
+            </span>
+          </div>
+        )}
+
         <div className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-sm">
           <Table>
             <TableHeader>
@@ -329,6 +349,13 @@ export function RuanganDetailClient({
                       {asset.material && (
                         <div className="text-[11px] text-zinc-400">
                           Bahan: {asset.material}
+                        </div>
+                      )}
+                      {asset.distribution && asset.distribution.id !== room.distribution.id && (
+                        <div className="mt-1">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/30 dark:text-sky-300 dark:border-sky-800">
+                            Tercatat: {asset.distribution.nama}
+                          </Badge>
                         </div>
                       )}
                     </TableCell>

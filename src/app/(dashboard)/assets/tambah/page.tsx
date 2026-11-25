@@ -48,6 +48,7 @@ export default async function AddAssetPage() {
       nama: room.nama,
       kode: room.kode,
       distributionId: room.distributionId,
+      distributionName: room.distribution?.nama || "",
     }));
 
     const serializedHolders = holders.map((holder) => ({
